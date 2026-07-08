@@ -1,3 +1,5 @@
+package tijetravel.modelos;
+
 public class Hotel {
     private int codigo;
     private String nombre;
