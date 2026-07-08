@@ -1,3 +1,5 @@
+package tijetravel.modelos;
+
 import java.time.LocalDateTime;
 
 public class Vuelo {
