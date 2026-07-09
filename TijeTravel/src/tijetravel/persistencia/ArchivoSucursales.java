@@ -7,7 +7,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import tijetravel.modelos.Sucursal;
+
+import tijetravel.models.Sucursal;
 
 public class ArchivoSucursales {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/sucursales.txt";

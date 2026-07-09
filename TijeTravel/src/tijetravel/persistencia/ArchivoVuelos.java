@@ -8,7 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import tijetravel.modelos.Vuelo;
+
+import tijetravel.models.Vuelo;
 
 public class ArchivoVuelos {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/vuelos.txt";

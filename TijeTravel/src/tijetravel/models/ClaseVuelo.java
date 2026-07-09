@@ -1,4 +1,4 @@
-package tijetravel.modelos;
+package tijetravel.models;
 
 public enum ClaseVuelo {
     TURISTA,
