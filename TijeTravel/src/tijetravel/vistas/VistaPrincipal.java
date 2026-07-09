@@ -126,11 +126,13 @@ public class VistaPrincipal {
     }
 
     private void mostrarMenuVendedor(Usuario usuario) {
-        System.out.println("Menu vendedor pendiente de implementar.");
+        VistaVendedor vistaVendedor = new VistaVendedor(agencia, controladorDatos, teclado);
+        vistaVendedor.mostrar(usuario);
     }
 
     private void mostrarMenuAdministrador(Usuario usuario) {
-        System.out.println("Menu administrador pendiente de implementar.");
+        VistaAdministrador vistaAdministrador = new VistaAdministrador(agencia, controladorDatos, teclado);
+        vistaAdministrador.mostrar(usuario);
     }
 
     private int leerEntero(String mensaje) {
