@@ -2,7 +2,7 @@ package tijetravel.vistas;
 
 import java.util.Scanner;
 import tijetravel.controladores.ControladorLogin;
-import tijetravel.models.Usuario;
+import tijetravel.modelos.Usuario;
 
 public class VistaLogin {
     private ControladorLogin controladorLogin;

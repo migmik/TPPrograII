@@ -8,11 +8,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import tijetravel.models.Sucursal;
+import tijetravel.modelos.Sucursal;
 
-public class ArchivoSucursales {
+public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/sucursales.txt";
 
+    @Override
     public ArrayList<Sucursal> cargar() {
         ArrayList<Sucursal> sucursales = new ArrayList<>();
         File archivo = new File(RUTA_ARCHIVO);
@@ -25,7 +26,11 @@ public class ArchivoSucursales {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (lineaVacia(linea)) {
+                    continue;
+                }
+
+                String[] partes = separarCampos(linea);
 
                 int codigo = Integer.parseInt(partes[0]);
                 String direccion = partes[1];
@@ -41,6 +46,7 @@ public class ArchivoSucursales {
         return sucursales;
     }
 
+    @Override
     public void guardar(ArrayList<Sucursal> sucursales) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();

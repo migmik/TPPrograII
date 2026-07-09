@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 import java.util.ArrayList;
 
@@ -93,6 +93,36 @@ public class Agencia {
         }
         this.usuarios.add(usuario);
         return true;
+    }
+
+    public boolean eliminarSucursalPorCodigo(int codigo) {
+        Sucursal sucursal = buscarSucursalPorCodigo(codigo);
+
+        if (sucursal == null) {
+            return false;
+        }
+
+        return sucursales.remove(sucursal);
+    }
+
+    public boolean eliminarHotelPorCodigo(int codigo) {
+        Hotel hotel = buscarHotelPorCodigo(codigo);
+
+        if (hotel == null) {
+            return false;
+        }
+
+        return hoteles.remove(hotel);
+    }
+
+    public boolean eliminarVueloPorNumero(int numero) {
+        Vuelo vuelo = buscarVueloPorNumero(numero);
+
+        if (vuelo == null) {
+            return false;
+        }
+
+        return vuelos.remove(vuelo);
     }
 
     // BUSQUEDAS
@@ -194,5 +224,35 @@ public class Agencia {
         }
 
         return mayorCodigo + 1;
+    }
+
+    public boolean existeReservaConSucursal(int codigoSucursal) {
+        for (Reserva reserva : reservas) {
+            if (reserva.getSucursal().getCodigo() == codigoSucursal) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean existeReservaConHotel(int codigoHotel) {
+        for (Reserva reserva : reservas) {
+            if (reserva.getHotel().getCodigo() == codigoHotel) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean existeReservaConVuelo(int numeroVuelo) {
+        for (Reserva reserva : reservas) {
+            if (reserva.getVuelo().getNumero() == numeroVuelo) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

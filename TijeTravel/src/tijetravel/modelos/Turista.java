@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public class Turista {
     private int codigo;
