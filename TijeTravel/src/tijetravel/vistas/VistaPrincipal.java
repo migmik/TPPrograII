@@ -2,10 +2,11 @@ package tijetravel.vistas;
 
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
-import tijetravel.modelos.Agencia;
-import tijetravel.modelos.Hotel;
-import tijetravel.modelos.Usuario;
-import tijetravel.modelos.Vuelo;
+import tijetravel.controladores.ControladorLogin;
+import tijetravel.models.Agencia;
+import tijetravel.models.Hotel;
+import tijetravel.models.Usuario;
+import tijetravel.models.Vuelo;
 
 public class VistaPrincipal {
     private Agencia agencia;
@@ -95,38 +96,41 @@ public class VistaPrincipal {
     }
 
     private void iniciarSesion() {
-        System.out.println("===== INICIAR SESION =====");
+        ControladorLogin controladorLogin = new ControladorLogin(agencia);
+        VistaLogin vistaLogin = new VistaLogin(controladorLogin, teclado);
+        Usuario usuario = vistaLogin.mostrar();
 
-        System.out.print("Usuario: ");
-        String nombreUsuario = teclado.nextLine();
-
-        System.out.print("Contrasenia: ");
-        String contrasenia = teclado.nextLine();
-
-        Usuario usuario = agencia.buscarUsuarioPorNombre(nombreUsuario);
-
-        if (usuario == null || !usuario.getContrasenia().equals(contrasenia)) {
-            System.out.println("Usuario o contrasenia incorrectos.");
+        if (usuario == null) {
             return;
         }
 
-        System.out.println("Inicio de sesion exitoso.");
-        System.out.println("Rol: " + usuario.getRol());
-
         switch (usuario.getRol()) {
             case CLIENTE:
-                System.out.println("Menu cliente pendiente de implementar.");
+                mostrarMenuCliente(usuario);
                 break;
             case VENDEDOR:
-                System.out.println("Menu vendedor pendiente de implementar.");
+                mostrarMenuVendedor(usuario);
                 break;
             case ADMINISTRADOR:
-                System.out.println("Menu administrador pendiente de implementar.");
+                mostrarMenuAdministrador(usuario);
                 break;
             default:
                 System.out.println("Rol no reconocido.");
                 break;
         }
+    }
+
+    private void mostrarMenuCliente(Usuario usuario) {
+        VistaCliente vistaCliente = new VistaCliente(agencia, controladorDatos, teclado);
+        vistaCliente.mostrar(usuario);
+    }
+
+    private void mostrarMenuVendedor(Usuario usuario) {
+        System.out.println("Menu vendedor pendiente de implementar.");
+    }
+
+    private void mostrarMenuAdministrador(Usuario usuario) {
+        System.out.println("Menu administrador pendiente de implementar.");
     }
 
     private int leerEntero(String mensaje) {

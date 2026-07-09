@@ -7,7 +7,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import tijetravel.modelos.Turista;
+
+import tijetravel.models.Turista;
 
 public class ArchivoTuristas {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/turistas.txt";
@@ -24,7 +25,16 @@ public class ArchivoTuristas {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] partes = linea.split(";", -1);
+
+                if (partes.length < 7) {
+                    System.out.println("Linea de turista incompleta: " + linea);
+                    continue;
+                }
 
                 int codigo = Integer.parseInt(partes[0]);
                 String nombre = partes[1];
@@ -33,6 +43,16 @@ public class ArchivoTuristas {
                 String email = partes[4];
                 String telefonoFijo = partes[5];
                 String telefonoCelular = partes[6];
+                boolean esTitular = true;
+                Integer codigoTitular = null;
+
+                if (partes.length > 7 && !partes[7].isEmpty()) {
+                    esTitular = Boolean.parseBoolean(partes[7]);
+                }
+
+                if (partes.length > 8 && !partes[8].isEmpty()) {
+                    codigoTitular = Integer.parseInt(partes[8]);
+                }
 
                 Turista turista = new Turista(
                         codigo,
@@ -41,10 +61,12 @@ public class ArchivoTuristas {
                         direccion,
                         email,
                         telefonoFijo,
-                        telefonoCelular);
+                        telefonoCelular,
+                        esTitular,
+                        codigoTitular);
                 turistas.add(turista);
             }
-        } catch (IOException | NumberFormatException e) {
+        } catch (IOException | NumberFormatException | ArrayIndexOutOfBoundsException e) {
             System.out.println("Error al cargar turistas: " + e.getMessage());
         }
 
@@ -64,7 +86,9 @@ public class ArchivoTuristas {
                         + turista.getDireccion() + ";"
                         + turista.getEmail() + ";"
                         + turista.getTelefonoFijo() + ";"
-                        + turista.getTelefonoCelular());
+                        + turista.getTelefonoCelular() + ";"
+                        + turista.isEsTitular() + ";"
+                        + (turista.getCodigoTitular() == null ? "" : turista.getCodigoTitular()));
                 escritor.newLine();
             }
         } catch (IOException e) {

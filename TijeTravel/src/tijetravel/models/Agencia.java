@@ -1,4 +1,4 @@
-package tijetravel.modelos;
+package tijetravel.models;
 
 import java.util.ArrayList;
 
@@ -148,5 +148,51 @@ public class Agencia {
             }
         }
         return null;
+    }
+
+    public Turista buscarTuristaDeUsuario(Usuario usuario) {
+        if (usuario == null || usuario.getCodigoTurista() == null) {
+            return null;
+        }
+
+        return buscarTuristaPorCodigo(usuario.getCodigoTurista());
+    }
+
+    public ArrayList<Turista> buscarFamiliaresDe(int codigoTitular) {
+        ArrayList<Turista> familiares = new ArrayList<>();
+
+        for (Turista turista : turistas) {
+            if (turista.getCodigoTitular() != null && turista.getCodigoTitular().equals(codigoTitular)) {
+                familiares.add(turista);
+            }
+        }
+
+        return familiares;
+    }
+
+    public boolean turistaPerteneceATitular(int codigoTurista, int codigoTitular) {
+        Turista turista = buscarTuristaPorCodigo(codigoTurista);
+
+        if (turista == null) {
+            return false;
+        }
+
+        if (turista.isEsTitular() && turista.getCodigo() == codigoTitular) {
+            return true;
+        }
+
+        return turista.getCodigoTitular() != null && turista.getCodigoTitular().equals(codigoTitular);
+    }
+
+    public int generarCodigoTurista() {
+        int mayorCodigo = 0;
+
+        for (Turista turista : turistas) {
+            if (turista.getCodigo() > mayorCodigo) {
+                mayorCodigo = turista.getCodigo();
+            }
+        }
+
+        return mayorCodigo + 1;
     }
 }

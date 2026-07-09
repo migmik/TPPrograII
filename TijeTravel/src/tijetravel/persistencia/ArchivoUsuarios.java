@@ -7,8 +7,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import tijetravel.modelos.RolUsuario;
-import tijetravel.modelos.Usuario;
+
+import tijetravel.models.RolUsuario;
+import tijetravel.models.Usuario;
 
 public class ArchivoUsuarios {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/usuarios.txt";
@@ -25,16 +26,30 @@ public class ArchivoUsuarios {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] partes = linea.split(";", -1);
+
+                if (partes.length < 3) {
+                    System.out.println("Linea de usuario incompleta: " + linea);
+                    continue;
+                }
 
                 String nombreUsuario = partes[0];
                 String contrasenia = partes[1];
                 RolUsuario rol = RolUsuario.valueOf(partes[2]);
+                Integer codigoTurista = null;
 
-                Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol);
+                if (partes.length > 3 && !partes[3].isEmpty()) {
+                    codigoTurista = Integer.parseInt(partes[3]);
+                }
+
+                Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol, codigoTurista);
                 usuarios.add(usuario);
             }
-        } catch (IOException | IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
             System.out.println("Error al cargar usuarios: " + e.getMessage());
         }
 
@@ -50,7 +65,8 @@ public class ArchivoUsuarios {
                 escritor.write(
                         usuario.getNombreUsuario() + ";"
                         + usuario.getContrasenia() + ";"
-                        + usuario.getRol());
+                        + usuario.getRol() + ";"
+                        + (usuario.getCodigoTurista() == null ? "" : usuario.getCodigoTurista()));
                 escritor.newLine();
             }
         } catch (IOException e) {
