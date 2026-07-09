@@ -8,14 +8,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import tijetravel.modelos.Agencia;
-import tijetravel.modelos.ClaseVuelo;
-import tijetravel.modelos.Hotel;
-import tijetravel.modelos.Reserva;
-import tijetravel.modelos.Sucursal;
-import tijetravel.modelos.TipoHospedaje;
-import tijetravel.modelos.Turista;
-import tijetravel.modelos.Vuelo;
+
+import tijetravel.models.Agencia;
+import tijetravel.models.ClaseVuelo;
+import tijetravel.models.Hotel;
+import tijetravel.models.Reserva;
+import tijetravel.models.Sucursal;
+import tijetravel.models.TipoHospedaje;
+import tijetravel.models.Turista;
+import tijetravel.models.Vuelo;
 
 public class ArchivoReservas {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/reservas.txt";
@@ -32,7 +33,16 @@ public class ArchivoReservas {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] partes = linea.split(";", -1);
+
+                if (partes.length < 9) {
+                    System.out.println("Linea de reserva incompleta: " + linea);
+                    continue;
+                }
 
                 int codigoReserva = Integer.parseInt(partes[0]);
                 int codigoTurista = Integer.parseInt(partes[1]);
@@ -49,21 +59,29 @@ public class ArchivoReservas {
                 Vuelo vuelo = agencia.buscarVueloPorNumero(numeroVuelo);
                 Hotel hotel = agencia.buscarHotelPorCodigo(codigoHotel);
 
-                if (turista != null && sucursal != null && vuelo != null && hotel != null) {
-                    Reserva reserva = new Reserva(
-                            codigoReserva,
-                            turista,
-                            sucursal,
-                            vuelo,
-                            hotel,
-                            claseVuelo,
-                            tipoHospedaje,
-                            fechaLlegada,
-                            fechaPartida);
-                    reservas.add(reserva);
+                if (turista == null || sucursal == null || vuelo == null || hotel == null) {
+                    System.out.println("Reserva omitida por referencias inexistentes: " + linea);
+                    continue;
                 }
+
+                if (!fechaPartida.isAfter(fechaLlegada)) {
+                    System.out.println("Reserva omitida por fechas invalidas: " + linea);
+                    continue;
+                }
+
+                Reserva reserva = new Reserva(
+                        codigoReserva,
+                        turista,
+                        sucursal,
+                        vuelo,
+                        hotel,
+                        claseVuelo,
+                        tipoHospedaje,
+                        fechaLlegada,
+                        fechaPartida);
+                reservas.add(reserva);
             }
-        } catch (IOException | IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
             System.out.println("Error al cargar reservas: " + e.getMessage());
         }
 
