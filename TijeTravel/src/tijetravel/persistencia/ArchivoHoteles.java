@@ -7,7 +7,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import tijetravel.modelos.Hotel;
+
+import tijetravel.models.Hotel;
 
 public class ArchivoHoteles {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/hoteles.txt";
