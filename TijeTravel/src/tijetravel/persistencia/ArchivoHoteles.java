@@ -8,11 +8,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import tijetravel.models.Hotel;
+import tijetravel.modelos.Hotel;
 
-public class ArchivoHoteles {
+public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/hoteles.txt";
 
+    @Override
     public ArrayList<Hotel> cargar() {
         ArrayList<Hotel> hoteles = new ArrayList<>();
         File archivo = new File(RUTA_ARCHIVO);
@@ -25,7 +26,11 @@ public class ArchivoHoteles {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (lineaVacia(linea)) {
+                    continue;
+                }
+
+                String[] partes = separarCampos(linea);
 
                 int codigo = Integer.parseInt(partes[0]);
                 String nombre = partes[1];
@@ -44,6 +49,7 @@ public class ArchivoHoteles {
         return hoteles;
     }
 
+    @Override
     public void guardar(ArrayList<Hotel> hoteles) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();

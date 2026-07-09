@@ -9,11 +9,12 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Vuelo;
 
-public class ArchivoVuelos {
+public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/vuelos.txt";
 
+    @Override
     public ArrayList<Vuelo> cargar() {
         ArrayList<Vuelo> vuelos = new ArrayList<>();
         File archivo = new File(RUTA_ARCHIVO);
@@ -26,7 +27,11 @@ public class ArchivoVuelos {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (lineaVacia(linea)) {
+                    continue;
+                }
+
+                String[] partes = separarCampos(linea);
 
                 int numero = Integer.parseInt(partes[0]);
                 LocalDateTime fechaYHora = LocalDateTime.parse(partes[1]);
@@ -34,8 +39,13 @@ public class ArchivoVuelos {
                 String destino = partes[3];
                 int totalPlazas = Integer.parseInt(partes[4]);
                 int plazasTurista = Integer.parseInt(partes[5]);
+                int plazasPrimera = totalPlazas - plazasTurista;
 
-                Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista);
+                if (partes.length > 6 && !partes[6].isEmpty()) {
+                    plazasPrimera = Integer.parseInt(partes[6]);
+                }
+
+                Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
                 vuelos.add(vuelo);
             }
         } catch (IOException | NumberFormatException e) {
@@ -45,6 +55,7 @@ public class ArchivoVuelos {
         return vuelos;
     }
 
+    @Override
     public void guardar(ArrayList<Vuelo> vuelos) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();
@@ -57,7 +68,8 @@ public class ArchivoVuelos {
                         + vuelo.getOrigen() + ";"
                         + vuelo.getDestino() + ";"
                         + vuelo.getTotalPlazas() + ";"
-                        + vuelo.getPlazasTurista());
+                        + vuelo.getPlazasTurista() + ";"
+                        + vuelo.getPlazasPrimera());
                 escritor.newLine();
             }
         } catch (IOException e) {

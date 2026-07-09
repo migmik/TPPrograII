@@ -3,14 +3,14 @@ package tijetravel.controladores;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Vuelo;
 
 public class ControladorReservas {
     private Agencia agencia;
@@ -59,6 +59,29 @@ public class ControladorReservas {
             return null;
         }
 
+        if (!hotel.tienePlazasDisponibles()) {
+            return null;
+        }
+
+        if (!vuelo.tienePlazasDisponibles(claseVuelo)) {
+            return null;
+        }
+
+        boolean hotelReservado = hotel.reservarPlaza();
+        boolean vueloReservado = vuelo.reservarPlaza(claseVuelo);
+
+        if (!hotelReservado || !vueloReservado) {
+            if (hotelReservado) {
+                hotel.liberarPlaza();
+            }
+
+            if (vueloReservado) {
+                vuelo.liberarPlaza(claseVuelo);
+            }
+
+            return null;
+        }
+
         Reserva reserva = new Reserva(
                 generarCodigoReserva(),
                 turista,
@@ -71,6 +94,8 @@ public class ControladorReservas {
                 fechaPartida);
 
         if (!agencia.agregarReserva(reserva)) {
+            hotel.liberarPlaza();
+            vuelo.liberarPlaza(claseVuelo);
             return null;
         }
 
@@ -129,6 +154,13 @@ public class ControladorReservas {
             return false;
         }
 
-        return agencia.getReservas().remove(reserva);
+        boolean eliminada = agencia.getReservas().remove(reserva);
+
+        if (eliminada) {
+            reserva.getHotel().liberarPlaza();
+            reserva.getVuelo().liberarPlaza(reserva.getClaseVuelo());
+        }
+
+        return eliminada;
     }
 }

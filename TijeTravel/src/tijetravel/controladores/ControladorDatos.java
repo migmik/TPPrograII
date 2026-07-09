@@ -1,12 +1,12 @@
 package tijetravel.controladores;
 
-import tijetravel.models.Agencia;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.Turista;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 import tijetravel.persistencia.ArchivoHoteles;
 import tijetravel.persistencia.ArchivoReservas;
 import tijetravel.persistencia.ArchivoSucursales;

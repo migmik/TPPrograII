@@ -9,16 +9,16 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Vuelo;
 
-public class ArchivoReservas {
+public class ArchivoReservas extends ArchivoTexto {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/reservas.txt";
 
     public ArrayList<Reserva> cargar(Agencia agencia) {
@@ -33,11 +33,11 @@ public class ArchivoReservas {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                if (linea.trim().isEmpty()) {
+                if (lineaVacia(linea)) {
                     continue;
                 }
 
-                String[] partes = linea.split(";", -1);
+                String[] partes = separarCampos(linea);
 
                 if (partes.length < 9) {
                     System.out.println("Linea de reserva incompleta: " + linea);

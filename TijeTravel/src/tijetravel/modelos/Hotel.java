@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public class Hotel {
     private int codigo;
@@ -65,4 +65,20 @@ public class Hotel {
         this.plazasDisponibles = plazasDisponibles;
     }
 
+    public boolean tienePlazasDisponibles() {
+        return plazasDisponibles > 0;
+    }
+
+    public boolean reservarPlaza() {
+        if (!tienePlazasDisponibles()) {
+            return false;
+        }
+
+        plazasDisponibles--;
+        return true;
+    }
+
+    public void liberarPlaza() {
+        plazasDisponibles++;
+    }
 }
