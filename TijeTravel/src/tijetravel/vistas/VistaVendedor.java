@@ -5,15 +5,15 @@ import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
 import tijetravel.controladores.ControladorReservas;
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 
 public class VistaVendedor {
     private Agencia agencia;
@@ -269,6 +269,7 @@ public class VistaVendedor {
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
             System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Plazas primera: " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

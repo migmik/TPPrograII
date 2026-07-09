@@ -6,16 +6,16 @@ import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
 import tijetravel.controladores.ControladorReservas;
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.RolUsuario;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.RolUsuario;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 
 public class VistaAdministrador {
     private Agencia agencia;
@@ -87,6 +87,8 @@ public class VistaAdministrador {
             System.out.println("===== ADMINISTRAR SUCURSALES =====");
             System.out.println("1. Listar sucursales");
             System.out.println("2. Agregar sucursal");
+            System.out.println("3. Modificar sucursal");
+            System.out.println("4. Eliminar sucursal");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -96,6 +98,12 @@ public class VistaAdministrador {
                     break;
                 case 2:
                     agregarSucursal();
+                    break;
+                case 3:
+                    modificarSucursal();
+                    break;
+                case 4:
+                    eliminarSucursal();
                     break;
                 case 0:
                     break;
@@ -113,6 +121,8 @@ public class VistaAdministrador {
             System.out.println("===== ADMINISTRAR HOTELES =====");
             System.out.println("1. Listar hoteles");
             System.out.println("2. Agregar hotel");
+            System.out.println("3. Modificar hotel");
+            System.out.println("4. Eliminar hotel");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -122,6 +132,12 @@ public class VistaAdministrador {
                     break;
                 case 2:
                     agregarHotel();
+                    break;
+                case 3:
+                    modificarHotel();
+                    break;
+                case 4:
+                    eliminarHotel();
                     break;
                 case 0:
                     break;
@@ -139,6 +155,8 @@ public class VistaAdministrador {
             System.out.println("===== ADMINISTRAR VUELOS =====");
             System.out.println("1. Listar vuelos");
             System.out.println("2. Agregar vuelo");
+            System.out.println("3. Modificar vuelo");
+            System.out.println("4. Eliminar vuelo");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -148,6 +166,12 @@ public class VistaAdministrador {
                     break;
                 case 2:
                     agregarVuelo();
+                    break;
+                case 3:
+                    modificarVuelo();
+                    break;
+                case 4:
+                    eliminarVuelo();
                     break;
                 case 0:
                     break;
@@ -279,6 +303,48 @@ public class VistaAdministrador {
         }
     }
 
+    private void modificarSucursal() {
+        if (agencia.getSucursales().isEmpty()) {
+            System.out.println("No hay sucursales cargadas.");
+            return;
+        }
+
+        mostrarSucursales();
+        int codigo = leerCodigoSucursalExistente();
+        Sucursal sucursal = agencia.buscarSucursalPorCodigo(codigo);
+
+        System.out.print("Nueva direccion: ");
+        sucursal.setDireccion(teclado.nextLine());
+
+        System.out.print("Nuevo telefono: ");
+        sucursal.setTelefono(teclado.nextLine());
+
+        controladorDatos.guardarTodo(agencia);
+        System.out.println("Sucursal modificada.");
+    }
+
+    private void eliminarSucursal() {
+        if (agencia.getSucursales().isEmpty()) {
+            System.out.println("No hay sucursales cargadas.");
+            return;
+        }
+
+        mostrarSucursales();
+        int codigo = leerCodigoSucursalExistente();
+
+        if (agencia.existeReservaConSucursal(codigo)) {
+            System.out.println("No se puede eliminar la sucursal porque tiene reservas asociadas.");
+            return;
+        }
+
+        if (agencia.eliminarSucursalPorCodigo(codigo)) {
+            controladorDatos.guardarTodo(agencia);
+            System.out.println("Sucursal eliminada.");
+        } else {
+            System.out.println("No se pudo eliminar la sucursal.");
+        }
+    }
+
     private void mostrarHoteles() {
         if (agencia.getHoteles().isEmpty()) {
             System.out.println("No hay hoteles cargados.");
@@ -327,6 +393,56 @@ public class VistaAdministrador {
         }
     }
 
+    private void modificarHotel() {
+        if (agencia.getHoteles().isEmpty()) {
+            System.out.println("No hay hoteles cargados.");
+            return;
+        }
+
+        mostrarHoteles();
+        int codigo = leerCodigoHotelExistente();
+        Hotel hotel = agencia.buscarHotelPorCodigo(codigo);
+
+        System.out.print("Nuevo nombre: ");
+        hotel.setNombre(teclado.nextLine());
+
+        System.out.print("Nueva direccion: ");
+        hotel.setDireccion(teclado.nextLine());
+
+        System.out.print("Nueva ciudad: ");
+        hotel.setCiudad(teclado.nextLine());
+
+        System.out.print("Nuevo telefono: ");
+        hotel.setTelefono(teclado.nextLine());
+
+        hotel.setPlazasDisponibles(leerEntero("Nuevas plazas disponibles: "));
+
+        controladorDatos.guardarTodo(agencia);
+        System.out.println("Hotel modificado.");
+    }
+
+    private void eliminarHotel() {
+        if (agencia.getHoteles().isEmpty()) {
+            System.out.println("No hay hoteles cargados.");
+            return;
+        }
+
+        mostrarHoteles();
+        int codigo = leerCodigoHotelExistente();
+
+        if (agencia.existeReservaConHotel(codigo)) {
+            System.out.println("No se puede eliminar el hotel porque tiene reservas asociadas.");
+            return;
+        }
+
+        if (agencia.eliminarHotelPorCodigo(codigo)) {
+            controladorDatos.guardarTodo(agencia);
+            System.out.println("Hotel eliminado.");
+        } else {
+            System.out.println("No se pudo eliminar el hotel.");
+        }
+    }
+
     private void mostrarVuelos() {
         if (agencia.getVuelos().isEmpty()) {
             System.out.println("No hay vuelos cargados.");
@@ -342,6 +458,7 @@ public class VistaAdministrador {
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
             System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Plazas primera: " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }
@@ -360,14 +477,63 @@ public class VistaAdministrador {
 
         int totalPlazas = leerEntero("Plazas totales: ");
         int plazasTurista = leerEntero("Plazas turista: ");
+        int plazasPrimera = leerEntero("Plazas primera: ");
 
-        Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista);
+        Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
 
         if (agencia.agregarVuelo(vuelo)) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Vuelo agregado.");
         } else {
             System.out.println("No se pudo agregar el vuelo.");
+        }
+    }
+
+    private void modificarVuelo() {
+        if (agencia.getVuelos().isEmpty()) {
+            System.out.println("No hay vuelos cargados.");
+            return;
+        }
+
+        mostrarVuelos();
+        int numero = leerNumeroVueloExistente();
+        Vuelo vuelo = agencia.buscarVueloPorNumero(numero);
+
+        vuelo.setFechaYHora(leerFechaYHora("Nueva fecha y hora (yyyy-mm-ddThh:mm): "));
+
+        System.out.print("Nuevo origen: ");
+        vuelo.setOrigen(teclado.nextLine());
+
+        System.out.print("Nuevo destino: ");
+        vuelo.setDestino(teclado.nextLine());
+
+        vuelo.setTotalPlazas(leerEntero("Nuevas plazas totales: "));
+        vuelo.setPlazasTurista(leerEntero("Nuevas plazas turista: "));
+        vuelo.setPlazasPrimera(leerEntero("Nuevas plazas primera: "));
+
+        controladorDatos.guardarTodo(agencia);
+        System.out.println("Vuelo modificado.");
+    }
+
+    private void eliminarVuelo() {
+        if (agencia.getVuelos().isEmpty()) {
+            System.out.println("No hay vuelos cargados.");
+            return;
+        }
+
+        mostrarVuelos();
+        int numero = leerNumeroVueloExistente();
+
+        if (agencia.existeReservaConVuelo(numero)) {
+            System.out.println("No se puede eliminar el vuelo porque tiene reservas asociadas.");
+            return;
+        }
+
+        if (agencia.eliminarVueloPorNumero(numero)) {
+            controladorDatos.guardarTodo(agencia);
+            System.out.println("Vuelo eliminado.");
+        } else {
+            System.out.println("No se pudo eliminar el vuelo.");
         }
     }
 

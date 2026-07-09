@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 import java.time.LocalDate;
 

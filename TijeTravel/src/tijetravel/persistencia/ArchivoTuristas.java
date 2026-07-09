@@ -8,11 +8,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import tijetravel.models.Turista;
+import tijetravel.modelos.Turista;
 
-public class ArchivoTuristas {
+public class ArchivoTuristas extends ArchivoTexto implements Archivo<Turista> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/turistas.txt";
 
+    @Override
     public ArrayList<Turista> cargar() {
         ArrayList<Turista> turistas = new ArrayList<>();
         File archivo = new File(RUTA_ARCHIVO);
@@ -25,11 +26,11 @@ public class ArchivoTuristas {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                if (linea.trim().isEmpty()) {
+                if (lineaVacia(linea)) {
                     continue;
                 }
 
-                String[] partes = linea.split(";", -1);
+                String[] partes = separarCampos(linea);
 
                 if (partes.length < 7) {
                     System.out.println("Linea de turista incompleta: " + linea);
@@ -73,6 +74,7 @@ public class ArchivoTuristas {
         return turistas;
     }
 
+    @Override
     public void guardar(ArrayList<Turista> turistas) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();
