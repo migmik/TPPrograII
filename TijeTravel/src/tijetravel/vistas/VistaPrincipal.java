@@ -3,10 +3,10 @@ package tijetravel.vistas;
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
 import tijetravel.controladores.ControladorLogin;
-import tijetravel.models.Agencia;
-import tijetravel.models.Hotel;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 
 public class VistaPrincipal {
     private Agencia agencia;
@@ -91,6 +91,7 @@ public class VistaPrincipal {
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
             System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Plazas primera: " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

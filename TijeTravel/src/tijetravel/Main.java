@@ -1,7 +1,7 @@
 package tijetravel;
 
 import tijetravel.controladores.ControladorDatos;
-import tijetravel.models.Agencia;
+import tijetravel.modelos.Agencia;
 import tijetravel.vistas.VistaPrincipal;
 
 public class Main {
