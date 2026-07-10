@@ -19,7 +19,7 @@ import tijetravel.modelos.TipoHospedaje;
 import tijetravel.modelos.Turista;
 import tijetravel.modelos.Vuelo;
 
-public class ArchivoReservas {
+public class ArchivoReservas extends ArchivoTexto {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/reservas.txt";
 
     public ArrayList<Reserva> cargar(Agencia agencia) {
@@ -34,11 +34,11 @@ public class ArchivoReservas {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                if (linea.trim().isEmpty()) {
+                if (lineaVacia(linea)) {
                     continue;
                 }
 
-                String[] partes = linea.split(";", -1);
+                String[] partes = separarCampos(linea);
 
                 if (partes.length < 9) {
                     System.out.println("Linea de reserva incompleta: " + linea);

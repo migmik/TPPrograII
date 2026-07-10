@@ -419,8 +419,9 @@ public class VistaAdministrador extends VistaUsuario {
 
         int totalPlazas = leerEnteroPositivo("Plazas totales: ");
         int plazasTurista = leerPlazasTurista(totalPlazas);
+        int plazasPrimera = leerPlazasPrimera(totalPlazas, plazasTurista);
 
-        Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista);
+        Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
 
         if (controladorAdministracion.agregarVuelo(usuarioActual, vuelo)) {
             controladorDatos.guardarTodo(agencia);
@@ -746,8 +747,9 @@ public class VistaAdministrador extends VistaUsuario {
         String destino = teclado.nextLine();
         int total = leerEnteroPositivo("Plazas totales: ");
         int turista = leerPlazasTurista(total);
+        int primera = leerPlazasPrimera(total, turista);
         if (controladorAdministracion.modificarVuelo(usuarioActual, vuelo.getNumero(), fecha, origen,
-                destino, total, turista)) guardarYMostrar("Vuelo actualizado.");
+                destino, total, turista, primera)) guardarYMostrar("Vuelo actualizado.");
     }
 
     private void eliminarVuelo() {
@@ -900,6 +902,17 @@ public class VistaAdministrador extends VistaUsuario {
             valor = leerEnteroNoNegativo("Plazas turista: ");
             if (valor > total) System.out.println("No puede superar las plazas totales.");
         } while (valor > total);
+        return valor;
+    }
+
+    private int leerPlazasPrimera(int total, int turista) {
+        int valor;
+        do {
+            valor = leerEnteroNoNegativo("Plazas primera: ");
+            if (turista + valor > total) {
+                System.out.println("La suma de plazas turista y primera no puede superar el total.");
+            }
+        } while (turista + valor > total);
         return valor;
     }
 

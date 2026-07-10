@@ -12,7 +12,7 @@ import java.util.List;
 import tijetravel.modelos.RolUsuario;
 import tijetravel.modelos.Usuario;
 
-public class ArchivoUsuarios {
+public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/usuarios.txt";
 
     public ArrayList<Usuario> cargar() {
