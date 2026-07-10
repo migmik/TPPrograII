@@ -1,28 +1,24 @@
 package tijetravel.persistencia;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import tijetravel.modelos.Hotel;
 
 public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
-    private static final String RUTA_ARCHIVO = "TijeTravel/datos/hoteles.txt";
+    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "hoteles.txt");
 
     public ArrayList<Hotel> cargar() {
         ArrayList<Hotel> hoteles = new ArrayList<>();
-        File archivo = new File(RUTA_ARCHIVO);
-
-        if (!archivo.exists()) {
+        if (!Files.exists(RUTA_ARCHIVO)) {
             return hoteles;
         }
 
-        try (BufferedReader lector = new BufferedReader(new FileReader(archivo))) {
+        try (BufferedReader lector = abrirLector(RUTA_ARCHIVO)) {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
@@ -38,18 +34,15 @@ public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
                 Hotel hotel = new Hotel(codigo, nombre, direccion, ciudad, telefono, plazasDisponibles);
                 hoteles.add(hotel);
             }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("Error al cargar hoteles: " + e.getMessage());
+        } catch (IOException | RuntimeException e) {
+            throw errorCarga(RUTA_ARCHIVO, e);
         }
 
         return hoteles;
     }
 
     public void guardar(List<Hotel> hoteles) {
-        File archivo = new File(RUTA_ARCHIVO);
-        archivo.getParentFile().mkdirs();
-
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo))) {
+        guardarAtomico(RUTA_ARCHIVO, escritor -> {
             for (Hotel hotel : hoteles) {
                 escritor.write(
                         hotel.getCodigo() + ";"
@@ -60,8 +53,6 @@ public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
                         + hotel.getPlazasDisponibles());
                 escritor.newLine();
             }
-        } catch (IOException e) {
-            System.out.println("Error al guardar hoteles: " + e.getMessage());
-        }
+        });
     }
 }

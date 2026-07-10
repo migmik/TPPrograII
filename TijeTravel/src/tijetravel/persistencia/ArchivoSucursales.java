@@ -1,28 +1,24 @@
 package tijetravel.persistencia;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import tijetravel.modelos.Sucursal;
 
 public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal> {
-    private static final String RUTA_ARCHIVO = "TijeTravel/datos/sucursales.txt";
+    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "sucursales.txt");
 
     public ArrayList<Sucursal> cargar() {
         ArrayList<Sucursal> sucursales = new ArrayList<>();
-        File archivo = new File(RUTA_ARCHIVO);
-
-        if (!archivo.exists()) {
+        if (!Files.exists(RUTA_ARCHIVO)) {
             return sucursales;
         }
 
-        try (BufferedReader lector = new BufferedReader(new FileReader(archivo))) {
+        try (BufferedReader lector = abrirLector(RUTA_ARCHIVO)) {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
@@ -35,18 +31,15 @@ public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal>
                 Sucursal sucursal = new Sucursal(codigo, direccion, telefono);
                 sucursales.add(sucursal);
             }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("Error al cargar sucursales: " + e.getMessage());
+        } catch (IOException | RuntimeException e) {
+            throw errorCarga(RUTA_ARCHIVO, e);
         }
 
         return sucursales;
     }
 
     public void guardar(List<Sucursal> sucursales) {
-        File archivo = new File(RUTA_ARCHIVO);
-        archivo.getParentFile().mkdirs();
-
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo))) {
+        guardarAtomico(RUTA_ARCHIVO, escritor -> {
             for (Sucursal sucursal : sucursales) {
                 escritor.write(
                         sucursal.getCodigo() + ";"
@@ -54,8 +47,6 @@ public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal>
                         + sucursal.getTelefono());
                 escritor.newLine();
             }
-        } catch (IOException e) {
-            System.out.println("Error al guardar sucursales: " + e.getMessage());
-        }
+        });
     }
 }

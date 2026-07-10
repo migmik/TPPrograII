@@ -47,7 +47,6 @@ public class VistaVendedor extends VistaUsuario {
                     mostrarSucursales();
                     break;
                 case 0:
-                    controladorDatos.guardarTodo(agencia);
                     System.out.println("Sesion cerrada.");
                     break;
                 default:
@@ -201,7 +200,7 @@ public class VistaVendedor extends VistaUsuario {
                 email, telefonoFijo, telefonoCelular);
 
         if (turista != null) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Titular agregado con codigo: " + turista.getCodigo());
         } else {
             System.out.println("No se pudo agregar el titular.");
@@ -236,7 +235,7 @@ public class VistaVendedor extends VistaUsuario {
                 direccion, email, telefonoFijo, telefonoCelular);
 
         if (familiar != null) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Familiar agregado con codigo: " + familiar.getCodigo());
         } else {
             System.out.println("No se pudo agregar el familiar.");
@@ -302,7 +301,7 @@ public class VistaVendedor extends VistaUsuario {
                     controladorTuristas.modificarTelefonoCelular(usuarioActual, codigo, teclado.nextLine());
                     break;
                 case 0:
-                    controladorDatos.guardarTodo(agencia);
+                    guardarCambios();
                     System.out.println("Cliente actualizado.");
                     break;
                 default:
@@ -340,7 +339,7 @@ public class VistaVendedor extends VistaUsuario {
         }
 
         if (controladorTuristas.eliminar(usuarioActual, codigo)) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Cliente eliminado.");
         } else {
             System.out.println("No se pudo eliminar el cliente.");
@@ -467,7 +466,7 @@ public class VistaVendedor extends VistaUsuario {
             return;
         }
 
-        controladorDatos.guardarTodo(agencia);
+        guardarCambios();
         System.out.println("Reserva creada con codigo: " + reserva.getCodigo());
     }
 
@@ -481,7 +480,7 @@ public class VistaVendedor extends VistaUsuario {
         int codigo = leerEntero("Codigo reserva: ");
 
         if (controladorReservas.cancelarReserva(usuarioActual, codigo)) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Reserva cancelada.");
         } else {
             System.out.println("No existe una reserva con ese codigo.");
@@ -497,7 +496,7 @@ public class VistaVendedor extends VistaUsuario {
             System.out.println("Direccion: " + hotel.getDireccion());
             System.out.println("Ciudad: " + hotel.getCiudad());
             System.out.println("Telefono: " + hotel.getTelefono());
-            System.out.println("Plazas disponibles: " + hotel.getPlazasDisponibles());
+            System.out.println("Capacidad de plazas: " + hotel.getPlazasDisponibles());
             System.out.println("--------------------");
         }
     }
@@ -511,7 +510,10 @@ public class VistaVendedor extends VistaUsuario {
             System.out.println("Origen: " + vuelo.getOrigen());
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
-            System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Turista disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.TURISTA)
+                    + " de " + vuelo.getPlazasTurista());
+            System.out.println("Primera disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.PRIMERA)
+                    + " de " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

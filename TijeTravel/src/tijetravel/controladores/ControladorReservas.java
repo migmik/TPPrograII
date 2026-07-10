@@ -43,6 +43,69 @@ public class ControladorReservas {
         return fechaLlegada.isBefore(fechaPartida);
     }
 
+    public int contarReservasVuelo(int numeroVuelo, ClaseVuelo claseVuelo) {
+        int cantidad = 0;
+        for (Reserva reserva : agencia.getReservas()) {
+            if (reserva.getVuelo().getNumero() == numeroVuelo
+                    && reserva.getClaseVuelo() == claseVuelo) {
+                cantidad++;
+            }
+        }
+        return cantidad;
+    }
+
+    public int plazasDisponiblesVuelo(Vuelo vuelo, ClaseVuelo claseVuelo) {
+        if (vuelo == null || claseVuelo == null) return 0;
+        int capacidad = claseVuelo == ClaseVuelo.TURISTA
+                ? vuelo.getPlazasTurista() : vuelo.getPlazasPrimera();
+        return Math.max(0, capacidad - contarReservasVuelo(vuelo.getNumero(), claseVuelo));
+    }
+
+    public int contarReservasHotelSuperpuestas(Hotel hotel, LocalDate llegada, LocalDate partida) {
+        if (hotel == null || !fechasValidas(llegada, partida)) return 0;
+        int cantidad = 0;
+        for (Reserva reserva : agencia.getReservas()) {
+            if (reserva.getHotel().getCodigo() == hotel.getCodigo()
+                    && llegada.isBefore(reserva.getFechaPartida())
+                    && partida.isAfter(reserva.getFechaLlegada())) {
+                cantidad++;
+            }
+        }
+        return cantidad;
+    }
+
+    public int plazasDisponiblesHotel(Hotel hotel, LocalDate llegada, LocalDate partida) {
+        if (hotel == null) return 0;
+        return Math.max(0, hotel.getPlazasDisponibles()
+                - contarReservasHotelSuperpuestas(hotel, llegada, partida));
+    }
+
+    public int ocupacionMaximaHotel(int codigoHotel) {
+        Hotel hotel = agencia.buscarHotelPorCodigo(codigoHotel);
+        if (hotel == null) return 0;
+        int maxima = 0;
+        for (Reserva reserva : agencia.getReservas()) {
+            if (reserva.getHotel().getCodigo() == codigoHotel) {
+                maxima = Math.max(maxima, contarReservasHotelSuperpuestas(hotel,
+                        reserva.getFechaLlegada(), reserva.getFechaPartida()));
+            }
+        }
+        return maxima;
+    }
+
+    public boolean turistaYaTieneVuelo(int codigoTurista, int numeroVuelo) {
+        for (Reserva reserva : agencia.getReservas()) {
+            if (reserva.getTurista().getCodigo() == codigoTurista
+                    && reserva.getVuelo().getNumero() == numeroVuelo) return true;
+        }
+        return false;
+    }
+
+    private boolean vueloYHotelCompatibles(Vuelo vuelo, Hotel hotel, LocalDate fechaLlegada) {
+        return !fechaLlegada.isBefore(vuelo.getFechaYHora().toLocalDate())
+                && hotel.getCiudad().trim().equalsIgnoreCase(vuelo.getDestino().trim());
+    }
+
     public Reserva crearReserva(Usuario usuario, int codigoTurista, int codigoSucursal, int numeroVuelo, int codigoHotel,
             ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada, LocalDate fechaPartida) {
 
@@ -65,14 +128,16 @@ public class ControladorReservas {
             return null;
         }
 
-        if (!hotel.reservarPlaza()) {
+        if (turistaYaTieneVuelo(codigoTurista, numeroVuelo)) {
             return null;
         }
 
-        if (!vuelo.reservarPlaza(claseVuelo)) {
-            hotel.liberarPlaza();
+        if (!vueloYHotelCompatibles(vuelo, hotel, fechaLlegada)) {
             return null;
         }
+
+        if (plazasDisponiblesVuelo(vuelo, claseVuelo) <= 0
+                || plazasDisponiblesHotel(hotel, fechaLlegada, fechaPartida) <= 0) return null;
 
         Reserva reserva = new Reserva(
                 generarCodigoReserva(),
@@ -85,11 +150,7 @@ public class ControladorReservas {
                 fechaLlegada,
                 fechaPartida);
 
-        if (!agencia.agregarReserva(reserva)) {
-            hotel.liberarPlaza();
-            vuelo.liberarPlaza(claseVuelo);
-            return null;
-        }
+        if (!agencia.agregarReserva(reserva)) return null;
 
         return reserva;
     }
@@ -128,12 +189,6 @@ public class ControladorReservas {
             return false;
         }
 
-        if (!agencia.eliminarReserva(codigoReserva)) {
-            return false;
-        }
-
-        reserva.getHotel().liberarPlaza();
-        reserva.getVuelo().liberarPlaza(reserva.getClaseVuelo());
-        return true;
+        return agencia.eliminarReserva(codigoReserva);
     }
 }
