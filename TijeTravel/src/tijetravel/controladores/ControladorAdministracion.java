@@ -24,13 +24,13 @@ public class ControladorAdministracion {
     public boolean eliminarHotel(Usuario u,int c){return puede(u,Permiso.ADMINISTRAR_HOTELES)&&agencia.eliminarHotel(c);}
 
     public boolean agregarVuelo(Usuario u, Vuelo v){return puede(u,Permiso.ADMINISTRAR_VUELOS)&&valido(v)&&agencia.agregarVuelo(v);}
-    public boolean modificarVuelo(Usuario u,int n,LocalDateTime f,String o,String d,int total,int turista){
-        if(!puede(u,Permiso.ADMINISTRAR_VUELOS)||total<=0||turista<0||turista>total)return false;
-        Vuelo v=agencia.buscarVueloPorNumero(n);return v!=null && v.actualizarDatos(f,o,d,total,turista);
+    public boolean modificarVuelo(Usuario u,int n,LocalDateTime f,String o,String d,int total,int turista,int primera){
+        if(!puede(u,Permiso.ADMINISTRAR_VUELOS)||total<=0||turista<0||primera<0||turista+primera>total)return false;
+        Vuelo v=agencia.buscarVueloPorNumero(n);return v!=null && v.actualizarDatos(f,o,d,total,turista,primera);
     }
     public boolean eliminarVuelo(Usuario u,int n){return puede(u,Permiso.ADMINISTRAR_VUELOS)&&agencia.eliminarVuelo(n);}
 
     private boolean puede(Usuario u,Permiso p){return autorizacion.tienePermiso(u,p);}
     private boolean valido(Hotel h){return h!=null&&h.getPlazasDisponibles()>=0;}
-    private boolean valido(Vuelo v){return v!=null&&v.getTotalPlazas()>0&&v.getPlazasTurista()>=0&&v.getPlazasTurista()<=v.getTotalPlazas();}
+    private boolean valido(Vuelo v){return v!=null&&v.getTotalPlazas()>0&&v.getPlazasTurista()>=0&&v.getPlazasPrimera()>=0&&v.getPlazasTurista()+v.getPlazasPrimera()<=v.getTotalPlazas();}
 }

@@ -12,7 +12,7 @@ import java.util.List;
 
 import tijetravel.modelos.Vuelo;
 
-public class ArchivoVuelos {
+public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/vuelos.txt";
 
     public ArrayList<Vuelo> cargar() {
@@ -35,8 +35,12 @@ public class ArchivoVuelos {
                 String destino = partes[3];
                 int totalPlazas = Integer.parseInt(partes[4]);
                 int plazasTurista = Integer.parseInt(partes[5]);
+                int plazasPrimera = partes.length > 6 && !partes[6].isEmpty()
+                        ? Integer.parseInt(partes[6])
+                        : totalPlazas - plazasTurista;
 
-                Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista);
+                Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas,
+                        plazasTurista, plazasPrimera);
                 vuelos.add(vuelo);
             }
         } catch (IOException | NumberFormatException e) {
@@ -58,7 +62,8 @@ public class ArchivoVuelos {
                         + vuelo.getOrigen() + ";"
                         + vuelo.getDestino() + ";"
                         + vuelo.getTotalPlazas() + ";"
-                        + vuelo.getPlazasTurista());
+                        + vuelo.getPlazasTurista() + ";"
+                        + vuelo.getPlazasPrimera());
                 escritor.newLine();
             }
         } catch (IOException e) {

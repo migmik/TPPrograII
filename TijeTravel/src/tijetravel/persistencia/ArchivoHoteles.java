@@ -11,7 +11,7 @@ import java.util.List;
 
 import tijetravel.modelos.Hotel;
 
-public class ArchivoHoteles {
+public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/hoteles.txt";
 
     public ArrayList<Hotel> cargar() {

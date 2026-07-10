@@ -91,6 +91,7 @@ public class VistaPrincipal {
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
             System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Plazas primera: " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

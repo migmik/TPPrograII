@@ -65,6 +65,15 @@ public class ControladorReservas {
             return null;
         }
 
+        if (!hotel.reservarPlaza()) {
+            return null;
+        }
+
+        if (!vuelo.reservarPlaza(claseVuelo)) {
+            hotel.liberarPlaza();
+            return null;
+        }
+
         Reserva reserva = new Reserva(
                 generarCodigoReserva(),
                 turista,
@@ -77,6 +86,8 @@ public class ControladorReservas {
                 fechaPartida);
 
         if (!agencia.agregarReserva(reserva)) {
+            hotel.liberarPlaza();
+            vuelo.liberarPlaza(claseVuelo);
             return null;
         }
 
@@ -117,6 +128,12 @@ public class ControladorReservas {
             return false;
         }
 
-        return agencia.eliminarReserva(codigoReserva);
+        if (!agencia.eliminarReserva(codigoReserva)) {
+            return false;
+        }
+
+        reserva.getHotel().liberarPlaza();
+        reserva.getVuelo().liberarPlaza(reserva.getClaseVuelo());
+        return true;
     }
 }
