@@ -399,10 +399,12 @@ public class VistaAdministrador extends VistaUsuario {
             System.out.println("Origen: " + vuelo.getOrigen());
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
-            System.out.println("Turista disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.TURISTA)
-                    + " de " + vuelo.getPlazasTurista());
-            System.out.println("Primera disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.PRIMERA)
-                    + " de " + vuelo.getPlazasPrimera());
+            System.out.println(
+                    "Turista disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.TURISTA)
+                            + " de " + vuelo.getPlazasTurista());
+            System.out.println(
+                    "Primera disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.PRIMERA)
+                            + " de " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }
@@ -710,7 +712,8 @@ public class VistaAdministrador extends VistaUsuario {
         String telefono = teclado.nextLine();
         int plazas = leerEnteroNoNegativo("Plazas disponibles: ");
         if (controladorAdministracion.modificarHotel(usuarioActual, hotel.getCodigo(), nombre, direccion,
-                ciudad, telefono, plazas)) guardarYMostrar("Hotel actualizado.");
+                ciudad, telefono, plazas))
+            guardarYMostrar("Hotel actualizado.");
     }
 
     private void eliminarHotel() {
@@ -751,7 +754,8 @@ public class VistaAdministrador extends VistaUsuario {
         int turista = leerPlazasTurista(total);
         int primera = leerPlazasPrimera(total, turista);
         if (controladorAdministracion.modificarVuelo(usuarioActual, vuelo.getNumero(), fecha, origen,
-                destino, total, turista, primera)) guardarYMostrar("Vuelo actualizado.");
+                destino, total, turista, primera))
+            guardarYMostrar("Vuelo actualizado.");
     }
 
     private void eliminarVuelo() {
@@ -772,15 +776,22 @@ public class VistaAdministrador extends VistaUsuario {
         }
         int codigoTitular = leerCodigoTitularExistente();
         int codigo = agencia.generarCodigoTurista();
-        System.out.print("Nombre: "); String nombre = teclado.nextLine();
-        System.out.print("Apellido: "); String apellido = teclado.nextLine();
-        System.out.print("Direccion: "); String direccion = teclado.nextLine();
-        System.out.print("Email: "); String email = teclado.nextLine();
-        System.out.print("Telefono fijo: "); String fijo = teclado.nextLine();
-        System.out.print("Telefono celular: "); String celular = teclado.nextLine();
+        System.out.print("Nombre: ");
+        String nombre = teclado.nextLine();
+        System.out.print("Apellido: ");
+        String apellido = teclado.nextLine();
+        System.out.print("Direccion: ");
+        String direccion = teclado.nextLine();
+        System.out.print("Email: ");
+        String email = teclado.nextLine();
+        System.out.print("Telefono fijo: ");
+        String fijo = teclado.nextLine();
+        System.out.print("Telefono celular: ");
+        String celular = teclado.nextLine();
         Turista familiar = controladorTuristas.agregarFamiliar(usuarioActual, codigoTitular, nombre, apellido,
                 direccion, email, fijo, celular);
-        if (familiar != null) guardarYMostrar("Familiar agregado con codigo: " + familiar.getCodigo());
+        if (familiar != null)
+            guardarYMostrar("Familiar agregado con codigo: " + familiar.getCodigo());
     }
 
     private void modificarTurista() {
@@ -789,35 +800,50 @@ public class VistaAdministrador extends VistaUsuario {
             System.out.println("No existe un turista con ese codigo.");
             return;
         }
-        System.out.print("Nuevo nombre: "); String nombre = teclado.nextLine();
-        System.out.print("Nuevo apellido: "); String apellido = teclado.nextLine();
-        System.out.print("Nueva direccion: "); String direccion = teclado.nextLine();
-        System.out.print("Nuevo email: "); String email = teclado.nextLine();
-        System.out.print("Nuevo telefono fijo: "); String fijo = teclado.nextLine();
-        System.out.print("Nuevo telefono celular: "); String celular = teclado.nextLine();
+        System.out.print("Nuevo nombre: ");
+        String nombre = teclado.nextLine();
+        System.out.print("Nuevo apellido: ");
+        String apellido = teclado.nextLine();
+        System.out.print("Nueva direccion: ");
+        String direccion = teclado.nextLine();
+        System.out.print("Nuevo email: ");
+        String email = teclado.nextLine();
+        System.out.print("Nuevo telefono fijo: ");
+        String fijo = teclado.nextLine();
+        System.out.print("Nuevo telefono celular: ");
+        String celular = teclado.nextLine();
         if (controladorTuristas.modificar(usuarioActual, turista.getCodigo(), nombre, apellido, direccion,
-                email, fijo, celular)) guardarYMostrar("Turista actualizado.");
+                email, fijo, celular))
+            guardarYMostrar("Turista actualizado.");
     }
 
     private void eliminarTurista() {
         int codigo = leerEntero("Codigo turista: ");
-        if (agencia.turistaTieneReservas(codigo)) System.out.println("No se puede eliminar: tiene reservas.");
-        else if (agencia.titularTieneFamiliares(codigo)) System.out.println("No se puede eliminar: tiene familiares.");
-        else if (agencia.turistaTieneUsuario(codigo)) System.out.println("No se puede eliminar: tiene usuario.");
-        else if (controladorTuristas.eliminar(usuarioActual, codigo)) guardarYMostrar("Turista eliminado.");
-        else System.out.println("No existe un turista con ese codigo.");
+        if (agencia.turistaTieneReservas(codigo))
+            System.out.println("No se puede eliminar: tiene reservas.");
+        else if (agencia.titularTieneFamiliares(codigo))
+            System.out.println("No se puede eliminar: tiene familiares.");
+        else if (agencia.turistaTieneUsuario(codigo))
+            System.out.println("No se puede eliminar: tiene usuario.");
+        else if (controladorTuristas.eliminar(usuarioActual, codigo))
+            guardarYMostrar("Turista eliminado.");
+        else
+            System.out.println("No existe un turista con ese codigo.");
     }
 
     private void buscarReserva() {
         Reserva reserva = agencia.buscarReservaPorCodigo(leerEntero("Codigo reserva: "));
-        if (reserva == null) System.out.println("No existe una reserva con ese codigo.");
-        else mostrarReserva(reserva);
+        if (reserva == null)
+            System.out.println("No existe una reserva con ese codigo.");
+        else
+            mostrarReserva(reserva);
     }
 
     private void buscarUsuario() {
         System.out.print("Nombre de usuario: ");
         Usuario usuario = agencia.buscarUsuarioPorNombre(teclado.nextLine());
-        if (usuario == null) System.out.println("No existe ese usuario.");
+        if (usuario == null)
+            System.out.println("No existe ese usuario.");
         else {
             System.out.println("Usuario: " + usuario.getNombreUsuario());
             System.out.println("Rol: " + usuario.getRol());
@@ -848,24 +874,31 @@ public class VistaAdministrador extends VistaUsuario {
             return;
         }
         Integer codigoTurista = null;
-        if (nuevoRol == RolUsuario.CLIENTE) codigoTurista = leerCodigoTitularExistente();
+        if (nuevoRol == RolUsuario.CLIENTE)
+            codigoTurista = leerCodigoTitularExistente();
         if (controladorUsuarios.modificar(usuarioActual, usuario.getNombreUsuario(), nuevoNombre, contrasenia,
-                nuevoRol, codigoTurista)) guardarYMostrar("Usuario actualizado.");
+                nuevoRol, codigoTurista))
+            guardarYMostrar("Usuario actualizado.");
     }
 
     private void eliminarUsuario() {
         System.out.print("Nombre de usuario: ");
         String nombre = teclado.nextLine();
         Usuario usuario = agencia.buscarUsuarioPorNombre(nombre);
-        if (usuario == null) System.out.println("No existe ese usuario.");
-        else if (usuario == usuarioActual) System.out.println("No puede eliminar el usuario de la sesion actual.");
+        if (usuario == null)
+            System.out.println("No existe ese usuario.");
+        else if (usuario == usuarioActual)
+            System.out.println("No puede eliminar el usuario de la sesion actual.");
         else if (usuario.getRol() == RolUsuario.ADMINISTRADOR && agencia.contarAdministradores() <= 1)
             System.out.println("No se puede eliminar el ultimo administrador.");
-        else if (controladorUsuarios.eliminar(usuarioActual, nombre)) guardarYMostrar("Usuario eliminado.");
+        else if (controladorUsuarios.eliminar(usuarioActual, nombre))
+            guardarYMostrar("Usuario eliminado.");
     }
 
     private boolean hayTitulares() {
-        for (Turista turista : agencia.getTuristas()) if (turista.isEsTitular()) return true;
+        for (Turista turista : agencia.getTuristas())
+            if (turista.isEsTitular())
+                return true;
         return false;
     }
 
@@ -875,7 +908,8 @@ public class VistaAdministrador extends VistaUsuario {
         do {
             codigo = leerEntero("Codigo titular: ");
             titular = agencia.buscarTuristaPorCodigo(codigo);
-            if (titular == null || !titular.isEsTitular()) System.out.println("No existe un titular con ese codigo.");
+            if (titular == null || !titular.isEsTitular())
+                System.out.println("No existe un titular con ese codigo.");
         } while (titular == null || !titular.isEsTitular());
         return codigo;
     }
@@ -884,7 +918,8 @@ public class VistaAdministrador extends VistaUsuario {
         int valor;
         do {
             valor = leerEntero(mensaje);
-            if (valor <= 0) System.out.println("Debe ser mayor que cero.");
+            if (valor <= 0)
+                System.out.println("Debe ser mayor que cero.");
         } while (valor <= 0);
         return valor;
     }
@@ -893,7 +928,8 @@ public class VistaAdministrador extends VistaUsuario {
         int valor;
         do {
             valor = leerEntero(mensaje);
-            if (valor < 0) System.out.println("No puede ser negativo.");
+            if (valor < 0)
+                System.out.println("No puede ser negativo.");
         } while (valor < 0);
         return valor;
     }
@@ -902,7 +938,8 @@ public class VistaAdministrador extends VistaUsuario {
         int valor;
         do {
             valor = leerEnteroNoNegativo("Plazas turista: ");
-            if (valor > total) System.out.println("No puede superar las plazas totales.");
+            if (valor > total)
+                System.out.println("No puede superar las plazas totales.");
         } while (valor > total);
         return valor;
     }

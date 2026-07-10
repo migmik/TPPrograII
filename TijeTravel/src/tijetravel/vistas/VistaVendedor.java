@@ -510,10 +510,12 @@ public class VistaVendedor extends VistaUsuario {
             System.out.println("Origen: " + vuelo.getOrigen());
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
-            System.out.println("Turista disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.TURISTA)
-                    + " de " + vuelo.getPlazasTurista());
-            System.out.println("Primera disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.PRIMERA)
-                    + " de " + vuelo.getPlazasPrimera());
+            System.out.println(
+                    "Turista disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.TURISTA)
+                            + " de " + vuelo.getPlazasTurista());
+            System.out.println(
+                    "Primera disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.PRIMERA)
+                            + " de " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

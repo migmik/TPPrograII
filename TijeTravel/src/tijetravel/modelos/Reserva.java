@@ -12,7 +12,7 @@ public class Reserva {
     private TipoHospedaje tipoHospedaje;
     private LocalDate fechaLlegada;
     private LocalDate fechaPartida;
-    
+
     public Reserva(int codigo, Turista turista, Sucursal sucursal, Vuelo vuelo, Hotel hotel, ClaseVuelo claseVuelo,
             TipoHospedaje tipoHospedaje, LocalDate fechaLlegada, LocalDate fechaPartida) {
         this.codigo = codigo;
@@ -97,5 +97,5 @@ public class Reserva {
     private void setFechaPartida(LocalDate fechaPartida) {
         this.fechaPartida = fechaPartida;
     }
-    
+
 }

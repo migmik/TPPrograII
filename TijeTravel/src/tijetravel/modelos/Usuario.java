@@ -5,7 +5,7 @@ public class Usuario {
     private String contrasenia;
     private RolUsuario rol;
     private Integer codigoTurista;
-    
+
     public Usuario(String nombreUsuario, String contrasenia, RolUsuario rol) {
         this(nombreUsuario, contrasenia, rol, null);
     }
@@ -19,11 +19,16 @@ public class Usuario {
 
     public boolean actualizarDatos(String nombreUsuario, String contrasenia, RolUsuario rol,
             Integer codigoTurista) {
-        if (nombreUsuario == null || contrasenia == null || rol == null) return false;
-        if (rol == RolUsuario.CLIENTE && codigoTurista == null) return false;
-        if (rol != RolUsuario.CLIENTE && codigoTurista != null) return false;
-        this.nombreUsuario = nombreUsuario; this.contrasenia = contrasenia;
-        this.rol = rol; this.codigoTurista = codigoTurista;
+        if (nombreUsuario == null || contrasenia == null || rol == null)
+            return false;
+        if (rol == RolUsuario.CLIENTE && codigoTurista == null)
+            return false;
+        if (rol != RolUsuario.CLIENTE && codigoTurista != null)
+            return false;
+        this.nombreUsuario = nombreUsuario;
+        this.contrasenia = contrasenia;
+        this.rol = rol;
+        this.codigoTurista = codigoTurista;
         return true;
     }
 
@@ -58,5 +63,5 @@ public class Usuario {
     private void setCodigoTurista(Integer codigoTurista) {
         this.codigoTurista = codigoTurista;
     }
-    
+
 }
