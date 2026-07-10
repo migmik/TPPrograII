@@ -51,12 +51,12 @@ public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
             for (Vuelo vuelo : vuelos) {
                 escritor.write(
                         vuelo.getNumero() + ";"
-                        + vuelo.getFechaYHora() + ";"
-                        + vuelo.getOrigen() + ";"
-                        + vuelo.getDestino() + ";"
-                        + vuelo.getTotalPlazas() + ";"
-                        + vuelo.getPlazasTurista() + ";"
-                        + vuelo.getPlazasPrimera());
+                                + vuelo.getFechaYHora() + ";"
+                                + vuelo.getOrigen() + ";"
+                                + vuelo.getDestino() + ";"
+                                + vuelo.getTotalPlazas() + ";"
+                                + vuelo.getPlazasTurista() + ";"
+                                + vuelo.getPlazasPrimera());
                 escritor.newLine();
             }
         });
