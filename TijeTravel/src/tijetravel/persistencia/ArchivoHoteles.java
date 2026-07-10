@@ -46,11 +46,11 @@ public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
             for (Hotel hotel : hoteles) {
                 escritor.write(
                         hotel.getCodigo() + ";"
-                        + hotel.getNombre() + ";"
-                        + hotel.getDireccion() + ";"
-                        + hotel.getCiudad() + ";"
-                        + hotel.getTelefono() + ";"
-                        + hotel.getPlazasDisponibles());
+                                + hotel.getNombre() + ";"
+                                + hotel.getDireccion() + ";"
+                                + hotel.getCiudad() + ";"
+                                + hotel.getTelefono() + ";"
+                                + hotel.getPlazasDisponibles());
                 escritor.newLine();
             }
         });

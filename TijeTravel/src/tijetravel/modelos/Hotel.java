@@ -21,8 +21,11 @@ public class Hotel {
             int plazasDisponibles) {
         if (nombre == null || direccion == null || ciudad == null || telefono == null || plazasDisponibles < 0)
             return false;
-        this.nombre = nombre; this.direccion = direccion; this.ciudad = ciudad;
-        this.telefono = telefono; this.plazasDisponibles = plazasDisponibles;
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.ciudad = ciudad;
+        this.telefono = telefono;
+        this.plazasDisponibles = plazasDisponibles;
         return true;
     }
 

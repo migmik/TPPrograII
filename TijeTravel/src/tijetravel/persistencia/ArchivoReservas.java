@@ -90,14 +90,14 @@ public class ArchivoReservas extends ArchivoTexto {
             for (Reserva reserva : reservas) {
                 escritor.write(
                         reserva.getCodigo() + ";"
-                        + reserva.getTurista().getCodigo() + ";"
-                        + reserva.getSucursal().getCodigo() + ";"
-                        + reserva.getVuelo().getNumero() + ";"
-                        + reserva.getHotel().getCodigo() + ";"
-                        + reserva.getClaseVuelo() + ";"
-                        + reserva.getTipoHospedaje() + ";"
-                        + reserva.getFechaLlegada() + ";"
-                        + reserva.getFechaPartida());
+                                + reserva.getTurista().getCodigo() + ";"
+                                + reserva.getSucursal().getCodigo() + ";"
+                                + reserva.getVuelo().getNumero() + ";"
+                                + reserva.getHotel().getCodigo() + ";"
+                                + reserva.getClaseVuelo() + ";"
+                                + reserva.getTipoHospedaje() + ";"
+                                + reserva.getFechaLlegada() + ";"
+                                + reserva.getFechaPartida());
                 escritor.newLine();
             }
         });

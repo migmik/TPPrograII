@@ -75,14 +75,14 @@ public class ArchivoTuristas extends ArchivoTexto implements Archivo<Turista> {
             for (Turista turista : turistas) {
                 escritor.write(
                         turista.getCodigo() + ";"
-                        + turista.getNombre() + ";"
-                        + turista.getApellido() + ";"
-                        + turista.getDireccion() + ";"
-                        + turista.getEmail() + ";"
-                        + turista.getTelefonoFijo() + ";"
-                        + turista.getTelefonoCelular() + ";"
-                        + turista.isEsTitular() + ";"
-                        + (turista.getCodigoTitular() == null ? "" : turista.getCodigoTitular()));
+                                + turista.getNombre() + ";"
+                                + turista.getApellido() + ";"
+                                + turista.getDireccion() + ";"
+                                + turista.getEmail() + ";"
+                                + turista.getTelefonoFijo() + ";"
+                                + turista.getTelefonoCelular() + ";"
+                                + turista.isEsTitular() + ";"
+                                + (turista.getCodigoTitular() == null ? "" : turista.getCodigoTitular()));
                 escritor.newLine();
             }
         });

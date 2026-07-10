@@ -43,8 +43,8 @@ public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal>
             for (Sucursal sucursal : sucursales) {
                 escritor.write(
                         sucursal.getCodigo() + ";"
-                        + sucursal.getDireccion() + ";"
-                        + sucursal.getTelefono());
+                                + sucursal.getDireccion() + ";"
+                                + sucursal.getTelefono());
                 escritor.newLine();
             }
         });
