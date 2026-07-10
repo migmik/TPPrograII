@@ -15,7 +15,6 @@ import tijetravel.persistencia.ArchivoUsuarios;
 import tijetravel.persistencia.ArchivoVuelos;
 import tijetravel.persistencia.PersistenciaException;
 
-//encapsula la carga y guardado de la info que debe persistir
 public class ControladorDatos {
     private ArchivoSucursales archivoSucursales;
     private ArchivoHoteles archivoHoteles;
@@ -24,7 +23,6 @@ public class ControladorDatos {
     private ArchivoUsuarios archivoUsuarios;
     private ArchivoReservas archivoReservas;
 
-    // constructor: cada clase archivo sabe leer y escribir su propio txt
     public ControladorDatos() {
         this.archivoSucursales = new ArchivoSucursales();
         this.archivoHoteles = new ArchivoHoteles();
@@ -34,8 +32,6 @@ public class ControladorDatos {
         this.archivoReservas = new ArchivoReservas();
     }
 
-    // carga todo desde archivos y arma la agencia
-    // el orden es importante
     public Agencia cargarTodo() {
         Agencia agencia = new Agencia();
         for (Sucursal sucursal : archivoSucursales.cargar()) {
@@ -57,7 +53,6 @@ public class ControladorDatos {
         for (Usuario usuario : archivoUsuarios.cargar()) {
             agencia.agregarUsuario(usuario);
         }
-        // esto siempre ultimo porque para poder cargar lo anterir ya debe estar
         for (Reserva reserva : archivoReservas.cargar(agencia)) {
             agencia.agregarReserva(reserva);
         }
@@ -65,7 +60,6 @@ public class ControladorDatos {
         return agencia;
     }
 
-    // guarda el estado completo de la agencia en archivo
     public void guardarTodo(Agencia agencia) {
         if (agencia == null) {
             throw new PersistenciaException("No se puede guardar una agencia nula");

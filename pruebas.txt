@@ -1,0 +1,14 @@
+Pruebas manuales sugeridas
+
+1. Iniciar el sistema y salir con opcion 0.
+2. Entrar como admin/admin y revisar que aparezca el menu de administrador.
+3. Entrar como vendedor/1234 y revisar que aparezca el menu de vendedor.
+4. Entrar como juan/juan y revisar que aparezca el menu de cliente.
+5. Como administrador, listar sucursales, hoteles, vuelos, clientes, reservas y usuarios.
+6. Como vendedor, agregar un titular y elegir una sucursal de contratacion.
+7. Crear una reserva con vuelo y hotel del mismo destino.
+8. Intentar crear una reserva con hotel de otra ciudad y confirmar que no la acepte.
+9. Intentar usar una fecha de llegada distinta a la fecha del vuelo y confirmar que no la acepte.
+10. Modificar una reserva existente y verificar que se guarde.
+11. Cancelar una reserva y verificar que desaparezca de la lista.
+12. Cerrar el programa, volver a abrirlo y revisar que los cambios sigan en los archivos.

@@ -102,6 +102,29 @@ public class Agencia {
         return true;
     }
 
+    public boolean reemplazarUsuario(String nombreActual, Usuario usuarioNuevo) {
+        if (usuarioNuevo == null) {
+            return false;
+        }
+
+        for (int i = 0; i < usuarios.size(); i++) {
+            Usuario usuario = usuarios.get(i);
+
+            if (usuario.getNombreUsuario().equals(nombreActual)) {
+                Usuario existente = buscarUsuarioPorNombre(usuarioNuevo.getNombreUsuario());
+
+                if (existente != null && existente != usuario) {
+                    return false;
+                }
+
+                usuarios.set(i, usuarioNuevo);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public boolean eliminarSucursalPorCodigo(int codigo) {
         Sucursal sucursal = buscarSucursalPorCodigo(codigo);
 
@@ -132,7 +155,6 @@ public class Agencia {
         return vuelos.remove(vuelo);
     }
 
-    // BUSQUEDAS
     public Turista buscarTuristaPorCodigo(int codigo) {
         for (Turista turista : turistas) {
             if (turista.getCodigo() == codigo) {

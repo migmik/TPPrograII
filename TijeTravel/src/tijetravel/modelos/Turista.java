@@ -10,14 +10,15 @@ public class Turista {
     private String telefonoCelular;
     private boolean esTitular;
     private Integer codigoTitular;
+    private Integer codigoSucursal;
 
     public Turista(int codigo, String nombre, String apellido, String direccion, String email, String telefonoFijo,
             String telefonoCelular) {
-        this(codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, true, null);
+        this(codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, true, null, null);
     }
 
     public boolean actualizarDatos(String nombre, String apellido, String direccion, String email,
-            String telefonoFijo, String telefonoCelular) {
+            String telefonoFijo, String telefonoCelular, Integer codigoSucursal) {
         if (nombre == null || apellido == null || direccion == null || email == null
                 || telefonoFijo == null || telefonoCelular == null)
             return false;
@@ -27,11 +28,22 @@ public class Turista {
         this.email = email;
         this.telefonoFijo = telefonoFijo;
         this.telefonoCelular = telefonoCelular;
+        this.codigoSucursal = codigoSucursal;
         return true;
+    }
+
+    public boolean actualizarDatos(String nombre, String apellido, String direccion, String email,
+            String telefonoFijo, String telefonoCelular) {
+        return actualizarDatos(nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, codigoSucursal);
     }
 
     public Turista(int codigo, String nombre, String apellido, String direccion, String email, String telefonoFijo,
             String telefonoCelular, boolean esTitular, Integer codigoTitular) {
+        this(codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, esTitular, codigoTitular, null);
+    }
+
+    public Turista(int codigo, String nombre, String apellido, String direccion, String email, String telefonoFijo,
+            String telefonoCelular, boolean esTitular, Integer codigoTitular, Integer codigoSucursal) {
         this.codigo = codigo;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -41,6 +53,7 @@ public class Turista {
         this.telefonoCelular = telefonoCelular;
         this.esTitular = esTitular;
         this.codigoTitular = codigoTitular;
+        this.codigoSucursal = codigoSucursal;
     }
 
     public int getCodigo() {
@@ -113,5 +126,13 @@ public class Turista {
 
     private void setCodigoTitular(Integer codigoTitular) {
         this.codigoTitular = codigoTitular;
+    }
+
+    public Integer getCodigoSucursal() {
+        return codigoSucursal;
+    }
+
+    private void setCodigoSucursal(Integer codigoSucursal) {
+        this.codigoSucursal = codigoSucursal;
     }
 }
