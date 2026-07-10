@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public class Turista {
     private int codigo;
@@ -14,6 +14,15 @@ public class Turista {
     public Turista(int codigo, String nombre, String apellido, String direccion, String email, String telefonoFijo,
             String telefonoCelular) {
         this(codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, true, null);
+    }
+
+    public boolean actualizarDatos(String nombre, String apellido, String direccion, String email,
+            String telefonoFijo, String telefonoCelular) {
+        if (nombre == null || apellido == null || direccion == null || email == null
+                || telefonoFijo == null || telefonoCelular == null) return false;
+        this.nombre = nombre; this.apellido = apellido; this.direccion = direccion; this.email = email;
+        this.telefonoFijo = telefonoFijo; this.telefonoCelular = telefonoCelular;
+        return true;
     }
 
     public Turista(int codigo, String nombre, String apellido, String direccion, String email, String telefonoFijo,
@@ -33,7 +42,7 @@ public class Turista {
         return codigo;
     }
 
-    public void setCodigo(int codigo) {
+    private void setCodigo(int codigo) {
         this.codigo = codigo;
     }
 
@@ -41,7 +50,7 @@ public class Turista {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    private void setNombre(String nombre) {
         this.nombre = nombre;
     }
 
@@ -49,7 +58,7 @@ public class Turista {
         return apellido;
     }
 
-    public void setApellido(String apellido) {
+    private void setApellido(String apellido) {
         this.apellido = apellido;
     }
 
@@ -57,7 +66,7 @@ public class Turista {
         return direccion;
     }
 
-    public void setDireccion(String direccion) {
+    private void setDireccion(String direccion) {
         this.direccion = direccion;
     }
 
@@ -65,7 +74,7 @@ public class Turista {
         return email;
     }
 
-    public void setEmail(String email) {
+    private void setEmail(String email) {
         this.email = email;
     }
 
@@ -73,7 +82,7 @@ public class Turista {
         return telefonoFijo;
     }
 
-    public void setTelefonoFijo(String telefonoFijo) {
+    private void setTelefonoFijo(String telefonoFijo) {
         this.telefonoFijo = telefonoFijo;
     }
 
@@ -81,7 +90,7 @@ public class Turista {
         return telefonoCelular;
     }
 
-    public void setTelefonoCelular(String telefonoCelular) {
+    private void setTelefonoCelular(String telefonoCelular) {
         this.telefonoCelular = telefonoCelular;
     }
 
@@ -89,7 +98,7 @@ public class Turista {
         return esTitular;
     }
 
-    public void setEsTitular(boolean esTitular) {
+    private void setEsTitular(boolean esTitular) {
         this.esTitular = esTitular;
     }
 
@@ -97,7 +106,7 @@ public class Turista {
         return codigoTitular;
     }
 
-    public void setCodigoTitular(Integer codigoTitular) {
+    private void setCodigoTitular(Integer codigoTitular) {
         this.codigoTitular = codigoTitular;
     }
 }

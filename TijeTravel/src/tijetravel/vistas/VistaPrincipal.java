@@ -3,10 +3,10 @@ package tijetravel.vistas;
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
 import tijetravel.controladores.ControladorLogin;
-import tijetravel.models.Agencia;
-import tijetravel.models.Hotel;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 
 public class VistaPrincipal {
     private Agencia agencia;
@@ -104,35 +104,24 @@ public class VistaPrincipal {
             return;
         }
 
+        VistaUsuario vistaUsuario;
+
         switch (usuario.getRol()) {
             case CLIENTE:
-                mostrarMenuCliente(usuario);
+                vistaUsuario = new VistaCliente(agencia, controladorDatos, teclado);
                 break;
             case VENDEDOR:
-                mostrarMenuVendedor(usuario);
+                vistaUsuario = new VistaVendedor(agencia, controladorDatos, teclado);
                 break;
             case ADMINISTRADOR:
-                mostrarMenuAdministrador(usuario);
+                vistaUsuario = new VistaAdministrador(agencia, controladorDatos, teclado);
                 break;
             default:
                 System.out.println("Rol no reconocido.");
-                break;
+                return;
         }
-    }
 
-    private void mostrarMenuCliente(Usuario usuario) {
-        VistaCliente vistaCliente = new VistaCliente(agencia, controladorDatos, teclado);
-        vistaCliente.mostrar(usuario);
-    }
-
-    private void mostrarMenuVendedor(Usuario usuario) {
-        VistaVendedor vistaVendedor = new VistaVendedor(agencia, controladorDatos, teclado);
-        vistaVendedor.mostrar(usuario);
-    }
-
-    private void mostrarMenuAdministrador(Usuario usuario) {
-        VistaAdministrador vistaAdministrador = new VistaAdministrador(agencia, controladorDatos, teclado);
-        vistaAdministrador.mostrar(usuario);
+        vistaUsuario.mostrar(usuario);
     }
 
     private int leerEntero(String mensaje) {

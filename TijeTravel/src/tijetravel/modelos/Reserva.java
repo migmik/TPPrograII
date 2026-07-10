@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 import java.time.LocalDate;
 
@@ -30,7 +30,7 @@ public class Reserva {
         return codigo;
     }
 
-    public void setCodigo(int codigo) {
+    private void setCodigo(int codigo) {
         this.codigo = codigo;
     }
 
@@ -38,7 +38,7 @@ public class Reserva {
         return turista;
     }
 
-    public void setTurista(Turista turista) {
+    private void setTurista(Turista turista) {
         this.turista = turista;
     }
 
@@ -46,7 +46,7 @@ public class Reserva {
         return sucursal;
     }
 
-    public void setSucursal(Sucursal sucursal) {
+    private void setSucursal(Sucursal sucursal) {
         this.sucursal = sucursal;
     }
 
@@ -54,7 +54,7 @@ public class Reserva {
         return vuelo;
     }
 
-    public void setVuelo(Vuelo vuelo) {
+    private void setVuelo(Vuelo vuelo) {
         this.vuelo = vuelo;
     }
 
@@ -62,7 +62,7 @@ public class Reserva {
         return hotel;
     }
 
-    public void setHotel(Hotel hotel) {
+    private void setHotel(Hotel hotel) {
         this.hotel = hotel;
     }
 
@@ -70,7 +70,7 @@ public class Reserva {
         return claseVuelo;
     }
 
-    public void setClaseVuelo(ClaseVuelo claseVuelo) {
+    private void setClaseVuelo(ClaseVuelo claseVuelo) {
         this.claseVuelo = claseVuelo;
     }
 
@@ -78,7 +78,7 @@ public class Reserva {
         return tipoHospedaje;
     }
 
-    public void setTipoHospedaje(TipoHospedaje tipoHospedaje) {
+    private void setTipoHospedaje(TipoHospedaje tipoHospedaje) {
         this.tipoHospedaje = tipoHospedaje;
     }
 
@@ -86,7 +86,7 @@ public class Reserva {
         return fechaLlegada;
     }
 
-    public void setFechaLlegada(LocalDate fechaLlegada) {
+    private void setFechaLlegada(LocalDate fechaLlegada) {
         this.fechaLlegada = fechaLlegada;
     }
 
@@ -94,7 +94,7 @@ public class Reserva {
         return fechaPartida;
     }
 
-    public void setFechaPartida(LocalDate fechaPartida) {
+    private void setFechaPartida(LocalDate fechaPartida) {
         this.fechaPartida = fechaPartida;
     }
     

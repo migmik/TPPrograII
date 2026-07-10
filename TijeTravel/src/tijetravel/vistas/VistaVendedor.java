@@ -4,31 +4,26 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
-import tijetravel.controladores.ControladorReservas;
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 
-public class VistaVendedor {
-    private Agencia agencia;
-    private ControladorDatos controladorDatos;
-    private ControladorReservas controladorReservas;
-    private Scanner teclado;
+public class VistaVendedor extends VistaUsuario {
+    private Usuario usuarioActual;
 
     public VistaVendedor(Agencia agencia, ControladorDatos controladorDatos, Scanner teclado) {
-        this.agencia = agencia;
-        this.controladorDatos = controladorDatos;
-        this.controladorReservas = new ControladorReservas(agencia);
-        this.teclado = teclado;
+        super(agencia, controladorDatos, teclado);
     }
 
+    @Override
     public void mostrar(Usuario usuario) {
+        this.usuarioActual = usuario;
         int opcion;
 
         do {
@@ -37,22 +32,19 @@ public class VistaVendedor {
 
             switch (opcion) {
                 case 1:
-                    mostrarTuristas();
+                    administrarClientes();
                     break;
                 case 2:
-                    agregarTurista();
+                    administrarReservas();
                     break;
                 case 3:
-                    buscarTurista();
+                    mostrarHoteles();
                     break;
                 case 4:
-                    mostrarReservas();
+                    mostrarVuelos();
                     break;
                 case 5:
-                    crearReservaParaTurista();
-                    break;
-                case 6:
-                    cancelarReserva();
+                    mostrarSucursales();
                     break;
                 case 0:
                     controladorDatos.guardarTodo(agencia);
@@ -69,13 +61,92 @@ public class VistaVendedor {
 
     private void mostrarMenu() {
         System.out.println("===== MENU VENDEDOR =====");
-        System.out.println("1. Ver turistas");
-        System.out.println("2. Agregar turista");
-        System.out.println("3. Buscar turista");
-        System.out.println("4. Ver reservas");
-        System.out.println("5. Crear reserva para turista");
-        System.out.println("6. Cancelar reserva");
+        System.out.println("1. Administrar clientes");
+        System.out.println("2. Administrar reservas");
+        System.out.println("3. Consultar hoteles");
+        System.out.println("4. Consultar vuelos");
+        System.out.println("5. Consultar sucursales");
         System.out.println("0. Cerrar sesion");
+    }
+
+    private void administrarClientes() {
+        int opcion;
+
+        do {
+            System.out.println("===== ADMINISTRAR CLIENTES =====");
+            System.out.println("1. Listar clientes");
+            System.out.println("2. Buscar cliente");
+            System.out.println("3. Agregar titular");
+            System.out.println("4. Agregar familiar");
+            System.out.println("5. Modificar cliente");
+            System.out.println("6. Eliminar cliente");
+            System.out.println("0. Volver");
+            opcion = leerEntero("Seleccione una opcion: ");
+
+            switch (opcion) {
+                case 1:
+                    mostrarTuristas();
+                    break;
+                case 2:
+                    buscarTurista();
+                    break;
+                case 3:
+                    agregarTitular();
+                    break;
+                case 4:
+                    agregarFamiliar();
+                    break;
+                case 5:
+                    modificarTurista();
+                    break;
+                case 6:
+                    eliminarTurista();
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opcion invalida.");
+                    break;
+            }
+
+            System.out.println();
+        } while (opcion != 0);
+    }
+
+    private void administrarReservas() {
+        int opcion;
+
+        do {
+            System.out.println("===== ADMINISTRAR RESERVAS =====");
+            System.out.println("1. Listar reservas");
+            System.out.println("2. Buscar reserva");
+            System.out.println("3. Crear reserva");
+            System.out.println("4. Cancelar reserva");
+            System.out.println("0. Volver");
+            opcion = leerEntero("Seleccione una opcion: ");
+
+            switch (opcion) {
+                case 1:
+                    mostrarReservas();
+                    break;
+                case 2:
+                    buscarReserva();
+                    break;
+                case 3:
+                    crearReservaParaTurista();
+                    break;
+                case 4:
+                    cancelarReserva();
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opcion invalida.");
+                    break;
+            }
+
+            System.out.println();
+        } while (opcion != 0);
     }
 
     private void mostrarTuristas() {
@@ -103,8 +174,8 @@ public class VistaVendedor {
         System.out.println("--------------------");
     }
 
-    private void agregarTurista() {
-        System.out.println("===== AGREGAR TURISTA =====");
+    private void agregarTitular() {
+        System.out.println("===== AGREGAR TITULAR =====");
 
         int codigo = agencia.generarCodigoTurista();
 
@@ -126,22 +197,153 @@ public class VistaVendedor {
         System.out.print("Telefono celular: ");
         String telefonoCelular = teclado.nextLine();
 
-        Turista turista = new Turista(
-                codigo,
-                nombre,
-                apellido,
-                direccion,
-                email,
-                telefonoFijo,
-                telefonoCelular,
-                true,
-                null);
+        Turista turista = controladorTuristas.agregarTitular(usuarioActual, nombre, apellido, direccion,
+                email, telefonoFijo, telefonoCelular);
 
-        if (agencia.agregarTurista(turista)) {
+        if (turista != null) {
             controladorDatos.guardarTodo(agencia);
-            System.out.println("Turista agregado con codigo: " + codigo);
+            System.out.println("Titular agregado con codigo: " + turista.getCodigo());
         } else {
-            System.out.println("No se pudo agregar el turista.");
+            System.out.println("No se pudo agregar el titular.");
+        }
+    }
+
+    private void agregarFamiliar() {
+        if (!hayTitulares()) {
+            System.out.println("No hay titulares cargados.");
+            return;
+        }
+
+        System.out.println("===== AGREGAR FAMILIAR =====");
+        mostrarTitulares();
+        int codigoTitular = leerCodigoTitularExistente();
+        int codigo = agencia.generarCodigoTurista();
+
+        System.out.print("Nombre: ");
+        String nombre = teclado.nextLine();
+        System.out.print("Apellido: ");
+        String apellido = teclado.nextLine();
+        System.out.print("Direccion: ");
+        String direccion = teclado.nextLine();
+        System.out.print("Email: ");
+        String email = teclado.nextLine();
+        System.out.print("Telefono fijo: ");
+        String telefonoFijo = teclado.nextLine();
+        System.out.print("Telefono celular: ");
+        String telefonoCelular = teclado.nextLine();
+
+        Turista familiar = controladorTuristas.agregarFamiliar(usuarioActual, codigoTitular, nombre, apellido,
+                direccion, email, telefonoFijo, telefonoCelular);
+
+        if (familiar != null) {
+            controladorDatos.guardarTodo(agencia);
+            System.out.println("Familiar agregado con codigo: " + familiar.getCodigo());
+        } else {
+            System.out.println("No se pudo agregar el familiar.");
+        }
+    }
+
+    private boolean hayTitulares() {
+        for (Turista turista : agencia.getTuristas()) {
+            if (turista.isEsTitular()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void modificarTurista() {
+        if (agencia.getTuristas().isEmpty()) {
+            System.out.println("No hay clientes cargados.");
+            return;
+        }
+
+        mostrarTuristas();
+        int codigo = leerCodigoTuristaExistente();
+        Turista turista = agencia.buscarTuristaPorCodigo(codigo);
+        int opcion;
+
+        do {
+            System.out.println("===== MODIFICAR CLIENTE =====");
+            mostrarTurista(turista);
+            System.out.println("1. Nombre");
+            System.out.println("2. Apellido");
+            System.out.println("3. Direccion");
+            System.out.println("4. Email");
+            System.out.println("5. Telefono fijo");
+            System.out.println("6. Telefono celular");
+            System.out.println("0. Terminar");
+            opcion = leerEntero("Seleccione un campo: ");
+
+            switch (opcion) {
+                case 1:
+                    System.out.print("Nuevo nombre: ");
+                    controladorTuristas.modificarNombre(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 2:
+                    System.out.print("Nuevo apellido: ");
+                    controladorTuristas.modificarApellido(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 3:
+                    System.out.print("Nueva direccion: ");
+                    controladorTuristas.modificarDireccion(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 4:
+                    System.out.print("Nuevo email: ");
+                    controladorTuristas.modificarEmail(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 5:
+                    System.out.print("Nuevo telefono fijo: ");
+                    controladorTuristas.modificarTelefonoFijo(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 6:
+                    System.out.print("Nuevo telefono celular: ");
+                    controladorTuristas.modificarTelefonoCelular(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 0:
+                    controladorDatos.guardarTodo(agencia);
+                    System.out.println("Cliente actualizado.");
+                    break;
+                default:
+                    System.out.println("Opcion invalida.");
+                    break;
+            }
+        } while (opcion != 0);
+    }
+
+    private void eliminarTurista() {
+        if (agencia.getTuristas().isEmpty()) {
+            System.out.println("No hay clientes cargados.");
+            return;
+        }
+
+        mostrarTuristas();
+        int codigo = leerEntero("Codigo del cliente a eliminar: ");
+        Turista turista = agencia.buscarTuristaPorCodigo(codigo);
+
+        if (turista == null) {
+            System.out.println("No existe un cliente con ese codigo.");
+            return;
+        }
+        if (agencia.turistaTieneReservas(codigo)) {
+            System.out.println("No se puede eliminar: el cliente tiene reservas.");
+            return;
+        }
+        if (agencia.titularTieneFamiliares(codigo)) {
+            System.out.println("No se puede eliminar: el titular tiene familiares asociados.");
+            return;
+        }
+        if (agencia.turistaTieneUsuario(codigo)) {
+            System.out.println("No se puede eliminar: el cliente tiene un usuario asociado.");
+            return;
+        }
+
+        if (controladorTuristas.eliminar(usuarioActual, codigo)) {
+            controladorDatos.guardarTodo(agencia);
+            System.out.println("Cliente eliminado.");
+        } else {
+            System.out.println("No se pudo eliminar el cliente.");
         }
     }
 
@@ -157,6 +359,34 @@ public class VistaVendedor {
         mostrarTurista(turista);
     }
 
+    private void mostrarTitulares() {
+        System.out.println("===== TITULARES =====");
+
+        for (Turista turista : agencia.getTuristas()) {
+            if (turista.isEsTitular()) {
+                System.out.println("Codigo: " + turista.getCodigo());
+                System.out.println("Nombre: " + turista.getNombre() + " " + turista.getApellido());
+                System.out.println("--------------------");
+            }
+        }
+    }
+
+    private int leerCodigoTitularExistente() {
+        int codigo;
+        Turista titular;
+
+        do {
+            codigo = leerEntero("Codigo titular: ");
+            titular = agencia.buscarTuristaPorCodigo(codigo);
+
+            if (titular == null || !titular.isEsTitular()) {
+                System.out.println("No existe un titular con ese codigo.");
+            }
+        } while (titular == null || !titular.isEsTitular());
+
+        return codigo;
+    }
+
     private void mostrarReservas() {
         if (agencia.getReservas().isEmpty()) {
             System.out.println("No hay reservas cargadas.");
@@ -168,6 +398,18 @@ public class VistaVendedor {
         for (Reserva reserva : agencia.getReservas()) {
             mostrarReserva(reserva);
         }
+    }
+
+    private void buscarReserva() {
+        int codigo = leerEntero("Codigo reserva: ");
+        Reserva reserva = agencia.buscarReservaPorCodigo(codigo);
+
+        if (reserva == null) {
+            System.out.println("No existe una reserva con ese codigo.");
+            return;
+        }
+
+        mostrarReserva(reserva);
     }
 
     private void mostrarReserva(Reserva reserva) {
@@ -210,6 +452,7 @@ public class VistaVendedor {
         LocalDate fechaPartida = leerFechaPartidaValida(fechaLlegada);
 
         Reserva reserva = controladorReservas.crearReserva(
+                usuarioActual,
                 codigoTurista,
                 codigoSucursal,
                 numeroVuelo,
@@ -237,7 +480,7 @@ public class VistaVendedor {
         mostrarReservas();
         int codigo = leerEntero("Codigo reserva: ");
 
-        if (controladorReservas.cancelarReserva(codigo)) {
+        if (controladorReservas.cancelarReserva(usuarioActual, codigo)) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Reserva cancelada.");
         } else {
@@ -412,21 +655,4 @@ public class VistaVendedor {
         return fechaPartida;
     }
 
-    private int leerEntero(String mensaje) {
-        int numero = -1;
-        boolean valido = false;
-
-        while (!valido) {
-            System.out.print(mensaje);
-
-            try {
-                numero = Integer.parseInt(teclado.nextLine());
-                valido = true;
-            } catch (NumberFormatException e) {
-                System.out.println("Debe ingresar un numero.");
-            }
-        }
-
-        return numero;
-    }
 }

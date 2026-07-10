@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public class Sucursal {
     private int codigo;
@@ -11,11 +11,18 @@ public class Sucursal {
         this.telefono = telefono;
     }
 
+    public boolean actualizarDatos(String direccion, String telefono) {
+        if (direccion == null || telefono == null) return false;
+        this.direccion = direccion;
+        this.telefono = telefono;
+        return true;
+    }
+
     public int getCodigo() {
         return codigo;
     }
 
-    public void setCodigo(int codigo) {
+    private void setCodigo(int codigo) {
         this.codigo = codigo;
     }
 
@@ -23,7 +30,7 @@ public class Sucursal {
         return direccion;
     }
 
-    public void setDireccion(String direccion) {
+    private void setDireccion(String direccion) {
         this.direccion = direccion;
     }
 
@@ -31,7 +38,7 @@ public class Sucursal {
         return telefono;
     }
 
-    public void setTelefono(String telefono) {
+    private void setTelefono(String telefono) {
         this.telefono = telefono;
     }
 

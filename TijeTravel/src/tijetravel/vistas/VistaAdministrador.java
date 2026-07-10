@@ -5,32 +5,27 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import tijetravel.controladores.ControladorDatos;
-import tijetravel.controladores.ControladorReservas;
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.RolUsuario;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Usuario;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.RolUsuario;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Usuario;
+import tijetravel.modelos.Vuelo;
 
-public class VistaAdministrador {
-    private Agencia agencia;
-    private ControladorDatos controladorDatos;
-    private ControladorReservas controladorReservas;
-    private Scanner teclado;
+public class VistaAdministrador extends VistaUsuario {
+    private Usuario usuarioActual;
 
     public VistaAdministrador(Agencia agencia, ControladorDatos controladorDatos, Scanner teclado) {
-        this.agencia = agencia;
-        this.controladorDatos = controladorDatos;
-        this.controladorReservas = new ControladorReservas(agencia);
-        this.teclado = teclado;
+        super(agencia, controladorDatos, teclado);
     }
 
+    @Override
     public void mostrar(Usuario usuario) {
+        this.usuarioActual = usuario;
         int opcion;
 
         do {
@@ -74,7 +69,7 @@ public class VistaAdministrador {
         System.out.println("1. Administrar sucursales");
         System.out.println("2. Administrar hoteles");
         System.out.println("3. Administrar vuelos");
-        System.out.println("4. Administrar turistas");
+        System.out.println("4. Administrar clientes");
         System.out.println("5. Administrar reservas");
         System.out.println("6. Administrar usuarios");
         System.out.println("0. Cerrar sesion");
@@ -86,7 +81,10 @@ public class VistaAdministrador {
         do {
             System.out.println("===== ADMINISTRAR SUCURSALES =====");
             System.out.println("1. Listar sucursales");
-            System.out.println("2. Agregar sucursal");
+            System.out.println("2. Buscar sucursal");
+            System.out.println("3. Agregar sucursal");
+            System.out.println("4. Modificar sucursal");
+            System.out.println("5. Eliminar sucursal");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -95,7 +93,16 @@ public class VistaAdministrador {
                     mostrarSucursales();
                     break;
                 case 2:
+                    buscarSucursal();
+                    break;
+                case 3:
                     agregarSucursal();
+                    break;
+                case 4:
+                    modificarSucursal();
+                    break;
+                case 5:
+                    eliminarSucursal();
                     break;
                 case 0:
                     break;
@@ -112,7 +119,10 @@ public class VistaAdministrador {
         do {
             System.out.println("===== ADMINISTRAR HOTELES =====");
             System.out.println("1. Listar hoteles");
-            System.out.println("2. Agregar hotel");
+            System.out.println("2. Buscar hotel");
+            System.out.println("3. Agregar hotel");
+            System.out.println("4. Modificar hotel");
+            System.out.println("5. Eliminar hotel");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -121,7 +131,16 @@ public class VistaAdministrador {
                     mostrarHoteles();
                     break;
                 case 2:
+                    buscarHotel();
+                    break;
+                case 3:
                     agregarHotel();
+                    break;
+                case 4:
+                    modificarHotel();
+                    break;
+                case 5:
+                    eliminarHotel();
                     break;
                 case 0:
                     break;
@@ -138,7 +157,10 @@ public class VistaAdministrador {
         do {
             System.out.println("===== ADMINISTRAR VUELOS =====");
             System.out.println("1. Listar vuelos");
-            System.out.println("2. Agregar vuelo");
+            System.out.println("2. Buscar vuelo");
+            System.out.println("3. Agregar vuelo");
+            System.out.println("4. Modificar vuelo");
+            System.out.println("5. Eliminar vuelo");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -147,7 +169,16 @@ public class VistaAdministrador {
                     mostrarVuelos();
                     break;
                 case 2:
+                    buscarVuelo();
+                    break;
+                case 3:
                     agregarVuelo();
+                    break;
+                case 4:
+                    modificarVuelo();
+                    break;
+                case 5:
+                    eliminarVuelo();
                     break;
                 case 0:
                     break;
@@ -162,10 +193,13 @@ public class VistaAdministrador {
         int opcion;
 
         do {
-            System.out.println("===== ADMINISTRAR TURISTAS =====");
-            System.out.println("1. Listar turistas");
-            System.out.println("2. Agregar turista");
-            System.out.println("3. Buscar turista");
+            System.out.println("===== ADMINISTRAR CLIENTES =====");
+            System.out.println("1. Listar clientes");
+            System.out.println("2. Buscar cliente");
+            System.out.println("3. Agregar titular");
+            System.out.println("4. Agregar familiar");
+            System.out.println("5. Modificar cliente");
+            System.out.println("6. Eliminar cliente");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -174,10 +208,19 @@ public class VistaAdministrador {
                     mostrarTuristas();
                     break;
                 case 2:
-                    agregarTurista();
+                    buscarTurista();
                     break;
                 case 3:
-                    buscarTurista();
+                    agregarTurista();
+                    break;
+                case 4:
+                    agregarFamiliar();
+                    break;
+                case 5:
+                    modificarTurista();
+                    break;
+                case 6:
+                    eliminarTurista();
                     break;
                 case 0:
                     break;
@@ -194,8 +237,9 @@ public class VistaAdministrador {
         do {
             System.out.println("===== ADMINISTRAR RESERVAS =====");
             System.out.println("1. Listar reservas");
-            System.out.println("2. Crear reserva");
-            System.out.println("3. Cancelar reserva");
+            System.out.println("2. Buscar reserva");
+            System.out.println("3. Crear reserva");
+            System.out.println("4. Cancelar reserva");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -204,9 +248,12 @@ public class VistaAdministrador {
                     mostrarReservas();
                     break;
                 case 2:
-                    crearReservaParaTurista();
+                    buscarReserva();
                     break;
                 case 3:
+                    crearReservaParaTurista();
+                    break;
+                case 4:
                     cancelarReserva();
                     break;
                 case 0:
@@ -224,7 +271,10 @@ public class VistaAdministrador {
         do {
             System.out.println("===== ADMINISTRAR USUARIOS =====");
             System.out.println("1. Listar usuarios");
-            System.out.println("2. Agregar usuario");
+            System.out.println("2. Buscar usuario");
+            System.out.println("3. Agregar usuario");
+            System.out.println("4. Modificar usuario");
+            System.out.println("5. Eliminar usuario");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -233,7 +283,16 @@ public class VistaAdministrador {
                     mostrarUsuarios();
                     break;
                 case 2:
+                    buscarUsuario();
+                    break;
+                case 3:
                     agregarUsuario();
+                    break;
+                case 4:
+                    modificarUsuario();
+                    break;
+                case 5:
+                    eliminarUsuario();
                     break;
                 case 0:
                     break;
@@ -271,7 +330,7 @@ public class VistaAdministrador {
         System.out.print("Telefono: ");
         String telefono = teclado.nextLine();
 
-        if (agencia.agregarSucursal(new Sucursal(codigo, direccion, telefono))) {
+        if (controladorAdministracion.agregarSucursal(usuarioActual, new Sucursal(codigo, direccion, telefono))) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Sucursal agregada.");
         } else {
@@ -315,11 +374,11 @@ public class VistaAdministrador {
         System.out.print("Telefono: ");
         String telefono = teclado.nextLine();
 
-        int plazasDisponibles = leerEntero("Plazas disponibles: ");
+        int plazasDisponibles = leerEnteroNoNegativo("Plazas disponibles: ");
 
         Hotel hotel = new Hotel(codigo, nombre, direccion, ciudad, telefono, plazasDisponibles);
 
-        if (agencia.agregarHotel(hotel)) {
+        if (controladorAdministracion.agregarHotel(usuarioActual, hotel)) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Hotel agregado.");
         } else {
@@ -358,12 +417,12 @@ public class VistaAdministrador {
         System.out.print("Destino: ");
         String destino = teclado.nextLine();
 
-        int totalPlazas = leerEntero("Plazas totales: ");
-        int plazasTurista = leerEntero("Plazas turista: ");
+        int totalPlazas = leerEnteroPositivo("Plazas totales: ");
+        int plazasTurista = leerPlazasTurista(totalPlazas);
 
         Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista);
 
-        if (agencia.agregarVuelo(vuelo)) {
+        if (controladorAdministracion.agregarVuelo(usuarioActual, vuelo)) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Vuelo agregado.");
         } else {
@@ -397,7 +456,7 @@ public class VistaAdministrador {
     }
 
     private void agregarTurista() {
-        System.out.println("===== AGREGAR TURISTA =====");
+        System.out.println("===== AGREGAR TITULAR =====");
 
         int codigo = agencia.generarCodigoTurista();
 
@@ -419,12 +478,12 @@ public class VistaAdministrador {
         System.out.print("Telefono celular: ");
         String telefonoCelular = teclado.nextLine();
 
-        Turista turista = new Turista(codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular,
-                true, null);
+        Turista turista = controladorTuristas.agregarTitular(usuarioActual, nombre, apellido, direccion, email,
+                telefonoFijo, telefonoCelular);
 
-        if (agencia.agregarTurista(turista)) {
+        if (turista != null) {
             controladorDatos.guardarTodo(agencia);
-            System.out.println("Turista agregado con codigo: " + codigo);
+            System.out.println("Titular agregado con codigo: " + codigo);
         } else {
             System.out.println("No se pudo agregar el turista.");
         }
@@ -495,6 +554,7 @@ public class VistaAdministrador {
         LocalDate fechaPartida = leerFechaPartidaValida(fechaLlegada);
 
         Reserva reserva = controladorReservas.crearReserva(
+                usuarioActual,
                 codigoTurista,
                 codigoSucursal,
                 numeroVuelo,
@@ -522,7 +582,7 @@ public class VistaAdministrador {
         mostrarReservas();
         int codigo = leerEntero("Codigo reserva: ");
 
-        if (controladorReservas.cancelarReserva(codigo)) {
+        if (controladorReservas.cancelarReserva(usuarioActual, codigo)) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Reserva cancelada.");
         } else {
@@ -564,23 +624,288 @@ public class VistaAdministrador {
         Integer codigoTurista = null;
 
         if (rol == RolUsuario.CLIENTE) {
-            if (agencia.getTuristas().isEmpty()) {
-                System.out.println("No hay turistas cargados para asociar al usuario cliente.");
+            if (!hayTitulares()) {
+                System.out.println("No hay titulares cargados para asociar al usuario cliente.");
                 return;
             }
 
             mostrarTuristas();
-            codigoTurista = leerCodigoTuristaExistente();
+            codigoTurista = leerCodigoTitularExistente();
         }
 
         Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol, codigoTurista);
 
-        if (agencia.agregarUsuario(usuario)) {
+        if (controladorUsuarios.agregar(usuarioActual, usuario)) {
             controladorDatos.guardarTodo(agencia);
             System.out.println("Usuario agregado.");
         } else {
             System.out.println("No se pudo agregar el usuario.");
         }
+    }
+
+    private void buscarSucursal() {
+        Sucursal sucursal = agencia.buscarSucursalPorCodigo(leerEntero("Codigo sucursal: "));
+        if (sucursal == null) {
+            System.out.println("No existe una sucursal con ese codigo.");
+            return;
+        }
+        System.out.println("Codigo: " + sucursal.getCodigo());
+        System.out.println("Direccion: " + sucursal.getDireccion());
+        System.out.println("Telefono: " + sucursal.getTelefono());
+    }
+
+    private void modificarSucursal() {
+        Sucursal sucursal = agencia.buscarSucursalPorCodigo(leerEntero("Codigo sucursal: "));
+        if (sucursal == null) {
+            System.out.println("No existe una sucursal con ese codigo.");
+            return;
+        }
+        System.out.print("Nueva direccion: ");
+        String direccion = teclado.nextLine();
+        System.out.print("Nuevo telefono: ");
+        String telefono = teclado.nextLine();
+        if (controladorAdministracion.modificarSucursal(usuarioActual, sucursal.getCodigo(), direccion, telefono))
+            guardarYMostrar("Sucursal actualizada.");
+    }
+
+    private void eliminarSucursal() {
+        int codigo = leerEntero("Codigo sucursal: ");
+        if (agencia.sucursalTieneReservas(codigo)) {
+            System.out.println("No se puede eliminar: la sucursal tiene reservas.");
+        } else if (controladorAdministracion.eliminarSucursal(usuarioActual, codigo)) {
+            guardarYMostrar("Sucursal eliminada.");
+        } else {
+            System.out.println("No existe una sucursal con ese codigo.");
+        }
+    }
+
+    private void buscarHotel() {
+        Hotel hotel = agencia.buscarHotelPorCodigo(leerEntero("Codigo hotel: "));
+        if (hotel == null) {
+            System.out.println("No existe un hotel con ese codigo.");
+            return;
+        }
+        System.out.println("Codigo: " + hotel.getCodigo());
+        System.out.println("Nombre: " + hotel.getNombre());
+        System.out.println("Ciudad: " + hotel.getCiudad());
+        System.out.println("Plazas disponibles: " + hotel.getPlazasDisponibles());
+    }
+
+    private void modificarHotel() {
+        Hotel hotel = agencia.buscarHotelPorCodigo(leerEntero("Codigo hotel: "));
+        if (hotel == null) {
+            System.out.println("No existe un hotel con ese codigo.");
+            return;
+        }
+        System.out.print("Nuevo nombre: ");
+        String nombre = teclado.nextLine();
+        System.out.print("Nueva direccion: ");
+        String direccion = teclado.nextLine();
+        System.out.print("Nueva ciudad: ");
+        String ciudad = teclado.nextLine();
+        System.out.print("Nuevo telefono: ");
+        String telefono = teclado.nextLine();
+        int plazas = leerEnteroNoNegativo("Plazas disponibles: ");
+        if (controladorAdministracion.modificarHotel(usuarioActual, hotel.getCodigo(), nombre, direccion,
+                ciudad, telefono, plazas)) guardarYMostrar("Hotel actualizado.");
+    }
+
+    private void eliminarHotel() {
+        int codigo = leerEntero("Codigo hotel: ");
+        if (agencia.hotelTieneReservas(codigo)) {
+            System.out.println("No se puede eliminar: el hotel tiene reservas.");
+        } else if (controladorAdministracion.eliminarHotel(usuarioActual, codigo)) {
+            guardarYMostrar("Hotel eliminado.");
+        } else {
+            System.out.println("No existe un hotel con ese codigo.");
+        }
+    }
+
+    private void buscarVuelo() {
+        Vuelo vuelo = agencia.buscarVueloPorNumero(leerEntero("Numero vuelo: "));
+        if (vuelo == null) {
+            System.out.println("No existe un vuelo con ese numero.");
+            return;
+        }
+        System.out.println("Numero: " + vuelo.getNumero());
+        System.out.println("Fecha y hora: " + vuelo.getFechaYHora());
+        System.out.println("Origen: " + vuelo.getOrigen());
+        System.out.println("Destino: " + vuelo.getDestino());
+    }
+
+    private void modificarVuelo() {
+        Vuelo vuelo = agencia.buscarVueloPorNumero(leerEntero("Numero vuelo: "));
+        if (vuelo == null) {
+            System.out.println("No existe un vuelo con ese numero.");
+            return;
+        }
+        LocalDateTime fecha = leerFechaYHora("Nueva fecha y hora (yyyy-mm-ddThh:mm): ");
+        System.out.print("Nuevo origen: ");
+        String origen = teclado.nextLine();
+        System.out.print("Nuevo destino: ");
+        String destino = teclado.nextLine();
+        int total = leerEnteroPositivo("Plazas totales: ");
+        int turista = leerPlazasTurista(total);
+        if (controladorAdministracion.modificarVuelo(usuarioActual, vuelo.getNumero(), fecha, origen,
+                destino, total, turista)) guardarYMostrar("Vuelo actualizado.");
+    }
+
+    private void eliminarVuelo() {
+        int numero = leerEntero("Numero vuelo: ");
+        if (agencia.vueloTieneReservas(numero)) {
+            System.out.println("No se puede eliminar: el vuelo tiene reservas.");
+        } else if (controladorAdministracion.eliminarVuelo(usuarioActual, numero)) {
+            guardarYMostrar("Vuelo eliminado.");
+        } else {
+            System.out.println("No existe un vuelo con ese numero.");
+        }
+    }
+
+    private void agregarFamiliar() {
+        if (!hayTitulares()) {
+            System.out.println("No hay titulares cargados.");
+            return;
+        }
+        int codigoTitular = leerCodigoTitularExistente();
+        int codigo = agencia.generarCodigoTurista();
+        System.out.print("Nombre: "); String nombre = teclado.nextLine();
+        System.out.print("Apellido: "); String apellido = teclado.nextLine();
+        System.out.print("Direccion: "); String direccion = teclado.nextLine();
+        System.out.print("Email: "); String email = teclado.nextLine();
+        System.out.print("Telefono fijo: "); String fijo = teclado.nextLine();
+        System.out.print("Telefono celular: "); String celular = teclado.nextLine();
+        Turista familiar = controladorTuristas.agregarFamiliar(usuarioActual, codigoTitular, nombre, apellido,
+                direccion, email, fijo, celular);
+        if (familiar != null) guardarYMostrar("Familiar agregado con codigo: " + familiar.getCodigo());
+    }
+
+    private void modificarTurista() {
+        Turista turista = agencia.buscarTuristaPorCodigo(leerEntero("Codigo turista: "));
+        if (turista == null) {
+            System.out.println("No existe un turista con ese codigo.");
+            return;
+        }
+        System.out.print("Nuevo nombre: "); String nombre = teclado.nextLine();
+        System.out.print("Nuevo apellido: "); String apellido = teclado.nextLine();
+        System.out.print("Nueva direccion: "); String direccion = teclado.nextLine();
+        System.out.print("Nuevo email: "); String email = teclado.nextLine();
+        System.out.print("Nuevo telefono fijo: "); String fijo = teclado.nextLine();
+        System.out.print("Nuevo telefono celular: "); String celular = teclado.nextLine();
+        if (controladorTuristas.modificar(usuarioActual, turista.getCodigo(), nombre, apellido, direccion,
+                email, fijo, celular)) guardarYMostrar("Turista actualizado.");
+    }
+
+    private void eliminarTurista() {
+        int codigo = leerEntero("Codigo turista: ");
+        if (agencia.turistaTieneReservas(codigo)) System.out.println("No se puede eliminar: tiene reservas.");
+        else if (agencia.titularTieneFamiliares(codigo)) System.out.println("No se puede eliminar: tiene familiares.");
+        else if (agencia.turistaTieneUsuario(codigo)) System.out.println("No se puede eliminar: tiene usuario.");
+        else if (controladorTuristas.eliminar(usuarioActual, codigo)) guardarYMostrar("Turista eliminado.");
+        else System.out.println("No existe un turista con ese codigo.");
+    }
+
+    private void buscarReserva() {
+        Reserva reserva = agencia.buscarReservaPorCodigo(leerEntero("Codigo reserva: "));
+        if (reserva == null) System.out.println("No existe una reserva con ese codigo.");
+        else mostrarReserva(reserva);
+    }
+
+    private void buscarUsuario() {
+        System.out.print("Nombre de usuario: ");
+        Usuario usuario = agencia.buscarUsuarioPorNombre(teclado.nextLine());
+        if (usuario == null) System.out.println("No existe ese usuario.");
+        else {
+            System.out.println("Usuario: " + usuario.getNombreUsuario());
+            System.out.println("Rol: " + usuario.getRol());
+            System.out.println("Codigo turista: " + usuario.getCodigoTurista());
+        }
+    }
+
+    private void modificarUsuario() {
+        System.out.print("Nombre de usuario actual: ");
+        Usuario usuario = agencia.buscarUsuarioPorNombre(teclado.nextLine());
+        if (usuario == null) {
+            System.out.println("No existe ese usuario.");
+            return;
+        }
+        System.out.print("Nuevo nombre de usuario: ");
+        String nuevoNombre = teclado.nextLine();
+        Usuario existente = agencia.buscarUsuarioPorNombre(nuevoNombre);
+        if (existente != null && existente != usuario) {
+            System.out.println("Ya existe un usuario con ese nombre.");
+            return;
+        }
+        System.out.print("Nueva contrasenia: ");
+        String contrasenia = teclado.nextLine();
+        RolUsuario nuevoRol = leerRolUsuario();
+        if (usuario.getRol() == RolUsuario.ADMINISTRADOR && nuevoRol != RolUsuario.ADMINISTRADOR
+                && agencia.contarAdministradores() <= 1) {
+            System.out.println("No se puede cambiar el rol del ultimo administrador.");
+            return;
+        }
+        Integer codigoTurista = null;
+        if (nuevoRol == RolUsuario.CLIENTE) codigoTurista = leerCodigoTitularExistente();
+        if (controladorUsuarios.modificar(usuarioActual, usuario.getNombreUsuario(), nuevoNombre, contrasenia,
+                nuevoRol, codigoTurista)) guardarYMostrar("Usuario actualizado.");
+    }
+
+    private void eliminarUsuario() {
+        System.out.print("Nombre de usuario: ");
+        String nombre = teclado.nextLine();
+        Usuario usuario = agencia.buscarUsuarioPorNombre(nombre);
+        if (usuario == null) System.out.println("No existe ese usuario.");
+        else if (usuario == usuarioActual) System.out.println("No puede eliminar el usuario de la sesion actual.");
+        else if (usuario.getRol() == RolUsuario.ADMINISTRADOR && agencia.contarAdministradores() <= 1)
+            System.out.println("No se puede eliminar el ultimo administrador.");
+        else if (controladorUsuarios.eliminar(usuarioActual, nombre)) guardarYMostrar("Usuario eliminado.");
+    }
+
+    private boolean hayTitulares() {
+        for (Turista turista : agencia.getTuristas()) if (turista.isEsTitular()) return true;
+        return false;
+    }
+
+    private int leerCodigoTitularExistente() {
+        int codigo;
+        Turista titular;
+        do {
+            codigo = leerEntero("Codigo titular: ");
+            titular = agencia.buscarTuristaPorCodigo(codigo);
+            if (titular == null || !titular.isEsTitular()) System.out.println("No existe un titular con ese codigo.");
+        } while (titular == null || !titular.isEsTitular());
+        return codigo;
+    }
+
+    private int leerEnteroPositivo(String mensaje) {
+        int valor;
+        do {
+            valor = leerEntero(mensaje);
+            if (valor <= 0) System.out.println("Debe ser mayor que cero.");
+        } while (valor <= 0);
+        return valor;
+    }
+
+    private int leerEnteroNoNegativo(String mensaje) {
+        int valor;
+        do {
+            valor = leerEntero(mensaje);
+            if (valor < 0) System.out.println("No puede ser negativo.");
+        } while (valor < 0);
+        return valor;
+    }
+
+    private int leerPlazasTurista(int total) {
+        int valor;
+        do {
+            valor = leerEnteroNoNegativo("Plazas turista: ");
+            if (valor > total) System.out.println("No puede superar las plazas totales.");
+        } while (valor > total);
+        return valor;
+    }
+
+    private void guardarYMostrar(String mensaje) {
+        controladorDatos.guardarTodo(agencia);
+        System.out.println(mensaje);
     }
 
     private int leerCodigoSucursalNuevo() {
@@ -794,21 +1119,4 @@ public class VistaAdministrador {
         return fechaPartida;
     }
 
-    private int leerEntero(String mensaje) {
-        int numero = -1;
-        boolean valido = false;
-
-        while (!valido) {
-            System.out.print(mensaje);
-
-            try {
-                numero = Integer.parseInt(teclado.nextLine());
-                valido = true;
-            } catch (NumberFormatException e) {
-                System.out.println("Debe ingresar un numero.");
-            }
-        }
-
-        return numero;
-    }
 }

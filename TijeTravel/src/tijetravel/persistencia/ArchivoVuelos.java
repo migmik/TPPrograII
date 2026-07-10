@@ -8,8 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Vuelo;
 
 public class ArchivoVuelos {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/vuelos.txt";
@@ -45,7 +46,7 @@ public class ArchivoVuelos {
         return vuelos;
     }
 
-    public void guardar(ArrayList<Vuelo> vuelos) {
+    public void guardar(List<Vuelo> vuelos) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();
 

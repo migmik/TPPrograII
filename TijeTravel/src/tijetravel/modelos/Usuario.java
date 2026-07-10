@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public class Usuario {
     private String nombreUsuario;
@@ -17,11 +17,21 @@ public class Usuario {
         this.codigoTurista = codigoTurista;
     }
 
+    public boolean actualizarDatos(String nombreUsuario, String contrasenia, RolUsuario rol,
+            Integer codigoTurista) {
+        if (nombreUsuario == null || contrasenia == null || rol == null) return false;
+        if (rol == RolUsuario.CLIENTE && codigoTurista == null) return false;
+        if (rol != RolUsuario.CLIENTE && codigoTurista != null) return false;
+        this.nombreUsuario = nombreUsuario; this.contrasenia = contrasenia;
+        this.rol = rol; this.codigoTurista = codigoTurista;
+        return true;
+    }
+
     public String getNombreUsuario() {
         return nombreUsuario;
     }
 
-    public void setNombreUsuario(String nombreUsuario) {
+    private void setNombreUsuario(String nombreUsuario) {
         this.nombreUsuario = nombreUsuario;
     }
 
@@ -29,7 +39,7 @@ public class Usuario {
         return contrasenia;
     }
 
-    public void setContrasenia(String contrasenia) {
+    private void setContrasenia(String contrasenia) {
         this.contrasenia = contrasenia;
     }
 
@@ -37,7 +47,7 @@ public class Usuario {
         return rol;
     }
 
-    public void setRol(RolUsuario rol) {
+    private void setRol(RolUsuario rol) {
         this.rol = rol;
     }
 
@@ -45,7 +55,7 @@ public class Usuario {
         return codigoTurista;
     }
 
-    public void setCodigoTurista(Integer codigoTurista) {
+    private void setCodigoTurista(Integer codigoTurista) {
         this.codigoTurista = codigoTurista;
     }
     

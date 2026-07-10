@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 import java.time.LocalDateTime;
 
@@ -20,11 +20,20 @@ public class Vuelo {
         this.plazasTurista = plazasTurista;
     }
 
+    public boolean actualizarDatos(LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista) {
+        if (fechaYHora == null || origen == null || destino == null || totalPlazas <= 0
+                || plazasTurista < 0 || plazasTurista > totalPlazas) return false;
+        this.fechaYHora = fechaYHora; this.origen = origen; this.destino = destino;
+        this.totalPlazas = totalPlazas; this.plazasTurista = plazasTurista;
+        return true;
+    }
+
     public int getNumero() {
         return numero;
     }
 
-    public void setNumero(int numero) {
+    private void setNumero(int numero) {
         this.numero = numero;
     }
 
@@ -32,7 +41,7 @@ public class Vuelo {
         return fechaYHora;
     }
 
-    public void setFechaYHora(LocalDateTime fechaYHora) {
+    private void setFechaYHora(LocalDateTime fechaYHora) {
         this.fechaYHora = fechaYHora;
     }
 
@@ -40,7 +49,7 @@ public class Vuelo {
         return origen;
     }
 
-    public void setOrigen(String origen) {
+    private void setOrigen(String origen) {
         this.origen = origen;
     }
 
@@ -48,7 +57,7 @@ public class Vuelo {
         return destino;
     }
 
-    public void setDestino(String destino) {
+    private void setDestino(String destino) {
         this.destino = destino;
     }
 
@@ -56,7 +65,7 @@ public class Vuelo {
         return totalPlazas;
     }
 
-    public void setTotalPlazas(int totalPlazas) {
+    private void setTotalPlazas(int totalPlazas) {
         this.totalPlazas = totalPlazas;
     }
 
@@ -64,7 +73,7 @@ public class Vuelo {
         return plazasTurista;
     }
 
-    public void setPlazasTurista(int plazasTurista) {
+    private void setPlazasTurista(int plazasTurista) {
         this.plazasTurista = plazasTurista;
     }
 

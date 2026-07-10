@@ -3,20 +3,24 @@ package tijetravel.controladores;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Permiso;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Vuelo;
+import tijetravel.modelos.Usuario;
 
 public class ControladorReservas {
     private Agencia agencia;
+    private ControladorAutorizacion autorizacion;
 
     public ControladorReservas(Agencia agencia) {
         this.agencia = agencia;
+        this.autorizacion = new ControladorAutorizacion();
     }
 
     public int generarCodigoReserva() {
@@ -36,11 +40,13 @@ public class ControladorReservas {
             return false;
         }
 
-        return fechaPartida.isAfter(fechaLlegada);
+        return fechaLlegada.isBefore(fechaPartida);
     }
 
-    public Reserva crearReserva(int codigoTurista, int codigoSucursal, int numeroVuelo, int codigoHotel,
+    public Reserva crearReserva(Usuario usuario, int codigoTurista, int codigoSucursal, int numeroVuelo, int codigoHotel,
             ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada, LocalDate fechaPartida) {
+
+        if (!autorizacion.tienePermiso(usuario, Permiso.ADMINISTRAR_RESERVAS)) return null;
 
         Turista turista = agencia.buscarTuristaPorCodigo(codigoTurista);
         Sucursal sucursal = agencia.buscarSucursalPorCodigo(codigoSucursal);
@@ -77,25 +83,6 @@ public class ControladorReservas {
         return reserva;
     }
 
-    public Reserva crearReservaCliente(int codigoTitular, int codigoTurista, int codigoSucursal, int numeroVuelo,
-            int codigoHotel, ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje,
-            LocalDate fechaLlegada, LocalDate fechaPartida) {
-
-        if (!agencia.turistaPerteneceATitular(codigoTurista, codigoTitular)) {
-            return null;
-        }
-
-        return crearReserva(
-                codigoTurista,
-                codigoSucursal,
-                numeroVuelo,
-                codigoHotel,
-                claseVuelo,
-                tipoHospedaje,
-                fechaLlegada,
-                fechaPartida);
-    }
-
     public ArrayList<Reserva> buscarReservasDeTurista(int codigoTurista) {
         ArrayList<Reserva> reservasEncontradas = new ArrayList<>();
 
@@ -122,13 +109,14 @@ public class ControladorReservas {
         return reservasEncontradas;
     }
 
-    public boolean cancelarReserva(int codigoReserva) {
+    public boolean cancelarReserva(Usuario usuario, int codigoReserva) {
+        if (!autorizacion.tienePermiso(usuario, Permiso.ADMINISTRAR_RESERVAS)) return false;
         Reserva reserva = agencia.buscarReservaPorCodigo(codigoReserva);
 
         if (reserva == null) {
             return false;
         }
 
-        return agencia.getReservas().remove(reserva);
+        return agencia.eliminarReserva(codigoReserva);
     }
 }
