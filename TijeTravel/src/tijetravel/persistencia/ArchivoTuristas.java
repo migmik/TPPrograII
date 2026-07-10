@@ -10,7 +10,7 @@ import java.util.List;
 import tijetravel.modelos.Turista;
 
 public class ArchivoTuristas extends ArchivoTexto implements Archivo<Turista> {
-    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "turistas.txt");
+    private static final Path RUTA_ARCHIVO = rutaDatos("turistas.txt");
 
     public ArrayList<Turista> cargar() {
         ArrayList<Turista> turistas = new ArrayList<>();
@@ -50,6 +50,11 @@ public class ArchivoTuristas extends ArchivoTexto implements Archivo<Turista> {
                 if (partes.length > 8 && !partes[8].isEmpty()) {
                     codigoTitular = Integer.parseInt(partes[8]);
                 }
+                Integer codigoSucursal = null;
+
+                if (partes.length > 9 && !partes[9].isEmpty()) {
+                    codigoSucursal = Integer.parseInt(partes[9]);
+                }
 
                 Turista turista = new Turista(
                         codigo,
@@ -60,7 +65,8 @@ public class ArchivoTuristas extends ArchivoTexto implements Archivo<Turista> {
                         telefonoFijo,
                         telefonoCelular,
                         esTitular,
-                        codigoTitular);
+                        codigoTitular,
+                        codigoSucursal);
                 turistas.add(turista);
             }
         } catch (IOException | RuntimeException e) {
@@ -82,7 +88,8 @@ public class ArchivoTuristas extends ArchivoTexto implements Archivo<Turista> {
                                 + turista.getTelefonoFijo() + ";"
                                 + turista.getTelefonoCelular() + ";"
                                 + turista.isEsTitular() + ";"
-                                + (turista.getCodigoTitular() == null ? "" : turista.getCodigoTitular()));
+                                + (turista.getCodigoTitular() == null ? "" : turista.getCodigoTitular()) + ";"
+                                + (turista.getCodigoSucursal() == null ? "" : turista.getCodigoSucursal()));
                 escritor.newLine();
             }
         });

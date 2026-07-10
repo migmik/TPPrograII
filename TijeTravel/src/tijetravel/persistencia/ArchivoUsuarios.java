@@ -9,9 +9,10 @@ import java.util.List;
 
 import tijetravel.modelos.RolUsuario;
 import tijetravel.modelos.Usuario;
+import tijetravel.modelos.UsuarioFactory;
 
 public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
-    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "usuarios.txt");
+    private static final Path RUTA_ARCHIVO = rutaDatos("usuarios.txt");
 
     public ArrayList<Usuario> cargar() {
         ArrayList<Usuario> usuarios = new ArrayList<>();
@@ -43,7 +44,13 @@ public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
                     codigoTurista = Integer.parseInt(partes[3]);
                 }
 
-                Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol, codigoTurista);
+                Usuario usuario = UsuarioFactory.crear(nombreUsuario, contrasenia, rol, codigoTurista);
+
+                if (usuario == null) {
+                    System.out.println("Usuario omitido por rol o asociacion invalida: " + linea);
+                    continue;
+                }
+
                 usuarios.add(usuario);
             }
         } catch (IOException | RuntimeException e) {

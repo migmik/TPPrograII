@@ -14,8 +14,6 @@ import tijetravel.modelos.Turista;
 import tijetravel.modelos.Vuelo;
 import tijetravel.modelos.Usuario;
 
-// controlador de reservas de la agencia
-//valida permisos, disponibilidad, crea y cancela reservas
 public class ControladorReservas {
     private Agencia agencia;
     private ControladorAutorizacion autorizacion;
@@ -25,7 +23,6 @@ public class ControladorReservas {
         this.autorizacion = new ControladorAutorizacion();
     }
 
-    // genera un codigo unico para reservas
     public int generarCodigoReserva() {
         int mayorCodigo = 0;
 
@@ -38,7 +35,6 @@ public class ControladorReservas {
         return mayorCodigo + 1;
     }
 
-    // valida fechas de partida y llegada
     public boolean fechasValidas(LocalDate fechaLlegada, LocalDate fechaPartida) {
         if (fechaLlegada == null || fechaPartida == null) {
             return false;
@@ -47,10 +43,16 @@ public class ControladorReservas {
         return fechaLlegada.isBefore(fechaPartida);
     }
 
-    // cuenta reservas de un vuelo en una clase especifica
     public int contarReservasVuelo(int numeroVuelo, ClaseVuelo claseVuelo) {
+        return contarReservasVuelo(numeroVuelo, claseVuelo, null);
+    }
+
+    private int contarReservasVuelo(int numeroVuelo, ClaseVuelo claseVuelo, Integer codigoReservaIgnorada) {
         int cantidad = 0;
         for (Reserva reserva : agencia.getReservas()) {
+            if (codigoReservaIgnorada != null && reserva.getCodigo() == codigoReservaIgnorada) {
+                continue;
+            }
             if (reserva.getVuelo().getNumero() == numeroVuelo
                     && reserva.getClaseVuelo() == claseVuelo) {
                 cantidad++;
@@ -60,21 +62,31 @@ public class ControladorReservas {
     }
 
     public int plazasDisponiblesVuelo(Vuelo vuelo, ClaseVuelo claseVuelo) {
+        return plazasDisponiblesVuelo(vuelo, claseVuelo, null);
+    }
+
+    private int plazasDisponiblesVuelo(Vuelo vuelo, ClaseVuelo claseVuelo, Integer codigoReservaIgnorada) {
         if (vuelo == null || claseVuelo == null)
             return 0;
         int capacidad = claseVuelo == ClaseVuelo.TURISTA
                 ? vuelo.getPlazasTurista()
                 : vuelo.getPlazasPrimera();
-        return Math.max(0, capacidad - contarReservasVuelo(vuelo.getNumero(), claseVuelo));
+        return Math.max(0, capacidad - contarReservasVuelo(vuelo.getNumero(), claseVuelo, codigoReservaIgnorada));
     }
 
-    // Cuenta reservas del hotel que se superponen con el rango de fechas
-    // solicitado.
     public int contarReservasHotelSuperpuestas(Hotel hotel, LocalDate llegada, LocalDate partida) {
+        return contarReservasHotelSuperpuestas(hotel, llegada, partida, null);
+    }
+
+    private int contarReservasHotelSuperpuestas(Hotel hotel, LocalDate llegada, LocalDate partida,
+            Integer codigoReservaIgnorada) {
         if (hotel == null || !fechasValidas(llegada, partida))
             return 0;
         int cantidad = 0;
         for (Reserva reserva : agencia.getReservas()) {
+            if (codigoReservaIgnorada != null && reserva.getCodigo() == codigoReservaIgnorada) {
+                continue;
+            }
             if (reserva.getHotel().getCodigo() == hotel.getCodigo()
                     && llegada.isBefore(reserva.getFechaPartida())
                     && partida.isAfter(reserva.getFechaLlegada())) {
@@ -85,14 +97,17 @@ public class ControladorReservas {
     }
 
     public int plazasDisponiblesHotel(Hotel hotel, LocalDate llegada, LocalDate partida) {
+        return plazasDisponiblesHotel(hotel, llegada, partida, null);
+    }
+
+    private int plazasDisponiblesHotel(Hotel hotel, LocalDate llegada, LocalDate partida,
+            Integer codigoReservaIgnorada) {
         if (hotel == null)
             return 0;
         return Math.max(0, hotel.getPlazasDisponibles()
-                - contarReservasHotelSuperpuestas(hotel, llegada, partida));
+                - contarReservasHotelSuperpuestas(hotel, llegada, partida, codigoReservaIgnorada));
     }
 
-    // determina cuantas plazas minimas debe conservar el hotel
-    // segun las reservas ya existentes en cualquier periodo
     public int ocupacionMaximaHotel(int codigoHotel) {
         Hotel hotel = agencia.buscarHotelPorCodigo(codigoHotel);
         if (hotel == null)
@@ -107,9 +122,15 @@ public class ControladorReservas {
         return maxima;
     }
 
-    // esto verifica si un turista ya reservo el mismo vuelo
     public boolean turistaYaTieneVuelo(int codigoTurista, int numeroVuelo) {
+        return turistaYaTieneVuelo(codigoTurista, numeroVuelo, null);
+    }
+
+    private boolean turistaYaTieneVuelo(int codigoTurista, int numeroVuelo, Integer codigoReservaIgnorada) {
         for (Reserva reserva : agencia.getReservas()) {
+            if (codigoReservaIgnorada != null && reserva.getCodigo() == codigoReservaIgnorada) {
+                continue;
+            }
             if (reserva.getTurista().getCodigo() == codigoTurista
                     && reserva.getVuelo().getNumero() == numeroVuelo)
                 return true;
@@ -117,27 +138,14 @@ public class ControladorReservas {
         return false;
     }
 
-    // Comprueba que el hotel y el vuelo sean compatibles en fecha y destino.
     private boolean vueloYHotelCompatibles(Vuelo vuelo, Hotel hotel, LocalDate fechaLlegada) {
-        return !fechaLlegada.isBefore(vuelo.getFechaYHora().toLocalDate())
+        return fechaLlegada.equals(vuelo.getFechaYHora().toLocalDate())
                 && hotel.getCiudad().trim().equalsIgnoreCase(vuelo.getDestino().trim());
     }
 
-    // crea una nueva reserva si el usuario tiene permiso y si todos los datos son
-    // validos:
-    /*
-     * 1 permiso
-     * 2 turista, sucursa, vuelo, hotel validos
-     * 3 clase y hospedaje
-     * 4 fechas
-     * 5 que no sea mismo vuelo
-     * 6 vuelo y hotel compatibles
-     * 7 plazas disponible en vuelo y hotel
-     */
     public Reserva crearReserva(Usuario usuario, int codigoTurista, int codigoSucursal, int numeroVuelo,
             int codigoHotel,
             ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada, LocalDate fechaPartida) {
-        // permiso
         if (!autorizacion.tienePermiso(usuario, Permiso.ADMINISTRAR_RESERVAS))
             return null;
 
@@ -145,7 +153,6 @@ public class ControladorReservas {
         Sucursal sucursal = agencia.buscarSucursalPorCodigo(codigoSucursal);
         Vuelo vuelo = agencia.buscarVueloPorNumero(numeroVuelo);
         Hotel hotel = agencia.buscarHotelPorCodigo(codigoHotel);
-        // rechaza reserva si falta alguna
         if (turista == null || sucursal == null || vuelo == null || hotel == null) {
             return null;
         }
@@ -161,7 +168,6 @@ public class ControladorReservas {
         if (turistaYaTieneVuelo(codigoTurista, numeroVuelo)) {
             return null;
         }
-        // asegura que el vuelo y hotel coincidan
         if (!vueloYHotelCompatibles(vuelo, hotel, fechaLlegada)) {
             return null;
         }
@@ -187,7 +193,6 @@ public class ControladorReservas {
         return reserva;
     }
 
-    // devuelve todas las reservas de un turista
     public ArrayList<Reserva> buscarReservasDeTurista(int codigoTurista) {
         ArrayList<Reserva> reservasEncontradas = new ArrayList<>();
 
@@ -200,7 +205,6 @@ public class ControladorReservas {
         return reservasEncontradas;
     }
 
-    // busca las reservas del titular y familiares
     public ArrayList<Reserva> buscarReservasDeTitularYFamiliares(int codigoTitular) {
         ArrayList<Reserva> reservasEncontradas = new ArrayList<>();
 
@@ -215,7 +219,6 @@ public class ControladorReservas {
         return reservasEncontradas;
     }
 
-    // cancela una reserva si el usuario tiene permisos
     public boolean cancelarReserva(Usuario usuario, int codigoReserva) {
         if (!autorizacion.tienePermiso(usuario, Permiso.ADMINISTRAR_RESERVAS))
             return false;
@@ -226,5 +229,39 @@ public class ControladorReservas {
         }
 
         return agencia.eliminarReserva(codigoReserva);
+    }
+
+    public boolean modificarReserva(Usuario usuario, int codigoReserva, int codigoTurista, int codigoSucursal,
+            int numeroVuelo, int codigoHotel, ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje,
+            LocalDate fechaLlegada, LocalDate fechaPartida) {
+        if (!autorizacion.tienePermiso(usuario, Permiso.ADMINISTRAR_RESERVAS))
+            return false;
+
+        Reserva reserva = agencia.buscarReservaPorCodigo(codigoReserva);
+        Turista turista = agencia.buscarTuristaPorCodigo(codigoTurista);
+        Sucursal sucursal = agencia.buscarSucursalPorCodigo(codigoSucursal);
+        Vuelo vuelo = agencia.buscarVueloPorNumero(numeroVuelo);
+        Hotel hotel = agencia.buscarHotelPorCodigo(codigoHotel);
+
+        if (reserva == null || turista == null || sucursal == null || vuelo == null || hotel == null
+                || claseVuelo == null || tipoHospedaje == null || !fechasValidas(fechaLlegada, fechaPartida)) {
+            return false;
+        }
+
+        if (turistaYaTieneVuelo(codigoTurista, numeroVuelo, codigoReserva)) {
+            return false;
+        }
+
+        if (!vueloYHotelCompatibles(vuelo, hotel, fechaLlegada)) {
+            return false;
+        }
+
+        if (plazasDisponiblesVuelo(vuelo, claseVuelo, codigoReserva) <= 0
+                || plazasDisponiblesHotel(hotel, fechaLlegada, fechaPartida, codigoReserva) <= 0) {
+            return false;
+        }
+
+        return reserva.actualizarDatos(turista, sucursal, vuelo, hotel, claseVuelo, tipoHospedaje,
+                fechaLlegada, fechaPartida);
     }
 }

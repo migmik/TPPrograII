@@ -8,23 +8,17 @@ import tijetravel.modelos.Hotel;
 import tijetravel.modelos.Usuario;
 import tijetravel.modelos.Vuelo;
 
-/*Vista principal del programa
-muesta menu inicial, permite ver hoteles,vuelos.
-Maneja el inicio de sesion */
 public class VistaPrincipal {
     private Agencia agencia;
     private ControladorDatos controladorDatos;
     private Scanner teclado;
 
-    // constructor de la vista principal
     public VistaPrincipal(Agencia agencia, ControladorDatos controladorDatos) {
         this.agencia = agencia;
         this.controladorDatos = controladorDatos;
         this.teclado = new Scanner(System.in);
     }
 
-    // CICLO PRINCIPAL
-    // muestra menu, ejecuta la opcion hasta salir
     public void iniciar() {
         int opcion;
 
@@ -54,7 +48,6 @@ public class VistaPrincipal {
         } while (opcion != 0);
     }
 
-    // muestra menu principal
     private void mostrarMenuPrincipal() {
         System.out.println("===== TIJE TRAVEL =====");
         System.out.println("1. Ver hoteles disponibles");
@@ -63,7 +56,6 @@ public class VistaPrincipal {
         System.out.println("0. Salir");
     }
 
-    // muestra hoteles disponibles
     private void mostrarHoteles() {
         if (agencia.getHoteles().isEmpty()) {
             System.out.println("No hay hoteles cargados.");
@@ -83,7 +75,6 @@ public class VistaPrincipal {
         }
     }
 
-    // muestra vuelos disponibles
     private void mostrarVuelos() {
         if (agencia.getVuelos().isEmpty()) {
             System.out.println("No hay vuelos cargados.");
@@ -104,7 +95,6 @@ public class VistaPrincipal {
         }
     }
 
-    // inicia el login y redirige segun el rol
     private void iniciarSesion() {
         ControladorLogin controladorLogin = new ControladorLogin(agencia);
         VistaLogin vistaLogin = new VistaLogin(controladorLogin, teclado);
@@ -134,7 +124,6 @@ public class VistaPrincipal {
         vistaUsuario.mostrar(usuario);
     }
 
-    // valida entrada de numeros enteros en un ciclo
     private int leerEntero(String mensaje) {
         int numero = -1;
         boolean valido = false;

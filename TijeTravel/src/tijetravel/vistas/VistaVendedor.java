@@ -121,6 +121,7 @@ public class VistaVendedor extends VistaUsuario {
             System.out.println("2. Buscar reserva");
             System.out.println("3. Crear reserva");
             System.out.println("4. Cancelar reserva");
+            System.out.println("5. Modificar reserva");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -136,6 +137,9 @@ public class VistaVendedor extends VistaUsuario {
                     break;
                 case 4:
                     cancelarReserva();
+                    break;
+                case 5:
+                    modificarReserva();
                     break;
                 case 0:
                     break;
@@ -170,6 +174,7 @@ public class VistaVendedor extends VistaUsuario {
         System.out.println("Telefono celular: " + turista.getTelefonoCelular());
         System.out.println("Titular: " + turista.isEsTitular());
         System.out.println("Codigo titular: " + turista.getCodigoTitular());
+        System.out.println("Sucursal contratacion: " + turista.getCodigoSucursal());
         System.out.println("--------------------");
     }
 
@@ -196,8 +201,11 @@ public class VistaVendedor extends VistaUsuario {
         System.out.print("Telefono celular: ");
         String telefonoCelular = teclado.nextLine();
 
+        mostrarSucursales();
+        int codigoSucursal = leerCodigoSucursalExistente();
+
         Turista turista = controladorTuristas.agregarTitular(usuarioActual, nombre, apellido, direccion,
-                email, telefonoFijo, telefonoCelular);
+                email, telefonoFijo, telefonoCelular, codigoSucursal);
 
         if (turista != null) {
             guardarCambios();
@@ -272,6 +280,7 @@ public class VistaVendedor extends VistaUsuario {
             System.out.println("4. Email");
             System.out.println("5. Telefono fijo");
             System.out.println("6. Telefono celular");
+            System.out.println("7. Sucursal contratacion");
             System.out.println("0. Terminar");
             opcion = leerEntero("Seleccione un campo: ");
 
@@ -299,6 +308,12 @@ public class VistaVendedor extends VistaUsuario {
                 case 6:
                     System.out.print("Nuevo telefono celular: ");
                     controladorTuristas.modificarTelefonoCelular(usuarioActual, codigo, teclado.nextLine());
+                    break;
+                case 7:
+                    mostrarSucursales();
+                    controladorTuristas.modificar(usuarioActual, codigo, turista.getNombre(), turista.getApellido(),
+                            turista.getDireccion(), turista.getEmail(), turista.getTelefonoFijo(),
+                            turista.getTelefonoCelular(), leerCodigoSucursalExistente());
                     break;
                 case 0:
                     guardarCambios();
@@ -484,6 +499,43 @@ public class VistaVendedor extends VistaUsuario {
             System.out.println("Reserva cancelada.");
         } else {
             System.out.println("No existe una reserva con ese codigo.");
+        }
+    }
+
+    private void modificarReserva() {
+        if (agencia.getReservas().isEmpty()) {
+            System.out.println("No hay reservas cargadas.");
+            return;
+        }
+
+        mostrarReservas();
+        int codigoReserva = leerEntero("Codigo reserva: ");
+
+        if (agencia.buscarReservaPorCodigo(codigoReserva) == null) {
+            System.out.println("No existe una reserva con ese codigo.");
+            return;
+        }
+
+        System.out.println("===== MODIFICAR RESERVA =====");
+        mostrarTuristas();
+        int codigoTurista = leerCodigoTuristaExistente();
+        mostrarVuelos();
+        int numeroVuelo = leerNumeroVueloExistente();
+        mostrarHoteles();
+        int codigoHotel = leerCodigoHotelExistente();
+        mostrarSucursales();
+        int codigoSucursal = leerCodigoSucursalExistente();
+        ClaseVuelo claseVuelo = leerClaseVuelo();
+        TipoHospedaje tipoHospedaje = leerTipoHospedaje();
+        LocalDate fechaLlegada = leerFecha("Fecha llegada (yyyy-mm-dd): ");
+        LocalDate fechaPartida = leerFechaPartidaValida(fechaLlegada);
+
+        if (controladorReservas.modificarReserva(usuarioActual, codigoReserva, codigoTurista, codigoSucursal,
+                numeroVuelo, codigoHotel, claseVuelo, tipoHospedaje, fechaLlegada, fechaPartida)) {
+            guardarCambios();
+            System.out.println("Reserva actualizada.");
+        } else {
+            System.out.println("No se pudo modificar la reserva.");
         }
     }
 

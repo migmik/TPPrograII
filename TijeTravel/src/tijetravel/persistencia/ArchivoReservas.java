@@ -18,7 +18,7 @@ import tijetravel.modelos.Turista;
 import tijetravel.modelos.Vuelo;
 
 public class ArchivoReservas extends ArchivoTexto {
-    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "reservas.txt");
+    private static final Path RUTA_ARCHIVO = rutaDatos("reservas.txt");
 
     public ArrayList<Reserva> cargar(Agencia agencia) {
         ArrayList<Reserva> reservas = new ArrayList<>();
@@ -63,6 +63,12 @@ public class ArchivoReservas extends ArchivoTexto {
 
                 if (!fechaLlegada.isBefore(fechaPartida)) {
                     System.out.println("Reserva omitida por fechas invalidas: " + linea);
+                    continue;
+                }
+
+                if (!fechaLlegada.equals(vuelo.getFechaYHora().toLocalDate())
+                        || !hotel.getCiudad().trim().equalsIgnoreCase(vuelo.getDestino().trim())) {
+                    System.out.println("Reserva omitida por vuelo y hotel incompatibles: " + linea);
                     continue;
                 }
 
