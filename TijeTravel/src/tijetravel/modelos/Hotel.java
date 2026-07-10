@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public class Hotel {
     private int codigo;
@@ -17,11 +17,20 @@ public class Hotel {
         this.plazasDisponibles = plazasDisponibles;
     }
 
+    public boolean actualizarDatos(String nombre, String direccion, String ciudad, String telefono,
+            int plazasDisponibles) {
+        if (nombre == null || direccion == null || ciudad == null || telefono == null || plazasDisponibles < 0)
+            return false;
+        this.nombre = nombre; this.direccion = direccion; this.ciudad = ciudad;
+        this.telefono = telefono; this.plazasDisponibles = plazasDisponibles;
+        return true;
+    }
+
     public int getCodigo() {
         return codigo;
     }
 
-    public void setCodigo(int codigo) {
+    private void setCodigo(int codigo) {
         this.codigo = codigo;
     }
 
@@ -29,7 +38,7 @@ public class Hotel {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
+    private void setNombre(String nombre) {
         this.nombre = nombre;
     }
 
@@ -37,7 +46,7 @@ public class Hotel {
         return direccion;
     }
 
-    public void setDireccion(String direccion) {
+    private void setDireccion(String direccion) {
         this.direccion = direccion;
     }
 
@@ -45,7 +54,7 @@ public class Hotel {
         return ciudad;
     }
 
-    public void setCiudad(String ciudad) {
+    private void setCiudad(String ciudad) {
         this.ciudad = ciudad;
     }
 
@@ -53,7 +62,7 @@ public class Hotel {
         return telefono;
     }
 
-    public void setTelefono(String telefono) {
+    private void setTelefono(String telefono) {
         this.telefono = telefono;
     }
 
@@ -61,7 +70,7 @@ public class Hotel {
         return plazasDisponibles;
     }
 
-    public void setPlazasDisponibles(int plazasDisponibles) {
+    private void setPlazasDisponibles(int plazasDisponibles) {
         this.plazasDisponibles = plazasDisponibles;
     }
 

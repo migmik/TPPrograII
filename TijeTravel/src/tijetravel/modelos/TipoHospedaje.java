@@ -1,4 +1,4 @@
-package tijetravel.models;
+package tijetravel.modelos;
 
 public enum TipoHospedaje {
     MEDIA_PENSION,

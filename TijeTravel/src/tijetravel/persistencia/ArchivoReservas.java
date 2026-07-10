@@ -8,15 +8,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
-import tijetravel.models.Agencia;
-import tijetravel.models.ClaseVuelo;
-import tijetravel.models.Hotel;
-import tijetravel.models.Reserva;
-import tijetravel.models.Sucursal;
-import tijetravel.models.TipoHospedaje;
-import tijetravel.models.Turista;
-import tijetravel.models.Vuelo;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.ClaseVuelo;
+import tijetravel.modelos.Hotel;
+import tijetravel.modelos.Reserva;
+import tijetravel.modelos.Sucursal;
+import tijetravel.modelos.TipoHospedaje;
+import tijetravel.modelos.Turista;
+import tijetravel.modelos.Vuelo;
 
 public class ArchivoReservas {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/reservas.txt";
@@ -64,7 +65,7 @@ public class ArchivoReservas {
                     continue;
                 }
 
-                if (!fechaPartida.isAfter(fechaLlegada)) {
+                if (!fechaLlegada.isBefore(fechaPartida)) {
                     System.out.println("Reserva omitida por fechas invalidas: " + linea);
                     continue;
                 }
@@ -88,7 +89,7 @@ public class ArchivoReservas {
         return reservas;
     }
 
-    public void guardar(ArrayList<Reserva> reservas) {
+    public void guardar(List<Reserva> reservas) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();
 

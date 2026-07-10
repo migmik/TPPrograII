@@ -1,7 +1,7 @@
 package tijetravel.controladores;
 
-import tijetravel.models.Agencia;
-import tijetravel.models.Usuario;
+import tijetravel.modelos.Agencia;
+import tijetravel.modelos.Usuario;
 
 public class ControladorLogin {
     private Agencia agencia;

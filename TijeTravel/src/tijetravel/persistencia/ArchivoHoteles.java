@@ -7,8 +7,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
-import tijetravel.models.Hotel;
+import tijetravel.modelos.Hotel;
 
 public class ArchivoHoteles {
     private static final String RUTA_ARCHIVO = "TijeTravel/datos/hoteles.txt";
@@ -44,7 +45,7 @@ public class ArchivoHoteles {
         return hoteles;
     }
 
-    public void guardar(ArrayList<Hotel> hoteles) {
+    public void guardar(List<Hotel> hoteles) {
         File archivo = new File(RUTA_ARCHIVO);
         archivo.getParentFile().mkdirs();
 
