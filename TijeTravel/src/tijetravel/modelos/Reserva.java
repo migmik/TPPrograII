@@ -26,6 +26,24 @@ public class Reserva {
         this.fechaPartida = fechaPartida;
     }
 
+    public boolean actualizarDatos(Turista turista, Sucursal sucursal, Vuelo vuelo, Hotel hotel,
+            ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada, LocalDate fechaPartida) {
+        if (turista == null || sucursal == null || vuelo == null || hotel == null
+                || claseVuelo == null || tipoHospedaje == null || fechaLlegada == null || fechaPartida == null) {
+            return false;
+        }
+
+        this.turista = turista;
+        this.sucursal = sucursal;
+        this.vuelo = vuelo;
+        this.hotel = hotel;
+        this.claseVuelo = claseVuelo;
+        this.tipoHospedaje = tipoHospedaje;
+        this.fechaLlegada = fechaLlegada;
+        this.fechaPartida = fechaPartida;
+        return true;
+    }
+
     public int getCodigo() {
         return codigo;
     }

@@ -10,7 +10,7 @@ import java.util.List;
 import tijetravel.modelos.Sucursal;
 
 public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal> {
-    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "sucursales.txt");
+    private static final Path RUTA_ARCHIVO = rutaDatos("sucursales.txt");
 
     public ArrayList<Sucursal> cargar() {
         ArrayList<Sucursal> sucursales = new ArrayList<>();
@@ -22,7 +22,16 @@ public class ArchivoSucursales extends ArchivoTexto implements Archivo<Sucursal>
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (lineaVacia(linea)) {
+                    continue;
+                }
+
+                String[] partes = separarCampos(linea);
+
+                if (partes.length < 3) {
+                    System.out.println("Linea de sucursal incompleta: " + linea);
+                    continue;
+                }
 
                 int codigo = Integer.parseInt(partes[0]);
                 String direccion = partes[1];

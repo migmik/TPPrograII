@@ -11,7 +11,7 @@ import java.util.List;
 import tijetravel.modelos.Vuelo;
 
 public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
-    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "vuelos.txt");
+    private static final Path RUTA_ARCHIVO = rutaDatos("vuelos.txt");
 
     public ArrayList<Vuelo> cargar() {
         ArrayList<Vuelo> vuelos = new ArrayList<>();
@@ -23,7 +23,16 @@ public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (lineaVacia(linea)) {
+                    continue;
+                }
+
+                String[] partes = separarCampos(linea);
+
+                if (partes.length < 6) {
+                    System.out.println("Linea de vuelo incompleta: " + linea);
+                    continue;
+                }
 
                 int numero = Integer.parseInt(partes[0]);
                 LocalDateTime fechaYHora = LocalDateTime.parse(partes[1]);
