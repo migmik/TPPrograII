@@ -10,7 +10,7 @@ import java.util.List;
 import tijetravel.modelos.Hotel;
 
 public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
-    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "hoteles.txt");
+    private static final Path RUTA_ARCHIVO = rutaDatos("hoteles.txt");
 
     public ArrayList<Hotel> cargar() {
         ArrayList<Hotel> hoteles = new ArrayList<>();
@@ -22,7 +22,16 @@ public class ArchivoHoteles extends ArchivoTexto implements Archivo<Hotel> {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
-                String[] partes = linea.split(";");
+                if (lineaVacia(linea)) {
+                    continue;
+                }
+
+                String[] partes = separarCampos(linea);
+
+                if (partes.length < 6) {
+                    System.out.println("Linea de hotel incompleta: " + linea);
+                    continue;
+                }
 
                 int codigo = Integer.parseInt(partes[0]);
                 String nombre = partes[1];

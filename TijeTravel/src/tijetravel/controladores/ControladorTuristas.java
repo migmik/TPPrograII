@@ -5,8 +5,6 @@ import tijetravel.modelos.Permiso;
 import tijetravel.modelos.Turista;
 import tijetravel.modelos.Usuario;
 
-//controlador para gestionar los turistas
-//permite agregar editar y eliminar titulares y familiares
 public class ControladorTuristas {
     private Agencia agencia;
     private ControladorAutorizacion autorizacion;
@@ -16,17 +14,25 @@ public class ControladorTuristas {
         this.autorizacion = new ControladorAutorizacion();
     }
 
-    // agrega si tiene permisos
     public Turista agregarTitular(Usuario usuario, String nombre, String apellido, String direccion,
-            String email, String telefonoFijo, String telefonoCelular) {
+            String email, String telefonoFijo, String telefonoCelular, int codigoSucursal) {
         if (!permitido(usuario))
             return null;
+        if (agencia.buscarSucursalPorCodigo(codigoSucursal) == null)
+            return null;
         Turista turista = new Turista(agencia.generarCodigoTurista(), nombre, apellido, direccion,
-                email, telefonoFijo, telefonoCelular, true, null);
+                email, telefonoFijo, telefonoCelular, true, null, codigoSucursal);
         return agencia.agregarTurista(turista) ? turista : null;
     }
 
-    // agrega un familiar a un titular, rechaza si el titular no existe
+    public Turista agregarTitular(Usuario usuario, String nombre, String apellido, String direccion,
+            String email, String telefonoFijo, String telefonoCelular) {
+        if (agencia.getSucursales().isEmpty())
+            return null;
+        return agregarTitular(usuario, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular,
+                agencia.getSucursales().get(0).getCodigo());
+    }
+
     public Turista agregarFamiliar(Usuario usuario, int codigoTitular, String nombre, String apellido,
             String direccion, String email, String telefonoFijo, String telefonoCelular) {
         if (!permitido(usuario))
@@ -35,19 +41,29 @@ public class ControladorTuristas {
         if (titular == null || !titular.isEsTitular())
             return null;
         Turista familiar = new Turista(agencia.generarCodigoTurista(), nombre, apellido, direccion,
-                email, telefonoFijo, telefonoCelular, false, codigoTitular);
+                email, telefonoFijo, telefonoCelular, false, codigoTitular, titular.getCodigoSucursal());
         return agencia.agregarTurista(familiar) ? familiar : null;
     }
 
-    // si tiene permisos puede modificar a turista
     public boolean modificar(Usuario usuario, int codigo, String nombre, String apellido, String direccion,
-            String email, String telefonoFijo, String telefonoCelular) {
+            String email, String telefonoFijo, String telefonoCelular, Integer codigoSucursal) {
         if (!permitido(usuario))
+            return false;
+        if (codigoSucursal != null && agencia.buscarSucursalPorCodigo(codigoSucursal) == null)
             return false;
         Turista turista = agencia.buscarTuristaPorCodigo(codigo);
         if (turista == null)
             return false;
-        return turista.actualizarDatos(nombre, apellido, direccion, email, telefonoFijo, telefonoCelular);
+        return turista.actualizarDatos(nombre, apellido, direccion, email, telefonoFijo, telefonoCelular,
+                codigoSucursal);
+    }
+
+    public boolean modificar(Usuario usuario, int codigo, String nombre, String apellido, String direccion,
+            String email, String telefonoFijo, String telefonoCelular) {
+        Turista turista = agencia.buscarTuristaPorCodigo(codigo);
+        Integer codigoSucursal = turista == null ? null : turista.getCodigoSucursal();
+        return modificar(usuario, codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular,
+                codigoSucursal);
     }
 
     public boolean eliminar(Usuario usuario, int codigo) {
@@ -58,42 +74,40 @@ public class ControladorTuristas {
         return autorizacion.tienePermiso(usuario, Permiso.ADMINISTRAR_CLIENTES);
     }
 
-    // de aca para abajo metodos auuxiliares para editar un solo campo del turista
-    // usa logica de modificar pero conservando el resto de los campos
     public boolean modificarNombre(Usuario u, int c, String v) {
         Turista t = agencia.buscarTuristaPorCodigo(c);
         return t != null && modificar(u, c, v, t.getApellido(), t.getDireccion(), t.getEmail(), t.getTelefonoFijo(),
-                t.getTelefonoCelular());
+                t.getTelefonoCelular(), t.getCodigoSucursal());
     }
 
     public boolean modificarApellido(Usuario u, int c, String v) {
         Turista t = agencia.buscarTuristaPorCodigo(c);
         return t != null && modificar(u, c, t.getNombre(), v, t.getDireccion(), t.getEmail(), t.getTelefonoFijo(),
-                t.getTelefonoCelular());
+                t.getTelefonoCelular(), t.getCodigoSucursal());
     }
 
     public boolean modificarDireccion(Usuario u, int c, String v) {
         Turista t = agencia.buscarTuristaPorCodigo(c);
         return t != null && modificar(u, c, t.getNombre(), t.getApellido(), v, t.getEmail(), t.getTelefonoFijo(),
-                t.getTelefonoCelular());
+                t.getTelefonoCelular(), t.getCodigoSucursal());
     }
 
     public boolean modificarEmail(Usuario u, int c, String v) {
         Turista t = agencia.buscarTuristaPorCodigo(c);
         return t != null && modificar(u, c, t.getNombre(), t.getApellido(), t.getDireccion(), v, t.getTelefonoFijo(),
-                t.getTelefonoCelular());
+                t.getTelefonoCelular(), t.getCodigoSucursal());
     }
 
     public boolean modificarTelefonoFijo(Usuario u, int c, String v) {
         Turista t = agencia.buscarTuristaPorCodigo(c);
         return t != null && modificar(u, c, t.getNombre(), t.getApellido(), t.getDireccion(), t.getEmail(), v,
-                t.getTelefonoCelular());
+                t.getTelefonoCelular(), t.getCodigoSucursal());
     }
 
     public boolean modificarTelefonoCelular(Usuario u, int c, String v) {
         Turista t = agencia.buscarTuristaPorCodigo(c);
         return t != null && modificar(u, c, t.getNombre(), t.getApellido(), t.getDireccion(), t.getEmail(),
-                t.getTelefonoFijo(), v);
+                t.getTelefonoFijo(), v, t.getCodigoSucursal());
     }
 
 }

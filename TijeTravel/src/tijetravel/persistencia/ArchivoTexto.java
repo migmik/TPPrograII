@@ -12,6 +12,16 @@ import java.nio.file.StandardCopyOption;
 public abstract class ArchivoTexto {
     protected static final String SEPARADOR = ";";
 
+    protected static Path rutaDatos(String nombreArchivo) {
+        Path rutaDesdeRaiz = Path.of("TijeTravel", "datos", nombreArchivo);
+
+        if (Files.exists(rutaDesdeRaiz) || !Files.exists(Path.of("datos"))) {
+            return rutaDesdeRaiz;
+        }
+
+        return Path.of("datos", nombreArchivo);
+    }
+
     protected boolean lineaVacia(String linea) {
         return linea == null || linea.trim().isEmpty();
     }
@@ -44,7 +54,6 @@ public abstract class ArchivoTexto {
             try {
                 Files.deleteIfExists(temporal);
             } catch (IOException ignorada) {
-                // Se conserva la causa original.
             }
             throw new PersistenciaException("No se pudo guardar el archivo " + ruta, e);
         }

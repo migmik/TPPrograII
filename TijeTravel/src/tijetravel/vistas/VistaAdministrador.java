@@ -14,6 +14,7 @@ import tijetravel.modelos.Sucursal;
 import tijetravel.modelos.TipoHospedaje;
 import tijetravel.modelos.Turista;
 import tijetravel.modelos.Usuario;
+import tijetravel.modelos.UsuarioFactory;
 import tijetravel.modelos.Vuelo;
 
 public class VistaAdministrador extends VistaUsuario {
@@ -239,6 +240,7 @@ public class VistaAdministrador extends VistaUsuario {
             System.out.println("2. Buscar reserva");
             System.out.println("3. Crear reserva");
             System.out.println("4. Cancelar reserva");
+            System.out.println("5. Modificar reserva");
             System.out.println("0. Volver");
             opcion = leerEntero("Seleccione una opcion: ");
 
@@ -254,6 +256,9 @@ public class VistaAdministrador extends VistaUsuario {
                     break;
                 case 4:
                     cancelarReserva();
+                    break;
+                case 5:
+                    modificarReserva();
                     break;
                 case 0:
                     break;
@@ -457,6 +462,7 @@ public class VistaAdministrador extends VistaUsuario {
         System.out.println("Telefono celular: " + turista.getTelefonoCelular());
         System.out.println("Titular: " + turista.isEsTitular());
         System.out.println("Codigo titular: " + turista.getCodigoTitular());
+        System.out.println("Sucursal contratacion: " + turista.getCodigoSucursal());
         System.out.println("--------------------");
     }
 
@@ -483,8 +489,11 @@ public class VistaAdministrador extends VistaUsuario {
         System.out.print("Telefono celular: ");
         String telefonoCelular = teclado.nextLine();
 
+        mostrarSucursales();
+        int codigoSucursal = leerCodigoSucursalExistente();
+
         Turista turista = controladorTuristas.agregarTitular(usuarioActual, nombre, apellido, direccion, email,
-                telefonoFijo, telefonoCelular);
+                telefonoFijo, telefonoCelular, codigoSucursal);
 
         if (turista != null) {
             guardarCambios();
@@ -595,6 +604,43 @@ public class VistaAdministrador extends VistaUsuario {
         }
     }
 
+    private void modificarReserva() {
+        if (agencia.getReservas().isEmpty()) {
+            System.out.println("No hay reservas cargadas.");
+            return;
+        }
+
+        mostrarReservas();
+        int codigoReserva = leerEntero("Codigo reserva: ");
+
+        if (agencia.buscarReservaPorCodigo(codigoReserva) == null) {
+            System.out.println("No existe una reserva con ese codigo.");
+            return;
+        }
+
+        System.out.println("===== MODIFICAR RESERVA =====");
+        mostrarTuristas();
+        int codigoTurista = leerCodigoTuristaExistente();
+        mostrarVuelos();
+        int numeroVuelo = leerNumeroVueloExistente();
+        mostrarHoteles();
+        int codigoHotel = leerCodigoHotelExistente();
+        mostrarSucursales();
+        int codigoSucursal = leerCodigoSucursalExistente();
+        ClaseVuelo claseVuelo = leerClaseVuelo();
+        TipoHospedaje tipoHospedaje = leerTipoHospedaje();
+        LocalDate fechaLlegada = leerFecha("Fecha llegada (yyyy-mm-dd): ");
+        LocalDate fechaPartida = leerFechaPartidaValida(fechaLlegada);
+
+        if (controladorReservas.modificarReserva(usuarioActual, codigoReserva, codigoTurista, codigoSucursal,
+                numeroVuelo, codigoHotel, claseVuelo, tipoHospedaje, fechaLlegada, fechaPartida)) {
+            guardarCambios();
+            System.out.println("Reserva actualizada.");
+        } else {
+            System.out.println("No se pudo modificar la reserva.");
+        }
+    }
+
     private void mostrarUsuarios() {
         if (agencia.getUsuarios().isEmpty()) {
             System.out.println("No hay usuarios cargados.");
@@ -638,7 +684,7 @@ public class VistaAdministrador extends VistaUsuario {
             codigoTurista = leerCodigoTitularExistente();
         }
 
-        Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol, codigoTurista);
+        Usuario usuario = UsuarioFactory.crear(nombreUsuario, contrasenia, rol, codigoTurista);
 
         if (controladorUsuarios.agregar(usuarioActual, usuario)) {
             guardarCambios();
@@ -812,8 +858,10 @@ public class VistaAdministrador extends VistaUsuario {
         String fijo = teclado.nextLine();
         System.out.print("Nuevo telefono celular: ");
         String celular = teclado.nextLine();
+        mostrarSucursales();
+        int codigoSucursal = leerCodigoSucursalExistente();
         if (controladorTuristas.modificar(usuarioActual, turista.getCodigo(), nombre, apellido, direccion,
-                email, fijo, celular))
+                email, fijo, celular, codigoSucursal))
             guardarYMostrar("Turista actualizado.");
     }
 
@@ -856,6 +904,10 @@ public class VistaAdministrador extends VistaUsuario {
         Usuario usuario = agencia.buscarUsuarioPorNombre(teclado.nextLine());
         if (usuario == null) {
             System.out.println("No existe ese usuario.");
+            return;
+        }
+        if (usuario == usuarioActual) {
+            System.out.println("No puede modificar el usuario de la sesion actual.");
             return;
         }
         System.out.print("Nuevo nombre de usuario: ");
