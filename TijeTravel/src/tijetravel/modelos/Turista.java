@@ -10,7 +10,7 @@ public class Turista {
     private String telefonoCelular;
     private boolean esTitular;
     private Integer codigoTitular;
-    
+
     public Turista(int codigo, String nombre, String apellido, String direccion, String email, String telefonoFijo,
             String telefonoCelular) {
         this(codigo, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, true, null);
@@ -19,9 +19,14 @@ public class Turista {
     public boolean actualizarDatos(String nombre, String apellido, String direccion, String email,
             String telefonoFijo, String telefonoCelular) {
         if (nombre == null || apellido == null || direccion == null || email == null
-                || telefonoFijo == null || telefonoCelular == null) return false;
-        this.nombre = nombre; this.apellido = apellido; this.direccion = direccion; this.email = email;
-        this.telefonoFijo = telefonoFijo; this.telefonoCelular = telefonoCelular;
+                || telefonoFijo == null || telefonoCelular == null)
+            return false;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.direccion = direccion;
+        this.email = email;
+        this.telefonoFijo = telefonoFijo;
+        this.telefonoCelular = telefonoCelular;
         return true;
     }
 

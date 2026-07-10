@@ -258,21 +258,24 @@ public class Agencia {
 
     public boolean sucursalTieneReservas(int codigoSucursal) {
         for (Reserva reserva : reservas) {
-            if (reserva.getSucursal().getCodigo() == codigoSucursal) return true;
+            if (reserva.getSucursal().getCodigo() == codigoSucursal)
+                return true;
         }
         return false;
     }
 
     public boolean hotelTieneReservas(int codigoHotel) {
         for (Reserva reserva : reservas) {
-            if (reserva.getHotel().getCodigo() == codigoHotel) return true;
+            if (reserva.getHotel().getCodigo() == codigoHotel)
+                return true;
         }
         return false;
     }
 
     public boolean vueloTieneReservas(int numeroVuelo) {
         for (Reserva reserva : reservas) {
-            if (reserva.getVuelo().getNumero() == numeroVuelo) return true;
+            if (reserva.getVuelo().getNumero() == numeroVuelo)
+                return true;
         }
         return false;
     }
@@ -295,15 +298,18 @@ public class Agencia {
     public int contarAdministradores() {
         int cantidad = 0;
         for (Usuario usuario : usuarios) {
-            if (usuario.getRol() == RolUsuario.ADMINISTRADOR) cantidad++;
+            if (usuario.getRol() == RolUsuario.ADMINISTRADOR)
+                cantidad++;
         }
         return cantidad;
     }
 
     public boolean eliminarUsuario(String nombreUsuario) {
         Usuario usuario = buscarUsuarioPorNombre(nombreUsuario);
-        if (usuario == null) return false;
-        if (usuario.getRol() == RolUsuario.ADMINISTRADOR && contarAdministradores() <= 1) return false;
+        if (usuario == null)
+            return false;
+        if (usuario.getRol() == RolUsuario.ADMINISTRADOR && contarAdministradores() <= 1)
+            return false;
         return usuarios.remove(usuario);
     }
 

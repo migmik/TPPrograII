@@ -26,9 +26,14 @@ public class Vuelo {
             int totalPlazas, int plazasTurista, int plazasPrimera) {
         if (fechaYHora == null || origen == null || destino == null || totalPlazas <= 0
                 || plazasTurista < 0 || plazasPrimera < 0
-                || plazasTurista + plazasPrimera > totalPlazas) return false;
-        this.fechaYHora = fechaYHora; this.origen = origen; this.destino = destino;
-        this.totalPlazas = totalPlazas; this.plazasTurista = plazasTurista; this.plazasPrimera = plazasPrimera;
+                || plazasTurista + plazasPrimera > totalPlazas)
+            return false;
+        this.fechaYHora = fechaYHora;
+        this.origen = origen;
+        this.destino = destino;
+        this.totalPlazas = totalPlazas;
+        this.plazasTurista = plazasTurista;
+        this.plazasPrimera = plazasPrimera;
         return true;
     }
 

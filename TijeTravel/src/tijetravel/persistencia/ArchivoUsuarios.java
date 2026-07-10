@@ -58,9 +58,9 @@ public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
             for (Usuario usuario : usuarios) {
                 escritor.write(
                         usuario.getNombreUsuario() + ";"
-                        + usuario.getContrasenia() + ";"
-                        + usuario.getRol() + ";"
-                        + (usuario.getCodigoTurista() == null ? "" : usuario.getCodigoTurista()));
+                                + usuario.getContrasenia() + ";"
+                                + usuario.getRol() + ";"
+                                + (usuario.getCodigoTurista() == null ? "" : usuario.getCodigoTurista()));
                 escritor.newLine();
             }
         });

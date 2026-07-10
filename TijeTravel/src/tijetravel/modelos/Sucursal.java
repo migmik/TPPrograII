@@ -12,7 +12,8 @@ public class Sucursal {
     }
 
     public boolean actualizarDatos(String direccion, String telefono) {
-        if (direccion == null || telefono == null) return false;
+        if (direccion == null || telefono == null)
+            return false;
         this.direccion = direccion;
         this.telefono = telefono;
         return true;
