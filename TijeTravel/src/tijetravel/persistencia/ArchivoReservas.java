@@ -1,11 +1,9 @@
 package tijetravel.persistencia;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,17 +18,15 @@ import tijetravel.modelos.Turista;
 import tijetravel.modelos.Vuelo;
 
 public class ArchivoReservas extends ArchivoTexto {
-    private static final String RUTA_ARCHIVO = "TijeTravel/datos/reservas.txt";
+    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "reservas.txt");
 
     public ArrayList<Reserva> cargar(Agencia agencia) {
         ArrayList<Reserva> reservas = new ArrayList<>();
-        File archivo = new File(RUTA_ARCHIVO);
-
-        if (!archivo.exists()) {
+        if (!Files.exists(RUTA_ARCHIVO)) {
             return reservas;
         }
 
-        try (BufferedReader lector = new BufferedReader(new FileReader(archivo))) {
+        try (BufferedReader lector = abrirLector(RUTA_ARCHIVO)) {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
@@ -82,18 +78,15 @@ public class ArchivoReservas extends ArchivoTexto {
                         fechaPartida);
                 reservas.add(reserva);
             }
-        } catch (IOException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
-            System.out.println("Error al cargar reservas: " + e.getMessage());
+        } catch (IOException | RuntimeException e) {
+            throw errorCarga(RUTA_ARCHIVO, e);
         }
 
         return reservas;
     }
 
     public void guardar(List<Reserva> reservas) {
-        File archivo = new File(RUTA_ARCHIVO);
-        archivo.getParentFile().mkdirs();
-
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo))) {
+        guardarAtomico(RUTA_ARCHIVO, escritor -> {
             for (Reserva reserva : reservas) {
                 escritor.write(
                         reserva.getCodigo() + ";"
@@ -107,8 +100,6 @@ public class ArchivoReservas extends ArchivoTexto {
                         + reserva.getFechaPartida());
                 escritor.newLine();
             }
-        } catch (IOException e) {
-            System.out.println("Error al guardar reservas: " + e.getMessage());
-        }
+        });
     }
 }

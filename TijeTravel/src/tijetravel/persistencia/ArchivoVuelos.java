@@ -1,11 +1,9 @@
 package tijetravel.persistencia;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,17 +11,15 @@ import java.util.List;
 import tijetravel.modelos.Vuelo;
 
 public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
-    private static final String RUTA_ARCHIVO = "TijeTravel/datos/vuelos.txt";
+    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "vuelos.txt");
 
     public ArrayList<Vuelo> cargar() {
         ArrayList<Vuelo> vuelos = new ArrayList<>();
-        File archivo = new File(RUTA_ARCHIVO);
-
-        if (!archivo.exists()) {
+        if (!Files.exists(RUTA_ARCHIVO)) {
             return vuelos;
         }
 
-        try (BufferedReader lector = new BufferedReader(new FileReader(archivo))) {
+        try (BufferedReader lector = abrirLector(RUTA_ARCHIVO)) {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
@@ -43,18 +39,15 @@ public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
                         plazasTurista, plazasPrimera);
                 vuelos.add(vuelo);
             }
-        } catch (IOException | NumberFormatException e) {
-            System.out.println("Error al cargar vuelos: " + e.getMessage());
+        } catch (IOException | RuntimeException e) {
+            throw errorCarga(RUTA_ARCHIVO, e);
         }
 
         return vuelos;
     }
 
     public void guardar(List<Vuelo> vuelos) {
-        File archivo = new File(RUTA_ARCHIVO);
-        archivo.getParentFile().mkdirs();
-
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo))) {
+        guardarAtomico(RUTA_ARCHIVO, escritor -> {
             for (Vuelo vuelo : vuelos) {
                 escritor.write(
                         vuelo.getNumero() + ";"
@@ -66,8 +59,6 @@ public class ArchivoVuelos extends ArchivoTexto implements Archivo<Vuelo> {
                         + vuelo.getPlazasPrimera());
                 escritor.newLine();
             }
-        } catch (IOException e) {
-            System.out.println("Error al guardar vuelos: " + e.getMessage());
-        }
+        });
     }
 }

@@ -88,37 +88,4 @@ public class Vuelo {
         this.plazasPrimera = plazasPrimera;
     }
 
-    public boolean tienePlazasDisponibles(ClaseVuelo claseVuelo) {
-        if (claseVuelo == ClaseVuelo.TURISTA) {
-            return plazasTurista > 0;
-        }
-
-        if (claseVuelo == ClaseVuelo.PRIMERA) {
-            return plazasPrimera > 0;
-        }
-
-        return false;
-    }
-
-    public boolean reservarPlaza(ClaseVuelo claseVuelo) {
-        if (!tienePlazasDisponibles(claseVuelo)) {
-            return false;
-        }
-
-        if (claseVuelo == ClaseVuelo.TURISTA) {
-            plazasTurista--;
-        } else {
-            plazasPrimera--;
-        }
-
-        return true;
-    }
-
-    public void liberarPlaza(ClaseVuelo claseVuelo) {
-        if (claseVuelo == ClaseVuelo.TURISTA) {
-            plazasTurista++;
-        } else if (claseVuelo == ClaseVuelo.PRIMERA) {
-            plazasPrimera++;
-        }
-    }
 }

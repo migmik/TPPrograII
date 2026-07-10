@@ -52,7 +52,6 @@ public class VistaAdministrador extends VistaUsuario {
                     administrarUsuarios();
                     break;
                 case 0:
-                    controladorDatos.guardarTodo(agencia);
                     System.out.println("Sesion cerrada.");
                     break;
                 default:
@@ -331,7 +330,7 @@ public class VistaAdministrador extends VistaUsuario {
         String telefono = teclado.nextLine();
 
         if (controladorAdministracion.agregarSucursal(usuarioActual, new Sucursal(codigo, direccion, telefono))) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Sucursal agregada.");
         } else {
             System.out.println("No se pudo agregar la sucursal.");
@@ -352,7 +351,7 @@ public class VistaAdministrador extends VistaUsuario {
             System.out.println("Direccion: " + hotel.getDireccion());
             System.out.println("Ciudad: " + hotel.getCiudad());
             System.out.println("Telefono: " + hotel.getTelefono());
-            System.out.println("Plazas disponibles: " + hotel.getPlazasDisponibles());
+            System.out.println("Capacidad de plazas: " + hotel.getPlazasDisponibles());
             System.out.println("--------------------");
         }
     }
@@ -379,7 +378,7 @@ public class VistaAdministrador extends VistaUsuario {
         Hotel hotel = new Hotel(codigo, nombre, direccion, ciudad, telefono, plazasDisponibles);
 
         if (controladorAdministracion.agregarHotel(usuarioActual, hotel)) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Hotel agregado.");
         } else {
             System.out.println("No se pudo agregar el hotel.");
@@ -400,7 +399,10 @@ public class VistaAdministrador extends VistaUsuario {
             System.out.println("Origen: " + vuelo.getOrigen());
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
-            System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Turista disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.TURISTA)
+                    + " de " + vuelo.getPlazasTurista());
+            System.out.println("Primera disponibles: " + controladorReservas.plazasDisponiblesVuelo(vuelo, ClaseVuelo.PRIMERA)
+                    + " de " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }
@@ -424,7 +426,7 @@ public class VistaAdministrador extends VistaUsuario {
         Vuelo vuelo = new Vuelo(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
 
         if (controladorAdministracion.agregarVuelo(usuarioActual, vuelo)) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Vuelo agregado.");
         } else {
             System.out.println("No se pudo agregar el vuelo.");
@@ -483,7 +485,7 @@ public class VistaAdministrador extends VistaUsuario {
                 telefonoFijo, telefonoCelular);
 
         if (turista != null) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Titular agregado con codigo: " + codigo);
         } else {
             System.out.println("No se pudo agregar el turista.");
@@ -570,7 +572,7 @@ public class VistaAdministrador extends VistaUsuario {
             return;
         }
 
-        controladorDatos.guardarTodo(agencia);
+        guardarCambios();
         System.out.println("Reserva creada con codigo: " + reserva.getCodigo());
     }
 
@@ -584,7 +586,7 @@ public class VistaAdministrador extends VistaUsuario {
         int codigo = leerEntero("Codigo reserva: ");
 
         if (controladorReservas.cancelarReserva(usuarioActual, codigo)) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Reserva cancelada.");
         } else {
             System.out.println("No existe una reserva con ese codigo.");
@@ -637,7 +639,7 @@ public class VistaAdministrador extends VistaUsuario {
         Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol, codigoTurista);
 
         if (controladorUsuarios.agregar(usuarioActual, usuario)) {
-            controladorDatos.guardarTodo(agencia);
+            guardarCambios();
             System.out.println("Usuario agregado.");
         } else {
             System.out.println("No se pudo agregar el usuario.");
@@ -689,7 +691,7 @@ public class VistaAdministrador extends VistaUsuario {
         System.out.println("Codigo: " + hotel.getCodigo());
         System.out.println("Nombre: " + hotel.getNombre());
         System.out.println("Ciudad: " + hotel.getCiudad());
-        System.out.println("Plazas disponibles: " + hotel.getPlazasDisponibles());
+        System.out.println("Capacidad de plazas: " + hotel.getPlazasDisponibles());
     }
 
     private void modificarHotel() {
@@ -917,7 +919,7 @@ public class VistaAdministrador extends VistaUsuario {
     }
 
     private void guardarYMostrar(String mensaje) {
-        controladorDatos.guardarTodo(agencia);
+        guardarCambios();
         System.out.println(mensaje);
     }
 

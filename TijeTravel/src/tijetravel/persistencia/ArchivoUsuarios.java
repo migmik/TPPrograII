@@ -1,11 +1,9 @@
 package tijetravel.persistencia;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,17 +11,15 @@ import tijetravel.modelos.RolUsuario;
 import tijetravel.modelos.Usuario;
 
 public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
-    private static final String RUTA_ARCHIVO = "TijeTravel/datos/usuarios.txt";
+    private static final Path RUTA_ARCHIVO = Path.of("TijeTravel", "datos", "usuarios.txt");
 
     public ArrayList<Usuario> cargar() {
         ArrayList<Usuario> usuarios = new ArrayList<>();
-        File archivo = new File(RUTA_ARCHIVO);
-
-        if (!archivo.exists()) {
+        if (!Files.exists(RUTA_ARCHIVO)) {
             return usuarios;
         }
 
-        try (BufferedReader lector = new BufferedReader(new FileReader(archivo))) {
+        try (BufferedReader lector = abrirLector(RUTA_ARCHIVO)) {
             String linea;
 
             while ((linea = lector.readLine()) != null) {
@@ -50,18 +46,15 @@ public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
                 Usuario usuario = new Usuario(nombreUsuario, contrasenia, rol, codigoTurista);
                 usuarios.add(usuario);
             }
-        } catch (IOException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
-            System.out.println("Error al cargar usuarios: " + e.getMessage());
+        } catch (IOException | RuntimeException e) {
+            throw errorCarga(RUTA_ARCHIVO, e);
         }
 
         return usuarios;
     }
 
     public void guardar(List<Usuario> usuarios) {
-        File archivo = new File(RUTA_ARCHIVO);
-        archivo.getParentFile().mkdirs();
-
-        try (BufferedWriter escritor = new BufferedWriter(new FileWriter(archivo))) {
+        guardarAtomico(RUTA_ARCHIVO, escritor -> {
             for (Usuario usuario : usuarios) {
                 escritor.write(
                         usuario.getNombreUsuario() + ";"
@@ -70,8 +63,6 @@ public class ArchivoUsuarios extends ArchivoTexto implements Archivo<Usuario> {
                         + (usuario.getCodigoTurista() == null ? "" : usuario.getCodigoTurista()));
                 escritor.newLine();
             }
-        } catch (IOException e) {
-            System.out.println("Error al guardar usuarios: " + e.getMessage());
-        }
+        });
     }
 }

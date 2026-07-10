@@ -9,6 +9,7 @@ import tijetravel.controladores.ControladorAdministracion;
 import tijetravel.controladores.ControladorUsuarios;
 import tijetravel.modelos.Agencia;
 import tijetravel.modelos.Usuario;
+import tijetravel.persistencia.PersistenciaException;
 
 public abstract class VistaUsuario {
     protected Agencia agencia;
@@ -30,6 +31,16 @@ public abstract class VistaUsuario {
     }
 
     public abstract void mostrar(Usuario usuario);
+
+    protected boolean guardarCambios() {
+        try {
+            controladorDatos.guardarTodo(agencia);
+            return true;
+        } catch (PersistenciaException e) {
+            System.out.println("No se pudieron guardar los cambios: " + e.getMessage());
+            return false;
+        }
+    }
 
     protected int leerEntero(String mensaje) {
         while (true) {

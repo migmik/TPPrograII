@@ -37,8 +37,7 @@ public class VistaPrincipal {
                     iniciarSesion();
                     break;
                 case 0:
-                    controladorDatos.guardarTodo(agencia);
-                    System.out.println("Datos guardados. Saliendo del sistema...");
+                    System.out.println("Saliendo del sistema...");
                     break;
                 default:
                     System.out.println("Opcion invalida.");
@@ -71,7 +70,7 @@ public class VistaPrincipal {
             System.out.println("Direccion: " + hotel.getDireccion());
             System.out.println("Ciudad: " + hotel.getCiudad());
             System.out.println("Telefono: " + hotel.getTelefono());
-            System.out.println("Plazas disponibles: " + hotel.getPlazasDisponibles());
+            System.out.println("Capacidad de plazas: " + hotel.getPlazasDisponibles());
             System.out.println("--------------------");
         }
     }
@@ -90,8 +89,8 @@ public class VistaPrincipal {
             System.out.println("Origen: " + vuelo.getOrigen());
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
-            System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
-            System.out.println("Plazas primera: " + vuelo.getPlazasPrimera());
+            System.out.println("Capacidad turista: " + vuelo.getPlazasTurista());
+            System.out.println("Capacidad primera: " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

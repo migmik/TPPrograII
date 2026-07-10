@@ -79,7 +79,7 @@ public class VistaCliente extends VistaUsuario {
             System.out.println("Direccion: " + hotel.getDireccion());
             System.out.println("Ciudad: " + hotel.getCiudad());
             System.out.println("Telefono: " + hotel.getTelefono());
-            System.out.println("Plazas disponibles: " + hotel.getPlazasDisponibles());
+            System.out.println("Capacidad de plazas: " + hotel.getPlazasDisponibles());
             System.out.println("--------------------");
         }
     }
@@ -98,7 +98,12 @@ public class VistaCliente extends VistaUsuario {
             System.out.println("Origen: " + vuelo.getOrigen());
             System.out.println("Destino: " + vuelo.getDestino());
             System.out.println("Plazas totales: " + vuelo.getTotalPlazas());
-            System.out.println("Plazas turista: " + vuelo.getPlazasTurista());
+            System.out.println("Turista disponibles: "
+                    + controladorReservas.plazasDisponiblesVuelo(vuelo, tijetravel.modelos.ClaseVuelo.TURISTA)
+                    + " de " + vuelo.getPlazasTurista());
+            System.out.println("Primera disponibles: "
+                    + controladorReservas.plazasDisponiblesVuelo(vuelo, tijetravel.modelos.ClaseVuelo.PRIMERA)
+                    + " de " + vuelo.getPlazasPrimera());
             System.out.println("--------------------");
         }
     }

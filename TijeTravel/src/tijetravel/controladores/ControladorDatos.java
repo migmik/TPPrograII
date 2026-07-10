@@ -13,6 +13,7 @@ import tijetravel.persistencia.ArchivoSucursales;
 import tijetravel.persistencia.ArchivoTuristas;
 import tijetravel.persistencia.ArchivoUsuarios;
 import tijetravel.persistencia.ArchivoVuelos;
+import tijetravel.persistencia.PersistenciaException;
 
 public class ControladorDatos {
     private ArchivoSucursales archivoSucursales;
@@ -31,7 +32,8 @@ public class ControladorDatos {
         this.archivoReservas = new ArchivoReservas();
     }
 
-    public void cargarTodo(Agencia agencia) {
+    public Agencia cargarTodo() {
+        Agencia agencia = new Agencia();
         for (Sucursal sucursal : archivoSucursales.cargar()) {
             agencia.agregarSucursal(sucursal);
         }
@@ -55,9 +57,14 @@ public class ControladorDatos {
         for (Reserva reserva : archivoReservas.cargar(agencia)) {
             agencia.agregarReserva(reserva);
         }
+
+        return agencia;
     }
 
     public void guardarTodo(Agencia agencia) {
+        if (agencia == null) {
+            throw new PersistenciaException("No se puede guardar una agencia nula");
+        }
         archivoSucursales.guardar(agencia.getSucursales());
         archivoHoteles.guardar(agencia.getHoteles());
         archivoVuelos.guardar(agencia.getVuelos());
