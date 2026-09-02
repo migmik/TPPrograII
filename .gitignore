@@ -1,5 +1,6 @@
 .vscode/
-/TijeTravel/bin/
-/TijeTravel/out/
-/TijeTravel/nbproject/private/
-/TijeTravel/build/
+/tije-back/bin/
+/tije-back/out/
+/tije-back/nbproject/private/
+/tije-back/build/
+/tije-back/dist/
