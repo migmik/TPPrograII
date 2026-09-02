@@ -1,0 +1,432 @@
+@startuml TijeTravel_Modelo
+title TijeTravel - Diagrama de clases del modelo
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+hide empty members
+
+package "tijetravel.modelos" {
+    class Agencia {
+        - sucursales: ArrayList<Sucursal>
+        - hoteles: ArrayList<Hotel>
+        - vuelos: ArrayList<Vuelo>
+        - turistas: ArrayList<Turista>
+        - usuarios: ArrayList<Usuario>
+        - reservas: ArrayList<Reserva>
+        --
+        + agregarSucursal(sucursal: Sucursal): boolean
+        + agregarHotel(hotel: Hotel): boolean
+        + agregarVuelo(vuelo: Vuelo): boolean
+        + agregarTurista(turista: Turista): boolean
+        + agregarUsuario(usuario: Usuario): boolean
+        + agregarReserva(reserva: Reserva): boolean
+        + buscarTuristaPorCodigo(codigo: int): Turista
+        + buscarSucursalPorCodigo(codigo: int): Sucursal
+        + buscarHotelPorCodigo(codigo: int): Hotel
+        + buscarVueloPorNumero(numero: int): Vuelo
+        + buscarReservaPorCodigo(codigo: int): Reserva
+        + buscarUsuarioPorNombre(nombreUsuario: String): Usuario
+        + eliminarTurista(codigoTurista: int): boolean
+        + eliminarSucursal(codigo: int): boolean
+        + eliminarHotel(codigo: int): boolean
+        + eliminarVuelo(numero: int): boolean
+        + eliminarReserva(codigo: int): boolean
+        + eliminarUsuario(nombreUsuario: String): boolean
+        + generarCodigoTurista(): int
+        + contarAdministradores(): int
+    }
+
+    abstract class Usuario {
+        - nombreUsuario: String
+        - contrasenia: String
+        --
+        + actualizarCredenciales(nombreUsuario: String, contrasenia: String): boolean
+        + getNombreUsuario(): String
+        + getContrasenia(): String
+        + getCodigoTurista(): Integer
+        + getRol(): RolUsuario
+        + tienePermiso(permiso: Permiso): boolean
+    }
+
+    class Administrador {
+        + getRol(): RolUsuario
+        + tienePermiso(permiso: Permiso): boolean
+    }
+
+    class Vendedor {
+        + getRol(): RolUsuario
+        + tienePermiso(permiso: Permiso): boolean
+    }
+
+    class Cliente {
+        - codigoTurista: Integer
+        --
+        + getRol(): RolUsuario
+        + getCodigoTurista(): Integer
+        + tienePermiso(permiso: Permiso): boolean
+    }
+
+    class UsuarioFactory {
+        + crear(nombreUsuario: String, contrasenia: String, rol: RolUsuario, codigoTurista: Integer): Usuario
+    }
+
+    class Turista {
+        - codigo: int
+        - nombre: String
+        - apellido: String
+        - direccion: String
+        - email: String
+        - telefonoFijo: String
+        - telefonoCelular: String
+        - esTitular: boolean
+        - codigoTitular: Integer
+        - codigoSucursal: Integer
+        --
+        + actualizarDatos(nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String, codigoSucursal: Integer): boolean
+    }
+
+    class Sucursal {
+        - codigo: int
+        - direccion: String
+        - telefono: String
+        --
+        + actualizarDatos(direccion: String, telefono: String): boolean
+    }
+
+    class Hotel {
+        - codigo: int
+        - nombre: String
+        - direccion: String
+        - ciudad: String
+        - telefono: String
+        - plazasDisponibles: int
+        --
+        + actualizarDatos(nombre: String, direccion: String, ciudad: String, telefono: String, plazasDisponibles: int): boolean
+    }
+
+    class Vuelo {
+        - numero: int
+        - fechaYHora: LocalDateTime
+        - origen: String
+        - destino: String
+        - totalPlazas: int
+        - plazasTurista: int
+        - plazasPrimera: int
+        --
+        + actualizarDatos(fechaYHora: LocalDateTime, origen: String, destino: String, totalPlazas: int, plazasTurista: int, plazasPrimera: int): boolean
+    }
+
+    class Reserva {
+        - codigo: int
+        - turista: Turista
+        - sucursal: Sucursal
+        - vuelo: Vuelo
+        - hotel: Hotel
+        - claseVuelo: ClaseVuelo
+        - tipoHospedaje: TipoHospedaje
+        - fechaLlegada: LocalDate
+        - fechaPartida: LocalDate
+        --
+        + actualizarDatos(turista: Turista, sucursal: Sucursal, vuelo: Vuelo, hotel: Hotel, claseVuelo: ClaseVuelo, tipoHospedaje: TipoHospedaje, fechaLlegada: LocalDate, fechaPartida: LocalDate): boolean
+    }
+
+    enum RolUsuario {
+        CLIENTE
+        VENDEDOR
+        ADMINISTRADOR
+    }
+
+    enum Permiso {
+        CONSULTAR
+        ADMINISTRAR_CLIENTES
+        ADMINISTRAR_RESERVAS
+        ADMINISTRAR_SUCURSALES
+        ADMINISTRAR_HOTELES
+        ADMINISTRAR_VUELOS
+        ADMINISTRAR_USUARIOS
+    }
+
+    enum ClaseVuelo {
+        TURISTA
+        PRIMERA
+    }
+
+    enum TipoHospedaje {
+        MEDIA_PENSION
+        PENSION_COMPLETA
+    }
+}
+
+Usuario <|-- Administrador
+Usuario <|-- Vendedor
+Usuario <|-- Cliente
+
+Agencia "1" o-- "0..*" Sucursal
+Agencia "1" o-- "0..*" Hotel
+Agencia "1" o-- "0..*" Vuelo
+Agencia "1" o-- "0..*" Turista
+Agencia "1" o-- "0..*" Usuario
+Agencia "1" o-- "0..*" Reserva
+
+Reserva "0..*" --> "1" Turista
+Reserva "0..*" --> "1" Sucursal
+Reserva "0..*" --> "1" Vuelo
+Reserva "0..*" --> "1" Hotel
+Reserva --> ClaseVuelo
+Reserva --> TipoHospedaje
+
+Usuario ..> RolUsuario
+Usuario ..> Permiso
+UsuarioFactory ..> Usuario
+UsuarioFactory ..> RolUsuario
+Cliente ..> Turista : codigoTurista
+Turista ..> Sucursal : codigoSucursal
+Turista ..> Turista : codigoTitular
+
+@enduml
+
+@startuml TijeTravel_Capas
+title TijeTravel - Diagrama general por capas
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+hide empty members
+
+package "tijetravel" {
+    class Main {
+        + main(args: String[]): void
+    }
+}
+
+package "tijetravel.vistas" {
+    class VistaPrincipal {
+        - agencia: Agencia
+        - controladorDatos: ControladorDatos
+        - teclado: Scanner
+        --
+        + iniciar(): void
+    }
+
+    class VistaLogin {
+        - controladorLogin: ControladorLogin
+        - teclado: Scanner
+        --
+        + mostrar(): Usuario
+    }
+
+    abstract class VistaUsuario {
+        # agencia: Agencia
+        # controladorDatos: ControladorDatos
+        # controladorReservas: ControladorReservas
+        # controladorTuristas: ControladorTuristas
+        # controladorAdministracion: ControladorAdministracion
+        # controladorUsuarios: ControladorUsuarios
+        # teclado: Scanner
+        --
+        + mostrar(usuario: Usuario): void
+        # guardarCambios(): boolean
+        # leerEntero(mensaje: String): int
+    }
+
+    class VistaCliente {
+        + mostrar(usuario: Usuario): void
+    }
+
+    class VistaVendedor {
+        - usuarioActual: Usuario
+        --
+        + mostrar(usuario: Usuario): void
+    }
+
+    class VistaAdministrador {
+        - usuarioActual: Usuario
+        --
+        + mostrar(usuario: Usuario): void
+    }
+}
+
+package "tijetravel.controladores" {
+    class ControladorDatos {
+        - archivoSucursales: ArchivoSucursales
+        - archivoHoteles: ArchivoHoteles
+        - archivoVuelos: ArchivoVuelos
+        - archivoTuristas: ArchivoTuristas
+        - archivoUsuarios: ArchivoUsuarios
+        - archivoReservas: ArchivoReservas
+        --
+        + cargarTodo(): Agencia
+        + guardarTodo(agencia: Agencia): void
+    }
+
+    class ControladorLogin {
+        - agencia: Agencia
+        --
+        + iniciarSesion(nombreUsuario: String, contrasenia: String): Usuario
+    }
+
+    class ControladorAutorizacion {
+        + tienePermiso(usuario: Usuario, permiso: Permiso): boolean
+    }
+
+    class ControladorAdministracion {
+        - agencia: Agencia
+        - autorizacion: ControladorAutorizacion
+        - reservas: ControladorReservas
+        --
+        + agregarSucursal(u: Usuario, s: Sucursal): boolean
+        + modificarSucursal(u: Usuario, c: int, d: String, t: String): boolean
+        + eliminarSucursal(u: Usuario, c: int): boolean
+        + agregarHotel(u: Usuario, h: Hotel): boolean
+        + modificarHotel(u: Usuario, c: int, n: String, d: String, ciudad: String, tel: String, plazas: int): boolean
+        + eliminarHotel(u: Usuario, c: int): boolean
+        + agregarVuelo(u: Usuario, v: Vuelo): boolean
+        + modificarVuelo(u: Usuario, n: int, f: LocalDateTime, o: String, d: String, total: int, turista: int, primera: int): boolean
+        + eliminarVuelo(u: Usuario, n: int): boolean
+    }
+
+    class ControladorTuristas {
+        - agencia: Agencia
+        - autorizacion: ControladorAutorizacion
+        --
+        + agregarTitular(usuario: Usuario, nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String, codigoSucursal: int): Turista
+        + agregarFamiliar(usuario: Usuario, codigoTitular: int, nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String): Turista
+        + modificar(usuario: Usuario, codigo: int, nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String, codigoSucursal: Integer): boolean
+        + eliminar(usuario: Usuario, codigo: int): boolean
+    }
+
+    class ControladorReservas {
+        - agencia: Agencia
+        - autorizacion: ControladorAutorizacion
+        --
+        + generarCodigoReserva(): int
+        + fechasValidas(fechaLlegada: LocalDate, fechaPartida: LocalDate): boolean
+        + contarReservasVuelo(numeroVuelo: int, claseVuelo: ClaseVuelo): int
+        + plazasDisponiblesVuelo(vuelo: Vuelo, claseVuelo: ClaseVuelo): int
+        + plazasDisponiblesHotel(hotel: Hotel, llegada: LocalDate, partida: LocalDate): int
+        + crearReserva(usuario: Usuario, codigoTurista: int, codigoSucursal: int, numeroVuelo: int, codigoHotel: int, claseVuelo: ClaseVuelo, tipoHospedaje: TipoHospedaje, fechaLlegada: LocalDate, fechaPartida: LocalDate): Reserva
+        + buscarReservasDeTurista(codigoTurista: int): ArrayList<Reserva>
+        + buscarReservasDeTitularYFamiliares(codigoTitular: int): ArrayList<Reserva>
+        + cancelarReserva(usuario: Usuario, codigoReserva: int): boolean
+        + modificarReserva(usuario: Usuario, codigoReserva: int, codigoTurista: int, codigoSucursal: int, numeroVuelo: int, codigoHotel: int, claseVuelo: ClaseVuelo, tipoHospedaje: TipoHospedaje, fechaLlegada: LocalDate, fechaPartida: LocalDate): boolean
+    }
+
+    class ControladorUsuarios {
+        - agencia: Agencia
+        - autorizacion: ControladorAutorizacion
+        --
+        + agregar(actor: Usuario, nuevo: Usuario): boolean
+        + modificar(actor: Usuario, actual: String, nuevoNombre: String, contrasenia: String, rol: RolUsuario, codigoTurista: Integer): boolean
+        + eliminar(actor: Usuario, nombre: String): boolean
+    }
+}
+
+package "tijetravel.persistencia" {
+    interface Archivo<T> {
+        + cargar(): ArrayList<T>
+        + guardar(lista: List<T>): void
+    }
+
+    abstract class ArchivoTexto {
+        # SEPARADOR: String
+        --
+        # rutaDatos(nombreArchivo: String): Path
+        # lineaVacia(linea: String): boolean
+        # separarCampos(linea: String): String[]
+        # abrirLector(ruta: Path): BufferedReader
+        # guardarAtomico(ruta: Path, escritura: EscrituraArchivo): void
+        # errorCarga(ruta: Path, causa: Exception): PersistenciaException
+    }
+
+    interface EscrituraArchivo {
+        + escribir(escritor: BufferedWriter): void
+    }
+
+    class PersistenciaException
+    class ArchivoSucursales
+    class ArchivoHoteles
+    class ArchivoVuelos
+    class ArchivoTuristas
+    class ArchivoUsuarios
+    class ArchivoReservas {
+        + cargar(agencia: Agencia): ArrayList<Reserva>
+        + guardar(reservas: List<Reserva>): void
+    }
+}
+
+package "tijetravel.modelos" {
+    class Agencia
+    class Usuario
+    class Sucursal
+    class Hotel
+    class Vuelo
+    class Turista
+    class Reserva
+    enum Permiso
+    enum RolUsuario
+    enum ClaseVuelo
+    enum TipoHospedaje
+}
+
+Main ..> ControladorDatos
+Main ..> VistaPrincipal
+
+VistaUsuario <|-- VistaCliente
+VistaUsuario <|-- VistaVendedor
+VistaUsuario <|-- VistaAdministrador
+VistaPrincipal ..> VistaLogin
+VistaPrincipal ..> VistaCliente
+VistaPrincipal ..> VistaVendedor
+VistaPrincipal ..> VistaAdministrador
+
+VistaPrincipal --> Agencia
+VistaPrincipal --> ControladorDatos
+VistaLogin --> ControladorLogin
+VistaUsuario --> Agencia
+VistaUsuario --> ControladorDatos
+VistaUsuario --> ControladorReservas
+VistaUsuario --> ControladorTuristas
+VistaUsuario --> ControladorAdministracion
+VistaUsuario --> ControladorUsuarios
+
+ControladorLogin --> Agencia
+ControladorAutorizacion ..> Usuario
+ControladorAutorizacion ..> Permiso
+ControladorAdministracion --> Agencia
+ControladorAdministracion --> ControladorAutorizacion
+ControladorAdministracion --> ControladorReservas
+ControladorTuristas --> Agencia
+ControladorTuristas --> ControladorAutorizacion
+ControladorReservas --> Agencia
+ControladorReservas --> ControladorAutorizacion
+ControladorUsuarios --> Agencia
+ControladorUsuarios --> ControladorAutorizacion
+ControladorDatos --> Agencia
+
+ControladorDatos *-- ArchivoSucursales
+ControladorDatos *-- ArchivoHoteles
+ControladorDatos *-- ArchivoVuelos
+ControladorDatos *-- ArchivoTuristas
+ControladorDatos *-- ArchivoUsuarios
+ControladorDatos *-- ArchivoReservas
+
+ArchivoTexto <|-- ArchivoSucursales
+ArchivoTexto <|-- ArchivoHoteles
+ArchivoTexto <|-- ArchivoVuelos
+ArchivoTexto <|-- ArchivoTuristas
+ArchivoTexto <|-- ArchivoUsuarios
+ArchivoTexto <|-- ArchivoReservas
+
+Archivo <|.. ArchivoSucursales
+Archivo <|.. ArchivoHoteles
+Archivo <|.. ArchivoVuelos
+Archivo <|.. ArchivoTuristas
+Archivo <|.. ArchivoUsuarios
+
+ArchivoTexto ..> EscrituraArchivo
+ArchivoTexto ..> PersistenciaException
+ArchivoReservas ..> Agencia
+ArchivoReservas ..> Reserva
+
+@enduml
