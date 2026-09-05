@@ -1,190 +1,143 @@
-# Tije Travel - Version Web
+# Tije Travel - Backend Web
 
 Proyecto de Programacion II para gestionar una cadena de agencias de viajes.
 
-Esta rama contiene la migracion de la entrega original de consola hacia una aplicacion web con backend Spring Boot, base de datos MySQL y frontend separado.
+La version original de consola se conserva en la rama `main` y en el tag
+`v1.0-tp-entregado`. Esta rama contiene el nucleo reorganizado para una
+aplicacion web con Spring Boot, JPA y MySQL.
 
-La version entregada del TP original se conserva en `main` y en el tag `v1.0-tp-entregado`.
+Los archivos `docs/uml.svg` y `docs/uml.pdf` son exportaciones historicas de
+la primera entrega. Los diagramas vigentes son `docs/uml-tijetravel.md` y
+`docs/uml-tijetravel.puml`.
 
-## Estado Actual
+## Estado actual
 
-- Backend creado como proyecto Maven/Spring Boot en `tije-back`.
-- Codigo de la version consola movido dentro de la estructura Maven.
-- Frontend reservado en `tije-front`.
-- Scripts y recursos de base de datos reservados en `database`.
-- Datos `.txt` heredados conservados temporalmente en `tije-back/datos`.
-- Persistencia MySQL, entidades JPA, servicios REST y frontend web pendientes de implementacion.
+- Modelos convertidos en entidades JPA.
+- Repositorios Spring Data definidos para todas las entidades.
+- Reglas de negocio separadas en controladores por recurso.
+- Validaciones de dominio y excepciones explicitas.
+- Transacciones declaradas en las operaciones de escritura.
+- Pruebas unitarias, integracion JPA y arranque de contexto con H2.
+- Menus de consola y persistencia en archivos retirados del codigo productivo.
+- API REST, seguridad web, migracion de datos y frontend aun pendientes.
 
-## Arquitectura Objetivo
+Los archivos de `tije-back/datos` se mantienen unicamente como referencia para
+crear los futuros scripts de carga inicial. La aplicacion ya no los lee ni los
+escribe.
+
+## Arquitectura
 
 ```text
-Navegador del usuario
+Frontend web                         (pendiente)
         |
         v
-Frontend web
+Controllers REST + DTOs             (pendiente)
         |
         v
-Backend Spring Boot
+Controladores de negocio            controladores/
         |
         v
-Base de datos MySQL
+Repositorios Spring Data JPA        repositorios/
+        |
+        v
+MySQL                               configuracion pendiente
 ```
 
-Para la demostracion en red, la base de datos puede ejecutarse en un equipo y el backend/frontend en otro. El navegador del profesor debe entrar al equipo donde se sirva la aplicacion web.
+Los controladores de negocio usan `@Service`. Se conserva el nombre
+`controladores` para mantener el estilo del proyecto Gestion Militar; cuando
+se agregue la API, los controllers HTTP deben vivir en un paquete separado,
+por ejemplo `api`.
 
-## Estructura Del Repo
+## Estructura
 
 ```text
 TPPrograII/
-  README.md
-  consignas.txt
-  pruebas.txt
-  docs/
-  database/
+  database/                         scripts SQL futuros
+  docs/                             UML y documentacion
+  tije-front/                       frontend futuro
   tije-back/
+    datos/                          datos heredados, solo referencia
     pom.xml
-    mvnw
-    mvnw.cmd
-    .mvn/
-    datos/
     src/
       main/
-        java/
-          com/tijetravel/tije_back/
+        java/com/tijetravel/tijeback/
+          controladores/            casos de uso y reglas de negocio
+          enums/                    roles, permisos y tipos del dominio
+          excepciones/              errores esperables del negocio
+          modelos/                  entidades y validaciones
+          repositorios/             contratos de acceso a datos
+          TijeBackApplication.java
         resources/
+          application.example.properties
       test/
-        java/
-  tije-front/
 ```
 
-## Backend
+## Criterios de diseno
 
-El backend esta ubicado en `tije-back` y usa:
+- Los paquetes y variables siguen la convencion Java: minusculas para paquetes,
+  `PascalCase` para clases y `lowerCamelCase` para miembros.
+- Se eliminaron abreviaturas como `u`, `c`, `d` y `t` de las firmas
+  publicas.
+- Los modelos validan su estado al construirse o modificarse.
+- Los identificadores de sucursales, hoteles, turistas, reservas y usuarios son
+  generados por la base de datos. El numero de vuelo sigue siendo un dato del
+  dominio.
+- Las relaciones usan objetos JPA en vez de codigos sueltos.
+- `Usuario` mantiene herencia y polimorfismo mediante `Administrador`,
+  `Vendedor` y `Cliente`.
+- Los controladores reciben repositorios por constructor y no conocen detalles
+  de consola, archivos ni SQL.
+- Los errores esperables se expresan con excepciones como
+  `EntidadNoEncontradaException`, `EntidadDuplicadaException`,
+  `CapacidadExcedidaException` y `OperacionNoPermitidaException`.
 
-- Java 21.
-- Maven.
-- Spring Boot.
-- Spring Web MVC.
-- Spring Data JPA.
-- MySQL Driver.
-- Bean Validation.
+## Reglas preservadas
 
-Clase principal de Spring Boot:
+- Un vendedor administra turistas y reservas; un administrador administra todo.
+- Un cliente solo consulta y debe estar asociado a un turista titular.
+- No se puede eliminar el ultimo administrador.
+- No se eliminan entidades que siguen referenciadas por reservas, usuarios o
+  familiares.
+- Un turista no puede reservar dos veces el mismo vuelo.
+- La llegada debe coincidir con la fecha del vuelo y la ciudad del hotel con su
+  destino.
+- Se controla la capacidad por clase del vuelo y la ocupacion superpuesta del
+  hotel.
+- Una reduccion de capacidad no puede dejar reservas existentes fuera de cupo.
+
+## Configuracion
+
+El ejemplo de configuracion se encuentra en
+`tije-back/src/main/resources/application.example.properties`. Admite estas
+variables de entorno:
 
 ```text
-tije-back/src/main/java/com/tijetravel/tije_back/TijeBackApplication.java
+DB_URL
+DB_USER
+DB_PASSWORD
 ```
 
-El codigo heredado de la version consola todavia existe como base de migracion:
+La configuracion definitiva de MySQL y los scripts de `database/` deben
+completarse antes de ejecutar la aplicacion contra datos reales.
 
-- `modelos`: clases del dominio original.
-- `controladores`: logica de negocio original, pendiente de migrar a servicios.
-- `persistencia`: lectura y escritura en archivos `.txt`, pendiente de reemplazar por Spring Data JPA.
-- `vistas`: menus de consola, pendientes de reemplazar por controllers REST y frontend.
+## Verificacion
 
-## Base De Datos
-
-La base de datos objetivo es MySQL.
-
-La carpeta `database` queda reservada para:
-
-- `schema.sql`: estructura de tablas.
-- `seed.sql`: datos iniciales.
-- scripts auxiliares de carga o reinicio de datos.
-
-Todavia no hay datasource definitivo configurado. Hasta completar `application.properties`, el arranque de Spring Boot puede fallar por falta de configuracion de MySQL.
-
-## Frontend
-
-La carpeta `tije-front` queda reservada para la interfaz web.
-
-El frontend no debe conectarse directo a MySQL. El flujo correcto es:
-
-```text
-Frontend -> API REST del backend -> MySQL
-```
-
-Cuando el backend este listo, el frontend debe consumir endpoints bajo rutas como:
-
-```text
-/api/hoteles
-/api/vuelos
-/api/turistas
-/api/reservas
-/api/usuarios
-```
-
-## Version Original
-
-La version 1 era una aplicacion de consola en Java con persistencia en archivos de texto.
-
-Para verla:
+Desde `tije-back`:
 
 ```powershell
-git switch main
+.\mvnw.cmd test
 ```
 
-O desde el tag:
+Las pruebas usan el perfil `test` con H2 en memoria, no dependen de la
+configuracion local y no requieren una instancia de MySQL. La suite verifica
+las relaciones JPA y las principales reglas heredadas del sistema de consola.
 
-```powershell
-git checkout v1.0-tp-entregado
-```
+## Proximas etapas
 
-Para volver al desarrollo web:
-
-```powershell
-git switch migue-v2
-```
-
-## Comandos Utiles
-
-Desde la raiz del repositorio:
-
-```powershell
-cd tije-back
-.\mvnw.cmd -v
-```
-
-Muestra la version del Maven Wrapper y confirma que el backend Maven puede ejecutarse.
-
-Cuando MySQL y `application.properties` esten configurados:
-
-```powershell
-cd tije-back
-.\mvnw.cmd spring-boot:run
-```
-
-Levanta el backend Spring Boot.
-
-## Flujo De Trabajo Con Git
-
-- `main`: version estable entregada.
-- `v2-web`: rama integradora de la version web.
-- `migue-v2`: rama personal de trabajo.
-
-El flujo recomendado es:
-
-```text
-rama personal -> Pull Request -> v2-web
-```
-
-`main` solo deberia actualizarse cuando la version web este estable y lista para presentar.
-
-Antes de empezar a trabajar:
-
-```powershell
-git status --short --branch
-```
-
-Verificar que la rama actual sea la esperada y que no haya cambios pendientes inesperados.
-
-## Proximas Prioridades
-
-1. Migrar modelos a entidades JPA.
-2. Crear repositorios con Spring Data JPA.
-3. Migrar la logica de negocio a servicios.
-4. Crear controllers REST.
-5. Configurar login, roles y permisos.
-6. Agregar validaciones y manejo centralizado de errores.
-7. Conectar el frontend con la API.
-8. Actualizar documentacion y UML de la version web.
+1. Definir `schema.sql` o migraciones versionadas y convertir los `.txt` en
+   datos iniciales.
+2. Incorporar DTOs y controllers REST sin exponer directamente las entidades.
+3. Agregar un manejador global que traduzca excepciones a respuestas HTTP.
+4. Reemplazar la comparacion de contrasenias en texto plano por hash y configurar
+   Spring Security.
+5. Implementar el frontend y consumir exclusivamente la API del backend.
