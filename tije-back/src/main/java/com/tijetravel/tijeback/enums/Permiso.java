@@ -1,0 +1,11 @@
+package com.tijetravel.tijeback.enums;
+
+public enum Permiso {
+    CONSULTAR,
+    ADMINISTRAR_CLIENTES,
+    ADMINISTRAR_RESERVAS,
+    ADMINISTRAR_SUCURSALES,
+    ADMINISTRAR_HOTELES,
+    ADMINISTRAR_VUELOS,
+    ADMINISTRAR_USUARIOS
+}

@@ -11,8 +11,8 @@
 	<groupId>com.tijetravel</groupId>
 	<artifactId>tije-back</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>Tije Travel Backend</name>
+	<description>Backend web para la gestion de agencias, turistas y reservas de Tije Travel.</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -47,6 +47,11 @@
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
