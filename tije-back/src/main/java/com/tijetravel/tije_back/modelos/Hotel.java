@@ -1,12 +1,22 @@
 package com.tijetravel.tije_back.modelos;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "hoteles")
 public class Hotel {
+    @Id
     private int codigo;
     private String nombre;
     private String direccion;
     private String ciudad;
     private String telefono;
     private int plazasDisponibles;
+
+    protected Hotel() {
+    }
 
     public Hotel(int codigo, String nombre, String direccion, String ciudad, String telefono, int plazasDisponibles) {
         this.codigo = codigo;
