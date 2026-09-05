@@ -1,47 +1,38 @@
-# Tije Travel - TP Programacion II
+# Tije Travel - Version Web
 
-Trabajo practico de Programacion II para gestionar una cadena de agencias de viajes.
+Proyecto de Programacion II para gestionar una cadena de agencias de viajes.
 
-Esta version corresponde a la entrega del TP original: una aplicacion de consola en Java, con persistencia en archivos de texto y sin base de datos ni interfaz grafica.
+Esta rama contiene la migracion de la entrega original de consola hacia una aplicacion web con backend Spring Boot, base de datos MySQL y frontend separado.
 
-## Alcance
+La version entregada del TP original se conserva en `main` y en el tag `v1.0-tp-entregado`.
 
-El sistema administra la informacion principal de Tije Travel:
+## Estado Actual
 
-- Sucursales de la agencia.
-- Hoteles contratados.
-- Vuelos disponibles.
-- Turistas titulares y familiares.
-- Reservas de vuelos y hospedajes.
-- Usuarios con distintos roles de acceso.
+- Backend creado como proyecto Maven/Spring Boot en `tije-back`.
+- Codigo de la version consola movido dentro de la estructura Maven.
+- Frontend reservado en `tije-front`.
+- Scripts y recursos de base de datos reservados en `database`.
+- Datos `.txt` heredados conservados temporalmente en `tije-back/datos`.
+- Persistencia MySQL, entidades JPA, servicios REST y frontend web pendientes de implementacion.
 
-La aplicacion aplica conceptos de programacion orientada a objetos: abstraccion, encapsulamiento, herencia, polimorfismo y persistencia.
+## Arquitectura Objetivo
 
-## Funcionalidades
+```text
+Navegador del usuario
+        |
+        v
+Frontend web
+        |
+        v
+Backend Spring Boot
+        |
+        v
+Base de datos MySQL
+```
 
-- Inicio de sesion con usuarios de tipo cliente, vendedor y administrador.
-- Consultas generales de hoteles, vuelos y sucursales.
-- Consulta de reservas por parte de clientes.
-- Administracion de clientes y reservas por parte de vendedores.
-- Administracion completa por parte de administradores.
-- Alta, modificacion, busqueda, listado y baja de entidades principales.
-- Validacion de permisos segun el rol del usuario.
-- Validacion de disponibilidad de vuelos y hoteles al crear o modificar reservas.
-- Validacion de compatibilidad entre vuelo, hotel y fecha de llegada.
-- Validacion de relaciones entre turistas titulares y familiares.
-- Persistencia de los cambios en archivos de texto.
+Para la demostracion en red, la base de datos puede ejecutarse en un equipo y el backend/frontend en otro. El navegador del profesor debe entrar al equipo donde se sirva la aplicacion web.
 
-## Usuarios de prueba
-
-Los usuarios iniciales estan definidos en `TijeTravel/datos/usuarios.txt`.
-
-| Usuario | Contrasenia | Rol | Descripcion |
-| --- | --- | --- | --- |
-| `admin` | `admin` | Administrador | Puede administrar todo el sistema. |
-| `vendedor` | `1234` | Vendedor | Puede administrar clientes y reservas. |
-| `juan` | `juan` | Cliente | Puede consultar hoteles, vuelos y sus reservas. |
-
-## Estructura del proyecto
+## Estructura Del Repo
 
 ```text
 TPPrograII/
@@ -49,111 +40,151 @@ TPPrograII/
   consignas.txt
   pruebas.txt
   docs/
-  TijeTravel/
-    build.xml
-    manifest.mf
-    nbproject/
+  database/
+  tije-back/
+    pom.xml
+    mvnw
+    mvnw.cmd
+    .mvn/
     datos/
     src/
-      tijetravel/
-        Main.java
-        controladores/
-        modelos/
-        persistencia/
-        vistas/
+      main/
+        java/
+          com/tijetravel/tije_back/
+        resources/
+      test/
+        java/
+  tije-front/
 ```
 
-## Paquetes principales
+## Backend
 
-- `modelos`: contiene las clases del dominio, como `Agencia`, `Sucursal`, `Hotel`, `Vuelo`, `Turista`, `Reserva` y `Usuario`.
-- `controladores`: contiene la logica que coordina las operaciones del sistema y valida permisos.
-- `persistencia`: contiene las clases encargadas de cargar y guardar datos en archivos de texto.
-- `vistas`: contiene los menus de consola para cada tipo de usuario.
+El backend esta ubicado en `tije-back` y usa:
 
-## Modelo de usuarios
+- Java 21.
+- Maven.
+- Spring Boot.
+- Spring Web MVC.
+- Spring Data JPA.
+- MySQL Driver.
+- Bean Validation.
 
-El sistema trabaja con tres roles:
-
-- `Cliente`: puede consultar hoteles, vuelos y reservas propias.
-- `Vendedor`: puede administrar clientes y reservas.
-- `Administrador`: puede administrar sucursales, hoteles, vuelos, clientes, reservas y usuarios.
-
-Para aplicar herencia y polimorfismo, `Cliente`, `Vendedor` y `Administrador` heredan de `Usuario`. Cada tipo de usuario define su comportamiento frente a los permisos disponibles.
-
-La clase `UsuarioFactory` centraliza la creacion del tipo correcto de usuario cuando se cargan datos desde archivo o cuando se administra un usuario desde el sistema.
-
-## Persistencia
-
-Los datos se guardan en archivos `.txt` dentro de `TijeTravel/datos`:
-
-- `sucursales.txt`
-- `hoteles.txt`
-- `vuelos.txt`
-- `turistas.txt`
-- `usuarios.txt`
-- `reservas.txt`
-
-Cada linea representa un registro y los campos se separan con `;`.
-
-La aplicacion carga los datos al iniciar y guarda los cambios cuando se realizan altas, bajas o modificaciones desde los menus.
-
-## Compilar y ejecutar
-
-Los comandos deben ejecutarse desde la raiz del repositorio.
-
-### PowerShell
-
-```powershell
-New-Item -ItemType Directory -Force TijeTravel\out | Out-Null
-javac -encoding UTF-8 -d TijeTravel\out (Get-ChildItem -Recurse TijeTravel\src -Filter *.java).FullName
-java -cp TijeTravel\out tijetravel.Main
-```
-
-### Linux/macOS
-
-```bash
-mkdir -p TijeTravel/out
-javac -encoding UTF-8 -d TijeTravel/out $(find TijeTravel/src -name "*.java")
-java -cp TijeTravel/out tijetravel.Main
-```
-
-## Ejecutar desde NetBeans
-
-Tambien se puede abrir la carpeta `TijeTravel` como proyecto de NetBeans y ejecutar la clase principal:
+Clase principal de Spring Boot:
 
 ```text
-tijetravel.Main
+tije-back/src/main/java/com/tijetravel/tije_back/TijeBackApplication.java
 ```
 
-Los archivos privados de NetBeans no forman parte del repositorio.
+El codigo heredado de la version consola todavia existe como base de migracion:
 
-## Pruebas manuales sugeridas
+- `modelos`: clases del dominio original.
+- `controladores`: logica de negocio original, pendiente de migrar a servicios.
+- `persistencia`: lectura y escritura en archivos `.txt`, pendiente de reemplazar por Spring Data JPA.
+- `vistas`: menus de consola, pendientes de reemplazar por controllers REST y frontend.
 
-El archivo `pruebas.txt` contiene una lista de pruebas manuales para revisar el funcionamiento general.
+## Base De Datos
 
-Casos recomendados:
+La base de datos objetivo es MySQL.
 
-- Iniciar el sistema y salir con la opcion `0`.
-- Entrar como `admin/admin` y verificar el menu de administrador.
-- Entrar como `vendedor/1234` y verificar el menu de vendedor.
-- Entrar como `juan/juan` y verificar el menu de cliente.
-- Listar sucursales, hoteles, vuelos, clientes, reservas y usuarios.
-- Crear una reserva valida con vuelo y hotel del mismo destino.
-- Intentar crear una reserva con hotel de otra ciudad y verificar que el sistema la rechace.
-- Intentar usar una fecha de llegada distinta a la fecha del vuelo y verificar que el sistema la rechace.
-- Modificar y cancelar una reserva.
-- Cerrar y volver a abrir el programa para verificar que los cambios persisten.
+La carpeta `database` queda reservada para:
 
-## Documentacion
+- `schema.sql`: estructura de tablas.
+- `seed.sql`: datos iniciales.
+- scripts auxiliares de carga o reinicio de datos.
 
-La carpeta `docs` contiene documentacion complementaria de la entrega:
+Todavia no hay datasource definitivo configurado. Hasta completar `application.properties`, el arranque de Spring Boot puede fallar por falta de configuracion de MySQL.
 
-- Documentacion del TP en PDF y DOCX.
-- Diagrama UML en PDF y SVG.
-- Fuente del diagrama UML en PlantUML.
+## Frontend
 
-## Estado de esta version
+La carpeta `tije-front` queda reservada para la interfaz web.
 
-Esta version esta pensada como cierre de la entrega original del TP.
+El frontend no debe conectarse directo a MySQL. El flujo correcto es:
 
-Para una version futura con base de datos y frontend web, conviene mantener esta entrega marcada en Git con un tag, por ejemplo `v1.0-tp-entregado`, y continuar el desarrollo en una rama separada.
+```text
+Frontend -> API REST del backend -> MySQL
+```
+
+Cuando el backend este listo, el frontend debe consumir endpoints bajo rutas como:
+
+```text
+/api/hoteles
+/api/vuelos
+/api/turistas
+/api/reservas
+/api/usuarios
+```
+
+## Version Original
+
+La version 1 era una aplicacion de consola en Java con persistencia en archivos de texto.
+
+Para verla:
+
+```powershell
+git switch main
+```
+
+O desde el tag:
+
+```powershell
+git checkout v1.0-tp-entregado
+```
+
+Para volver al desarrollo web:
+
+```powershell
+git switch migue-v2
+```
+
+## Comandos Utiles
+
+Desde la raiz del repositorio:
+
+```powershell
+cd tije-back
+.\mvnw.cmd -v
+```
+
+Muestra la version del Maven Wrapper y confirma que el backend Maven puede ejecutarse.
+
+Cuando MySQL y `application.properties` esten configurados:
+
+```powershell
+cd tije-back
+.\mvnw.cmd spring-boot:run
+```
+
+Levanta el backend Spring Boot.
+
+## Flujo De Trabajo Con Git
+
+- `main`: version estable entregada.
+- `v2-web`: rama integradora de la version web.
+- `migue-v2`: rama personal de trabajo.
+
+El flujo recomendado es:
+
+```text
+rama personal -> Pull Request -> v2-web
+```
+
+`main` solo deberia actualizarse cuando la version web este estable y lista para presentar.
+
+Antes de empezar a trabajar:
+
+```powershell
+git status --short --branch
+```
+
+Verificar que la rama actual sea la esperada y que no haya cambios pendientes inesperados.
+
+## Proximas Prioridades
+
+1. Migrar modelos a entidades JPA.
+2. Crear repositorios con Spring Data JPA.
+3. Migrar la logica de negocio a servicios.
+4. Crear controllers REST.
+5. Configurar login, roles y permisos.
+6. Agregar validaciones y manejo centralizado de errores.
+7. Conectar el frontend con la API.
+8. Actualizar documentacion y UML de la version web.
