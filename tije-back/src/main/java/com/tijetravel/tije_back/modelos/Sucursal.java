@@ -1,9 +1,19 @@
 package com.tijetravel.tije_back.modelos;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "sucursales")
 public class Sucursal {
+    @Id
     private int codigo;
     private String direccion;
     private String telefono;
+
+    protected Sucursal() {
+    }
 
     public Sucursal(int codigo, String direccion, String telefono) {
         this.codigo = codigo;
