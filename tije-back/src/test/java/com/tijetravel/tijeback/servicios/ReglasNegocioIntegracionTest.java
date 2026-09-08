@@ -37,6 +37,7 @@ class ReglasNegocioIntegracionTest {
     @Autowired VueloRepositorio vueloRepo;
     @Autowired ReservaRepositorio reservaRepo;
     @Autowired PlatformTransactionManager transacciones;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     record Datos(Integer sucursal, Integer titular, Integer familiar, Integer hotel, Integer vuelo) { }
 
@@ -55,6 +56,14 @@ class ReglasNegocioIntegracionTest {
     private Reserva reservar(Datos d, Integer turista) {
         return reservas.crear(admin, turista, d.vuelo(), d.hotel(), ClaseVuelo.TURISTA,
                 TipoHospedaje.MEDIA_PENSION, DIA, DIA.plusDays(4));
+    }
+
+    @Test
+    void conservaHoraLocalDelVueloTantoEnSqlComoEnJava() {
+        Datos d = preparar(2, 10);
+        String fechaSql = jdbc.queryForObject("SELECT fecha_hora FROM vuelos WHERE numero = ?", String.class, d.vuelo());
+        assertTrue(fechaSql.startsWith("2027-02-01 10:00:00"), fechaSql);
+        assertEquals(DIA.atTime(10, 0), vueloRepo.findById(d.vuelo()).orElseThrow().getFechaYHora());
     }
 
     @Test

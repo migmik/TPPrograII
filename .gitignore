@@ -8,4 +8,8 @@ hoja de ruta.docx
 /tije-back/src/main/resources/application.properties
 /tije-back/config/application.properties
 /tije-back/config/mysql-pruebas/
+/database/__pycache__/
+/database/verificar_mysql.py
+/database/probar_http_mysql.py
+/docs/verificacion-mysql.md
 /TijeTravel/
