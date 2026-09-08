@@ -32,7 +32,6 @@ import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
-import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
@@ -42,8 +41,6 @@ class ReservasControladorTest {
     private ReservaRepositorio reservaRepositorio;
     @Mock
     private TuristaRepositorio turistaRepositorio;
-    @Mock
-    private SucursalRepositorio sucursalRepositorio;
     @Mock
     private VueloRepositorio vueloRepositorio;
     @Mock
@@ -60,7 +57,6 @@ class ReservasControladorTest {
         controlador = new ReservasControlador(
                 reservaRepositorio,
                 turistaRepositorio,
-                sucursalRepositorio,
                 vueloRepositorio,
                 hotelRepositorio,
                 new AutorizacionControlador());
@@ -97,7 +93,6 @@ class ReservasControladorTest {
         Reserva reserva = controlador.ingresar(
                 new Vendedor("vendedor", "clave"),
                 1,
-                1,
                 100,
                 1,
                 ClaseVuelo.TURISTA,
@@ -106,6 +101,7 @@ class ReservasControladorTest {
                 LocalDate.of(2026, 10, 3));
 
         assertSame(turista, reserva.getTurista());
+        assertSame(sucursal, reserva.getSucursalContratacion());
         assertEquals(ClaseVuelo.TURISTA, reserva.getClaseVuelo());
     }
 
@@ -120,7 +116,6 @@ class ReservasControladorTest {
                 () -> controlador.ingresar(
                         new Vendedor("vendedor", "clave"),
                         1,
-                        1,
                         100,
                         1,
                         ClaseVuelo.TURISTA,
@@ -132,7 +127,6 @@ class ReservasControladorTest {
     @Test
     void rechazaUnaSegundaReservaDelTuristaParaElMismoVuelo() {
         when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
-        when(sucursalRepositorio.findById(1)).thenReturn(Optional.of(sucursal));
         when(vueloRepositorio.findById(100)).thenReturn(Optional.of(vuelo));
         when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
         when(reservaRepositorio.existsByTuristaCodigoAndVueloNumero(1, 100))
@@ -177,7 +171,6 @@ class ReservasControladorTest {
 
     private void prepararBusquedas() {
         when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
-        when(sucursalRepositorio.findById(1)).thenReturn(Optional.of(sucursal));
         when(vueloRepositorio.findById(100)).thenReturn(Optional.of(vuelo));
         when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
     }
@@ -185,7 +178,6 @@ class ReservasControladorTest {
     private Reserva ingresarReservaValida(Usuario actor) {
         return controlador.ingresar(
                 actor,
-                1,
                 1,
                 100,
                 1,

@@ -70,7 +70,7 @@ public class SucursalesControlador {
     public void eliminar(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
         Sucursal sucursal = encontrarPorId(codigo);
-        if (reservaRepositorio.existsBySucursalCodigo(codigo)
+        if (reservaRepositorio.existsBySucursalContratacionCodigo(codigo)
                 || turistaRepositorio.existsBySucursalContratacionCodigo(codigo)) {
             throw new OperacionNoPermitidaException(
                     "No se puede eliminar una sucursal vinculada a turistas o reservas");

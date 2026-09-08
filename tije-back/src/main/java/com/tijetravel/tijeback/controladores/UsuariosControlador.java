@@ -1,9 +1,11 @@
 package com.tijetravel.tijeback.controladores;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.RolUsuario;
@@ -22,14 +24,17 @@ public class UsuariosControlador {
     private final UsuarioRepositorio usuarioRepositorio;
     private final TuristaRepositorio turistaRepositorio;
     private final AutorizacionControlador autorizacion;
+    private final PasswordEncoder codificadorContrasenias;
 
     public UsuariosControlador(
             UsuarioRepositorio usuarioRepositorio,
             TuristaRepositorio turistaRepositorio,
-            AutorizacionControlador autorizacion) {
+            AutorizacionControlador autorizacion,
+            PasswordEncoder codificadorContrasenias) {
         this.usuarioRepositorio = usuarioRepositorio;
         this.turistaRepositorio = turistaRepositorio;
         this.autorizacion = autorizacion;
+        this.codificadorContrasenias = codificadorContrasenias;
     }
 
     @Transactional
@@ -61,7 +66,11 @@ public class UsuariosControlador {
             }
         }
 
-        Usuario usuario = UsuarioFactory.crear(nombreUsuario, contrasenia, rol, turista);
+        Usuario usuario = UsuarioFactory.crear(
+                nombreUsuario,
+                codificarContrasenia(contrasenia),
+                rol,
+                turista);
         return usuarioRepositorio.save(usuario);
     }
 
@@ -69,9 +78,23 @@ public class UsuariosControlador {
         return usuarioRepositorio.findAll();
     }
 
+    public List<Usuario> listarPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
+        List<Usuario> usuarios = listar();
+        usuarios.forEach(Usuario::getCodigoTurista);
+        return usuarios;
+    }
+
     public Usuario encontrarPorId(Integer codigo) {
         return usuarioRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el usuario " + codigo));
+    }
+
+    public Usuario encontrarVisiblePara(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
+        Usuario usuario = encontrarPorId(codigo);
+        usuario.getCodigoTurista();
+        return usuario;
     }
 
     public Usuario encontrarPorNombre(String nombreUsuario) {
@@ -94,7 +117,9 @@ public class UsuariosControlador {
         }
 
         Usuario usuario = encontrarPorId(codigo);
-        usuario.actualizarCredenciales(nombreUsuario, contrasenia);
+        usuario.actualizarCredenciales(
+                nombreUsuario,
+                codificarContrasenia(contrasenia));
         return usuarioRepositorio.save(usuario);
     }
 
@@ -124,5 +149,15 @@ public class UsuariosControlador {
             throw new IllegalArgumentException("El campo nombreUsuario es obligatorio");
         }
         return nombreUsuario.trim();
+    }
+
+    private String codificarContrasenia(String contrasenia) {
+        if (contrasenia == null || contrasenia.isBlank()) {
+            throw new IllegalArgumentException("El campo contrasenia es obligatorio");
+        }
+        if (contrasenia.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("La contrasenia no puede superar 72 bytes");
+        }
+        return codificadorContrasenias.encode(contrasenia);
     }
 }

@@ -11,20 +11,27 @@ entrega y se conservan como referencia historica.
 ```mermaid
 flowchart TB
     WEB[Frontend web - pendiente]
-    API[Controllers REST y DTOs - pendiente]
+    SEC[Spring Security - sesion, CSRF y roles]
+    API[API REST publica y protegida]
+    APIERR[Manejador global de errores]
     CTRL[Controladores de negocio]
     REPO[Repositorios Spring Data JPA]
     MODEL[Modelos y enums]
     ERR[Excepciones de negocio]
+    MIG[Flyway - migraciones SQL]
     DB[(MySQL)]
 
-    WEB --> API
+    WEB --> SEC
+    SEC --> API
+    SEC --> REPO
     API --> CTRL
+    API --> APIERR
     CTRL --> REPO
     CTRL --> MODEL
     CTRL --> ERR
     REPO --> MODEL
     REPO --> DB
+    MIG --> DB
 ```
 
 ## Dominio
@@ -86,7 +93,7 @@ classDiagram
     Turista --> Sucursal : sucursalContratacion
     Turista --> Turista : titular
     Reserva --> Turista
-    Reserva --> Sucursal
+    Reserva --> Sucursal : sucursalContratacion derivada
     Reserva --> Vuelo
     Reserva --> Hotel
 ```
@@ -113,6 +120,14 @@ classDiagram
     class UsuariosControlador
     class AutenticacionControlador
     class AutorizacionControlador
+    class AutenticacionRestControlador
+    class TuristasRestControlador
+    class ReservasRestControlador
+    class UsuariosRestControlador
+    class ConfiguracionSeguridad
+    class UsuarioDetallesServicio
+    class UsuarioActualServicio
+    class UsuarioAutenticado
 
     GenericoRepositorio <|-- SucursalRepositorio
     GenericoRepositorio <|-- HotelRepositorio
@@ -128,4 +143,20 @@ classDiagram
     ReservasControlador --> ReservaRepositorio
     UsuariosControlador --> UsuarioRepositorio
     AutenticacionControlador --> UsuarioRepositorio
+    AutenticacionRestControlador --> ConfiguracionSeguridad
+    SucursalesRestControlador --> UsuarioActualServicio
+    HotelesRestControlador --> UsuarioActualServicio
+    VuelosRestControlador --> UsuarioActualServicio
+    HotelesRestControlador --> ReservasControlador : consulta disponibilidad
+    VuelosRestControlador --> ReservasControlador : consulta disponibilidad
+    TuristasRestControlador --> TuristasControlador
+    ReservasRestControlador --> ReservasControlador
+    UsuariosRestControlador --> UsuariosControlador
+    TuristasRestControlador --> UsuarioActualServicio
+    ReservasRestControlador --> UsuarioActualServicio
+    UsuariosRestControlador --> UsuarioActualServicio
+    ConfiguracionSeguridad --> UsuarioDetallesServicio
+    UsuarioActualServicio --> UsuarioRepositorio
+    UsuarioDetallesServicio --> UsuarioRepositorio
+    UsuarioDetallesServicio --> UsuarioAutenticado
 ```

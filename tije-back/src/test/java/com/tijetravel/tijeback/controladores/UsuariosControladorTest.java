@@ -1,5 +1,6 @@
 package com.tijetravel.tijeback.controladores;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
@@ -35,6 +37,9 @@ class UsuariosControladorTest {
     @Mock
     private TuristaRepositorio turistaRepositorio;
 
+    @Mock
+    private PasswordEncoder codificadorContrasenias;
+
     private UsuariosControlador controlador;
 
     @BeforeEach
@@ -42,7 +47,8 @@ class UsuariosControladorTest {
         controlador = new UsuariosControlador(
                 usuarioRepositorio,
                 turistaRepositorio,
-                new AutorizacionControlador());
+                new AutorizacionControlador(),
+                codificadorContrasenias);
     }
 
     @Test
@@ -60,6 +66,21 @@ class UsuariosControladorTest {
     }
 
     @Test
+    void rechazaContraseniasVaciasAntesDeCodificarlas() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controlador.ingresar(
+                        new Administrador("admin", "clave"),
+                        "nuevo",
+                        "  ",
+                        RolUsuario.VENDEDOR,
+                        null));
+
+        verify(codificadorContrasenias, never()).encode(any());
+        verify(usuarioRepositorio, never()).save(any());
+    }
+
+    @Test
     void clienteSoloPuedeAsociarseAUnTuristaTitular() {
         Sucursal sucursal = new Sucursal("Av. Colon 100", "351-1000");
         Turista titular = new Turista(
@@ -67,6 +88,7 @@ class UsuariosControladorTest {
         Turista familiar = new Turista(
                 "Luis", "Perez", "Calle 1", "luis@example.com", "100", "300", sucursal, titular);
         when(turistaRepositorio.findById(2)).thenReturn(Optional.of(familiar));
+        when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -88,6 +110,7 @@ class UsuariosControladorTest {
         when(turistaRepositorio.findById(1)).thenReturn(Optional.of(titular));
         when(usuarioRepositorio.save(any(Usuario.class)))
                 .thenAnswer(invocacion -> invocacion.getArgument(0));
+        when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
         Usuario usuario = controlador.ingresar(
                 new Administrador("admin", "clave"),
@@ -98,6 +121,7 @@ class UsuariosControladorTest {
 
         Cliente cliente = assertInstanceOf(Cliente.class, usuario);
         assertSame(titular, cliente.getTurista());
+        assertEquals("{bcrypt}hash", cliente.getContrasenia());
     }
 
     @Test
