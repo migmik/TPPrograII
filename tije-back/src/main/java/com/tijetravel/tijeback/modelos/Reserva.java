@@ -34,7 +34,7 @@ public class Reserva {
     private Turista turista;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sucursal_codigo", nullable = false)
+    @JoinColumn(name = "sucursal_codigo", nullable = false, updatable = false)
     private Sucursal sucursalContratacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -90,8 +90,10 @@ public class Reserva {
             LocalDate fechaPartida) {
         validarFechas(fechaLlegada, fechaPartida);
         this.turista = ValidacionModelo.obligatorio(turista, "turista");
-        this.sucursalContratacion = ValidacionModelo.obligatorio(
-                turista.getSucursalContratacion(), "sucursalContratacion");
+        if (this.sucursalContratacion == null) {
+            this.sucursalContratacion = ValidacionModelo.obligatorio(
+                    turista.getSucursalContratacion(), "sucursalContratacion");
+        }
         this.vuelo = ValidacionModelo.obligatorio(vuelo, "vuelo");
         this.hotel = ValidacionModelo.obligatorio(hotel, "hotel");
         this.claseVuelo = ValidacionModelo.obligatorio(claseVuelo, "claseVuelo");

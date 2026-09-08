@@ -1,10 +1,11 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
@@ -19,22 +20,25 @@ import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
 @Service
 @Transactional(readOnly = true)
-public class VuelosControlador {
+public class VueloServicio {
+    private final BloqueoEscrituras bloqueoEscrituras;
     private final VueloRepositorio vueloRepositorio;
     private final ReservaRepositorio reservaRepositorio;
-    private final AutorizacionControlador autorizacion;
+    private final AutorizacionServicio autorizacion;
 
-    public VuelosControlador(
+    public VueloServicio(
             VueloRepositorio vueloRepositorio,
             ReservaRepositorio reservaRepositorio,
-            AutorizacionControlador autorizacion) {
+            AutorizacionServicio autorizacion,
+            BloqueoEscrituras bloqueoEscrituras) {
+        this.bloqueoEscrituras = bloqueoEscrituras;
         this.vueloRepositorio = vueloRepositorio;
         this.reservaRepositorio = reservaRepositorio;
         this.autorizacion = autorizacion;
     }
 
-    @Transactional
-    public Vuelo ingresar(
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Vuelo crear(
             Usuario actor,
             int numero,
             LocalDateTime fechaYHora,
@@ -43,6 +47,7 @@ public class VuelosControlador {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         if (vueloRepositorio.existsById(numero)) {
             throw new EntidadDuplicadaException("Ya existe el vuelo " + numero);
@@ -61,7 +66,7 @@ public class VuelosControlador {
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el vuelo " + numero));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Vuelo modificar(
             Usuario actor,
             Integer numero,
@@ -71,6 +76,7 @@ public class VuelosControlador {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         Vuelo vuelo = encontrarPorId(numero);
 
@@ -83,13 +89,19 @@ public class VuelosControlador {
                     "Las plazas no pueden ser menores que las reservas ya registradas");
         }
 
+        if (reservaRepositorio.findByVueloNumero(numero).stream().anyMatch(reserva ->
+                fechaYHora == null || !reserva.getFechaLlegada().equals(fechaYHora.toLocalDate())
+                || destino == null || !reserva.getHotel().getCiudad().equalsIgnoreCase(destino.trim()))) {
+            throw new OperacionNoPermitidaException("El cambio dejaría reservas incompatibles con su hotel o fecha");
+        }
         vuelo.actualizarDatos(
                 fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
         return vueloRepositorio.save(vuelo);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer numero) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         Vuelo vuelo = encontrarPorId(numero);
         if (reservaRepositorio.existsByVueloNumero(numero)) {

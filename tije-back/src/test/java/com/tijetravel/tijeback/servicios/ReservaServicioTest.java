@@ -1,4 +1,4 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -36,7 +36,7 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
 @ExtendWith(MockitoExtension.class)
-class ReservasControladorTest {
+class ReservaServicioTest {
     @Mock
     private ReservaRepositorio reservaRepositorio;
     @Mock
@@ -46,20 +46,22 @@ class ReservasControladorTest {
     @Mock
     private HotelRepositorio hotelRepositorio;
 
-    private ReservasControlador controlador;
+    private ReservaServicio servicio;
     private Sucursal sucursal;
     private Turista turista;
     private Vuelo vuelo;
     private Hotel hotel;
 
     @BeforeEach
-    void prepararControlador() {
-        controlador = new ReservasControlador(
+    void prepararServicio() {
+        servicio = new ReservaServicio(
                 reservaRepositorio,
                 turistaRepositorio,
                 vueloRepositorio,
                 hotelRepositorio,
-                new AutorizacionControlador());
+                new AutorizacionServicio(),
+                new DisponibilidadServicio(reservaRepositorio, vueloRepositorio, hotelRepositorio),
+                org.mockito.Mockito.mock(BloqueoEscrituras.class));
 
         sucursal = conCodigo(new Sucursal("Av. Siempre Viva 100", "1234"), "codigo", 1);
         turista = conCodigo(
@@ -90,7 +92,7 @@ class ReservasControladorTest {
         when(reservaRepositorio.save(any(Reserva.class)))
                 .thenAnswer(invocacion -> invocacion.getArgument(0));
 
-        Reserva reserva = controlador.ingresar(
+        Reserva reserva = servicio.crear(
                 new Vendedor("vendedor", "clave"),
                 1,
                 100,
@@ -113,7 +115,7 @@ class ReservasControladorTest {
 
         assertThrows(
                 CapacidadExcedidaException.class,
-                () -> controlador.ingresar(
+                () -> servicio.crear(
                         new Vendedor("vendedor", "clave"),
                         1,
                         100,
@@ -150,12 +152,9 @@ class ReservasControladorTest {
     @Test
     void rechazaReservaCuandoElHotelEstaCompletoEnLasFechasSolicitadas() {
         prepararBusquedas();
-        when(reservaRepositorio
-                .countByHotelCodigoAndFechaLlegadaLessThanAndFechaPartidaGreaterThan(
-                        1,
-                        LocalDate.of(2026, 10, 3),
-                        LocalDate.of(2026, 10, 1)))
-                .thenReturn(1L);
+        when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(java.util.List.of(
+                new Reserva(turista, vuelo, hotel, ClaseVuelo.TURISTA,
+                        TipoHospedaje.MEDIA_PENSION, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3))));
 
         assertThrows(
                 CapacidadExcedidaException.class,
@@ -176,7 +175,7 @@ class ReservasControladorTest {
     }
 
     private Reserva ingresarReservaValida(Usuario actor) {
-        return controlador.ingresar(
+        return servicio.crear(
                 actor,
                 1,
                 100,

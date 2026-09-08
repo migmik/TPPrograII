@@ -34,7 +34,7 @@ import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:tijetravel-recursos;MODE=MySQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.url=${TEST_DB_URL_RECURSOS:jdbc:h2:mem:tijetravel-recursos;MODE=MySQL;DB_CLOSE_DELAY=-1}",
         "app.seguridad.administrador-inicial.habilitado=true",
         "app.seguridad.administrador-inicial.nombre-usuario=admin-recursos",
         "app.seguridad.administrador-inicial.contrasenia=ClaveAdmin123!"

@@ -21,8 +21,8 @@ import com.tijetravel.tijeback.api.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijeback.api.dto.ModificarVueloSolicitud;
 import com.tijetravel.tijeback.api.dto.VueloRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.VueloMapeador;
-import com.tijetravel.tijeback.controladores.ReservasControlador;
-import com.tijetravel.tijeback.controladores.VuelosControlador;
+import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
+import com.tijetravel.tijeback.servicios.VueloServicio;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vuelo;
@@ -34,25 +34,25 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/vuelos")
 public class VuelosRestControlador {
-    private final VuelosControlador vuelosControlador;
-    private final ReservasControlador reservasControlador;
+    private final VueloServicio vueloServicio;
+    private final DisponibilidadServicio disponibilidadServicio;
     private final VueloMapeador vueloMapeador;
     private final UsuarioActualServicio usuarioActualServicio;
 
     public VuelosRestControlador(
-            VuelosControlador vuelosControlador,
-            ReservasControlador reservasControlador,
+            VueloServicio vueloServicio,
+            DisponibilidadServicio disponibilidadServicio,
             VueloMapeador vueloMapeador,
             UsuarioActualServicio usuarioActualServicio) {
-        this.vuelosControlador = vuelosControlador;
-        this.reservasControlador = reservasControlador;
+        this.vueloServicio = vueloServicio;
+        this.disponibilidadServicio = disponibilidadServicio;
         this.vueloMapeador = vueloMapeador;
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
     @GetMapping
     public List<VueloRespuesta> listar() {
-        return vuelosControlador.listar().stream()
+        return vueloServicio.listar().stream()
                 .map(vueloMapeador::aRespuesta)
                 .sorted(Comparator.comparing(VueloRespuesta::numero))
                 .toList();
@@ -61,23 +61,23 @@ public class VuelosRestControlador {
     @GetMapping("/{numero}")
     public VueloRespuesta encontrarPorId(
             @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero) {
-        return vueloMapeador.aRespuesta(vuelosControlador.encontrarPorId(numero));
+        return vueloMapeador.aRespuesta(vueloServicio.encontrarPorId(numero));
     }
 
     @GetMapping("/{numero}/disponibilidad")
     public DisponibilidadVueloRespuesta consultarDisponibilidad(
             @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero,
             @RequestParam ClaseVuelo clase) {
-        int plazasDisponibles = reservasControlador.plazasDisponiblesVuelo(numero, clase);
+        int plazasDisponibles = disponibilidadServicio.plazasDisponiblesVuelo(numero, clase);
         return new DisponibilidadVueloRespuesta(numero, clase, plazasDisponibles);
     }
 
     @PostMapping
-    public ResponseEntity<VueloRespuesta> ingresar(
+    public ResponseEntity<VueloRespuesta> crear(
             @Valid @RequestBody CrearVueloSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Vuelo vuelo = vuelosControlador.ingresar(
+        Vuelo vuelo = vueloServicio.crear(
                 actor,
                 solicitud.numero(),
                 solicitud.fechaYHora(),
@@ -98,7 +98,7 @@ public class VuelosRestControlador {
             @Valid @RequestBody ModificarVueloSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return vueloMapeador.aRespuesta(vuelosControlador.modificar(
+        return vueloMapeador.aRespuesta(vueloServicio.modificar(
                 actor,
                 numero,
                 solicitud.fechaYHora(),
@@ -114,7 +114,7 @@ public class VuelosRestControlador {
             @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        vuelosControlador.eliminar(actor, numero);
+        vueloServicio.eliminar(actor, numero);
         return ResponseEntity.noContent().build();
     }
 }

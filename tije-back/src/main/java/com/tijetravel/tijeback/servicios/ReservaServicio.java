@@ -1,16 +1,16 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
@@ -26,28 +26,34 @@ import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
 @Service
 @Transactional(readOnly = true)
-public class ReservasControlador {
+public class ReservaServicio {
+    private final BloqueoEscrituras bloqueoEscrituras;
     private final ReservaRepositorio reservaRepositorio;
     private final TuristaRepositorio turistaRepositorio;
     private final VueloRepositorio vueloRepositorio;
     private final HotelRepositorio hotelRepositorio;
-    private final AutorizacionControlador autorizacion;
+    private final AutorizacionServicio autorizacion;
+    private final DisponibilidadServicio disponibilidadServicio;
 
-    public ReservasControlador(
+    public ReservaServicio(
             ReservaRepositorio reservaRepositorio,
             TuristaRepositorio turistaRepositorio,
             VueloRepositorio vueloRepositorio,
             HotelRepositorio hotelRepositorio,
-            AutorizacionControlador autorizacion) {
+            AutorizacionServicio autorizacion,
+            DisponibilidadServicio disponibilidadServicio,
+            BloqueoEscrituras bloqueoEscrituras) {
+        this.bloqueoEscrituras = bloqueoEscrituras;
         this.reservaRepositorio = reservaRepositorio;
         this.turistaRepositorio = turistaRepositorio;
         this.vueloRepositorio = vueloRepositorio;
         this.hotelRepositorio = hotelRepositorio;
         this.autorizacion = autorizacion;
+        this.disponibilidadServicio = disponibilidadServicio;
     }
 
-    @Transactional
-    public Reserva ingresar(
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Reserva crear(
             Usuario actor,
             Integer codigoTurista,
             Integer numeroVuelo,
@@ -56,8 +62,9 @@ public class ReservasControlador {
             TipoHospedaje tipoHospedaje,
             LocalDate fechaLlegada,
             LocalDate fechaPartida) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
-        validarFechas(fechaLlegada, fechaPartida);
+        disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Turista turista = encontrarTurista(codigoTurista);
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
@@ -67,8 +74,8 @@ public class ReservasControlador {
             throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
         }
         validarCompatibilidad(vuelo, hotel, fechaLlegada);
-        verificarCapacidadVuelo(vuelo, claseVuelo, null);
-        verificarCapacidadHotel(hotel, fechaLlegada, fechaPartida, null);
+        disponibilidadServicio.verificarCapacidadVuelo(vuelo, claseVuelo, null);
+        disponibilidadServicio.verificarCapacidadHotel(hotel, fechaLlegada, fechaPartida, null);
 
         Reserva reserva = new Reserva(
                 turista,
@@ -88,7 +95,7 @@ public class ReservasControlador {
     public List<Reserva> listarPara(Usuario actor) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         if (actor.getRol() == RolUsuario.CLIENTE) {
-            return listarPorTitularYFamiliares(obtenerCodigoTurista(actor));
+            return listarPorTitularYFamiliares(autorizacion.codigoTitular(actor));
         }
         return listar();
     }
@@ -101,16 +108,11 @@ public class ReservasControlador {
     public Reserva encontrarVisiblePara(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         Reserva reserva = encontrarPorId(codigo);
-        if (actor.getRol() == RolUsuario.CLIENTE && !perteneceAlGrupoFamiliar(actor, reserva)) {
+        if (actor.getRol() == RolUsuario.CLIENTE && !autorizacion.perteneceAlGrupoFamiliar(actor, reserva.getTurista())) {
             throw new OperacionNoPermitidaException(
                     "El cliente no puede consultar reservas de otro grupo familiar");
         }
         return reserva;
-    }
-
-    public List<Reserva> listarPorTurista(Integer codigoTurista) {
-        encontrarTurista(codigoTurista);
-        return reservaRepositorio.findByTuristaCodigo(codigoTurista);
     }
 
     public List<Reserva> listarPorTitularYFamiliares(Integer codigoTitular) {
@@ -121,26 +123,7 @@ public class ReservasControlador {
         return reservaRepositorio.listarPorTitularYFamiliares(codigoTitular);
     }
 
-    public int plazasDisponiblesVuelo(Integer numeroVuelo, ClaseVuelo claseVuelo) {
-        Vuelo vuelo = encontrarVuelo(numeroVuelo);
-        int capacidad = capacidadDeClase(vuelo, claseVuelo);
-        long ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVuelo(numeroVuelo, claseVuelo);
-        return Math.max(0, capacidad - Math.toIntExact(ocupadas));
-    }
-
-    public int plazasDisponiblesHotel(
-            Integer codigoHotel,
-            LocalDate fechaLlegada,
-            LocalDate fechaPartida) {
-        validarFechas(fechaLlegada, fechaPartida);
-        Hotel hotel = encontrarHotel(codigoHotel);
-        long ocupadas = reservaRepositorio
-                .countByHotelCodigoAndFechaLlegadaLessThanAndFechaPartidaGreaterThan(
-                        codigoHotel, fechaPartida, fechaLlegada);
-        return Math.max(0, hotel.getPlazasDisponibles() - Math.toIntExact(ocupadas));
-    }
-
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Reserva modificar(
             Usuario actor,
             Integer codigoReserva,
@@ -151,8 +134,9 @@ public class ReservasControlador {
             TipoHospedaje tipoHospedaje,
             LocalDate fechaLlegada,
             LocalDate fechaPartida) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
-        validarFechas(fechaLlegada, fechaPartida);
+        disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Reserva reserva = encontrarPorId(codigoReserva);
         Turista turista = encontrarTurista(codigoTurista);
@@ -164,8 +148,8 @@ public class ReservasControlador {
             throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
         }
         validarCompatibilidad(vuelo, hotel, fechaLlegada);
-        verificarCapacidadVuelo(vuelo, claseVuelo, codigoReserva);
-        verificarCapacidadHotel(hotel, fechaLlegada, fechaPartida, codigoReserva);
+        disponibilidadServicio.verificarCapacidadVuelo(vuelo, claseVuelo, codigoReserva);
+        disponibilidadServicio.verificarCapacidadHotel(hotel, fechaLlegada, fechaPartida, codigoReserva);
 
         reserva.actualizarDatos(
                 turista,
@@ -178,51 +162,12 @@ public class ReservasControlador {
         return reservaRepositorio.save(reserva);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigoReserva) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
         Reserva reserva = encontrarPorId(codigoReserva);
         reservaRepositorio.delete(reserva);
-    }
-
-    private void verificarCapacidadVuelo(
-            Vuelo vuelo,
-            ClaseVuelo claseVuelo,
-            Integer codigoReservaIgnorada) {
-        if (claseVuelo == null) {
-            throw new IllegalArgumentException("El campo claseVuelo es obligatorio");
-        }
-        long ocupadas = codigoReservaIgnorada == null
-                ? reservaRepositorio.countByVueloNumeroAndClaseVuelo(vuelo.getNumero(), claseVuelo)
-                : reservaRepositorio.countByVueloNumeroAndClaseVueloAndCodigoNot(
-                        vuelo.getNumero(), claseVuelo, codigoReservaIgnorada);
-        if (ocupadas >= capacidadDeClase(vuelo, claseVuelo)) {
-            throw new CapacidadExcedidaException("No quedan plazas disponibles en la clase seleccionada");
-        }
-    }
-
-    private void verificarCapacidadHotel(
-            Hotel hotel,
-            LocalDate fechaLlegada,
-            LocalDate fechaPartida,
-            Integer codigoReservaIgnorada) {
-        long ocupadas = codigoReservaIgnorada == null
-                ? reservaRepositorio.countByHotelCodigoAndFechaLlegadaLessThanAndFechaPartidaGreaterThan(
-                        hotel.getCodigo(), fechaPartida, fechaLlegada)
-                : reservaRepositorio.countByHotelCodigoAndCodigoNotAndFechaLlegadaLessThanAndFechaPartidaGreaterThan(
-                        hotel.getCodigo(), codigoReservaIgnorada, fechaPartida, fechaLlegada);
-        if (ocupadas >= hotel.getPlazasDisponibles()) {
-            throw new CapacidadExcedidaException("No quedan plazas disponibles en el hotel para esas fechas");
-        }
-    }
-
-    private int capacidadDeClase(Vuelo vuelo, ClaseVuelo claseVuelo) {
-        if (claseVuelo == null) {
-            throw new IllegalArgumentException("El campo claseVuelo es obligatorio");
-        }
-        return claseVuelo == ClaseVuelo.TURISTA
-                ? vuelo.getPlazasTurista()
-                : vuelo.getPlazasPrimera();
     }
 
     private void validarCompatibilidad(Vuelo vuelo, Hotel hotel, LocalDate fechaLlegada) {
@@ -231,13 +176,6 @@ public class ReservasControlador {
         if (!coincideFecha || !coincideDestino) {
             throw new OperacionNoPermitidaException(
                     "El hotel, el destino del vuelo y la fecha de llegada no son compatibles");
-        }
-    }
-
-    private void validarFechas(LocalDate fechaLlegada, LocalDate fechaPartida) {
-        if (fechaLlegada == null || fechaPartida == null || !fechaLlegada.isBefore(fechaPartida)) {
-            throw new IllegalArgumentException(
-                    "La fecha de llegada debe ser anterior a la fecha de partida");
         }
     }
 
@@ -256,19 +194,4 @@ public class ReservasControlador {
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el hotel " + codigo));
     }
 
-    private boolean perteneceAlGrupoFamiliar(Usuario actor, Reserva reserva) {
-        Integer codigoTitular = obtenerCodigoTurista(actor);
-        Turista turista = reserva.getTurista();
-        return codigoTitular.equals(turista.getCodigo())
-                || codigoTitular.equals(turista.getCodigoTitular());
-    }
-
-    private Integer obtenerCodigoTurista(Usuario actor) {
-        Integer codigoTurista = actor.getCodigoTurista();
-        if (codigoTurista == null) {
-            throw new OperacionNoPermitidaException(
-                    "El cliente no tiene un turista titular asociado");
-        }
-        return codigoTurista;
-    }
 }

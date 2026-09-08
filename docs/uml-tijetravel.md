@@ -3,9 +3,6 @@
 Este diagrama representa el nucleo de la version web. La version PlantUML se
 encuentra en `uml-tijetravel.puml`.
 
-Las exportaciones `uml.svg` y `uml.pdf` corresponden al UML de la primera
-entrega y se conservan como referencia historica.
-
 ## Capas
 
 ```mermaid
@@ -14,7 +11,7 @@ flowchart TB
     SEC[Spring Security - sesion, CSRF y roles]
     API[API REST publica y protegida]
     APIERR[Manejador global de errores]
-    CTRL[Controladores de negocio]
+    CTRL[Servicios de negocio]
     REPO[Repositorios Spring Data JPA]
     MODEL[Modelos y enums]
     ERR[Excepciones de negocio]
@@ -67,7 +64,7 @@ classDiagram
         -Integer codigo
         -String nombre
         -String ciudad
-        -int plazasDisponibles
+        -int capacidadTotal
     }
     class Vuelo {
         -Integer numero
@@ -93,7 +90,7 @@ classDiagram
     Turista --> Sucursal : sucursalContratacion
     Turista --> Turista : titular
     Reserva --> Turista
-    Reserva --> Sucursal : sucursalContratacion derivada
+    Reserva --> Sucursal : sucursal historica
     Reserva --> Vuelo
     Reserva --> Hotel
 ```
@@ -102,7 +99,7 @@ classDiagram
 
 ```mermaid
 classDiagram
-    class GenericoRepositorio {
+    class JpaRepository {
         <<interface>>
     }
     class SucursalRepositorio
@@ -112,14 +109,22 @@ classDiagram
     class ReservaRepositorio
     class UsuarioRepositorio
 
-    class SucursalesControlador
-    class HotelesControlador
-    class VuelosControlador
-    class TuristasControlador
-    class ReservasControlador
-    class UsuariosControlador
-    class AutenticacionControlador
-    class AutorizacionControlador
+    class SucursalServicio
+    class HotelServicio
+    class VueloServicio
+    class TuristaServicio
+    class ReservaServicio
+    class UsuarioServicio
+    class BloqueoEscrituras
+    class OcupacionHotel
+    class DisponibilidadServicio
+    class UsuarioFactory
+    class CreadorUsuario {
+        <<interface>>
+    }
+    UsuarioServicio --> UsuarioFactory
+    UsuarioFactory --> CreadorUsuario
+    class AutorizacionServicio
     class AutenticacionRestControlador
     class TuristasRestControlador
     class ReservasRestControlador
@@ -129,29 +134,40 @@ classDiagram
     class UsuarioActualServicio
     class UsuarioAutenticado
 
-    GenericoRepositorio <|-- SucursalRepositorio
-    GenericoRepositorio <|-- HotelRepositorio
-    GenericoRepositorio <|-- VueloRepositorio
-    GenericoRepositorio <|-- TuristaRepositorio
-    GenericoRepositorio <|-- ReservaRepositorio
-    GenericoRepositorio <|-- UsuarioRepositorio
+    JpaRepository <|-- SucursalRepositorio
+    JpaRepository <|-- HotelRepositorio
+    JpaRepository <|-- VueloRepositorio
+    JpaRepository <|-- TuristaRepositorio
+    JpaRepository <|-- ReservaRepositorio
+    JpaRepository <|-- UsuarioRepositorio
 
-    SucursalesControlador --> SucursalRepositorio
-    HotelesControlador --> HotelRepositorio
-    VuelosControlador --> VueloRepositorio
-    TuristasControlador --> TuristaRepositorio
-    ReservasControlador --> ReservaRepositorio
-    UsuariosControlador --> UsuarioRepositorio
-    AutenticacionControlador --> UsuarioRepositorio
+    SucursalServicio --> SucursalRepositorio
+    HotelServicio --> HotelRepositorio
+    VueloServicio --> VueloRepositorio
+    TuristaServicio --> TuristaRepositorio
+    ReservaServicio --> BloqueoEscrituras
+    HotelServicio --> BloqueoEscrituras
+    VueloServicio --> BloqueoEscrituras
+    TuristaServicio --> BloqueoEscrituras
+    UsuarioServicio --> BloqueoEscrituras
+    SucursalServicio --> BloqueoEscrituras
+    HotelServicio --> OcupacionHotel
+    DisponibilidadServicio --> OcupacionHotel
+    ReservaServicio --> DisponibilidadServicio
+    DisponibilidadServicio --> ReservaRepositorio
+    DisponibilidadServicio --> VueloRepositorio
+    DisponibilidadServicio --> HotelRepositorio
+    ReservaServicio --> ReservaRepositorio
+    UsuarioServicio --> UsuarioRepositorio
     AutenticacionRestControlador --> ConfiguracionSeguridad
     SucursalesRestControlador --> UsuarioActualServicio
     HotelesRestControlador --> UsuarioActualServicio
     VuelosRestControlador --> UsuarioActualServicio
-    HotelesRestControlador --> ReservasControlador : consulta disponibilidad
-    VuelosRestControlador --> ReservasControlador : consulta disponibilidad
-    TuristasRestControlador --> TuristasControlador
-    ReservasRestControlador --> ReservasControlador
-    UsuariosRestControlador --> UsuariosControlador
+    HotelesRestControlador --> DisponibilidadServicio : consulta disponibilidad
+    VuelosRestControlador --> DisponibilidadServicio : consulta disponibilidad
+    TuristasRestControlador --> TuristaServicio
+    ReservasRestControlador --> ReservaServicio
+    UsuariosRestControlador --> UsuarioServicio
     TuristasRestControlador --> UsuarioActualServicio
     ReservasRestControlador --> UsuarioActualServicio
     UsuariosRestControlador --> UsuarioActualServicio

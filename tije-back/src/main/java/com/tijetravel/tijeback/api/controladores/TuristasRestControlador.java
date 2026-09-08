@@ -19,7 +19,7 @@ import com.tijetravel.tijeback.api.dto.CrearTuristaSolicitud;
 import com.tijetravel.tijeback.api.dto.ModificarTuristaSolicitud;
 import com.tijetravel.tijeback.api.dto.TuristaRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.TuristaMapeador;
-import com.tijetravel.tijeback.controladores.TuristasControlador;
+import com.tijetravel.tijeback.servicios.TuristaServicio;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
@@ -30,15 +30,15 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/turistas")
 public class TuristasRestControlador {
-    private final TuristasControlador turistasControlador;
+    private final TuristaServicio turistaServicio;
     private final TuristaMapeador turistaMapeador;
     private final UsuarioActualServicio usuarioActualServicio;
 
     public TuristasRestControlador(
-            TuristasControlador turistasControlador,
+            TuristaServicio turistaServicio,
             TuristaMapeador turistaMapeador,
             UsuarioActualServicio usuarioActualServicio) {
-        this.turistasControlador = turistasControlador;
+        this.turistaServicio = turistaServicio;
         this.turistaMapeador = turistaMapeador;
         this.usuarioActualServicio = usuarioActualServicio;
     }
@@ -46,7 +46,7 @@ public class TuristasRestControlador {
     @GetMapping
     public List<TuristaRespuesta> listar(Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return turistasControlador.listarPara(actor).stream()
+        return turistaServicio.listarPara(actor).stream()
                 .map(turistaMapeador::aRespuesta)
                 .sorted(Comparator.comparing(TuristaRespuesta::codigo))
                 .toList();
@@ -58,17 +58,17 @@ public class TuristasRestControlador {
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
         return turistaMapeador.aRespuesta(
-                turistasControlador.encontrarVisiblePara(actor, codigo));
+                turistaServicio.encontrarVisiblePara(actor, codigo));
     }
 
     @PostMapping
-    public ResponseEntity<TuristaRespuesta> ingresar(
+    public ResponseEntity<TuristaRespuesta> crear(
             @Valid @RequestBody CrearTuristaSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Turista turista = solicitud.codigoTitular() == null
-                ? ingresarTitular(actor, solicitud)
-                : ingresarFamiliar(actor, solicitud);
+        Turista turista = turistaServicio.crear(actor, solicitud.nombre(), solicitud.apellido(),
+                solicitud.direccion(), solicitud.email(), solicitud.telefonoFijo(),
+                solicitud.telefonoCelular(), solicitud.codigoSucursal(), solicitud.codigoTitular());
         TuristaRespuesta respuesta = turistaMapeador.aRespuesta(turista);
         return ResponseEntity
                 .created(URI.create("/api/v1/turistas/" + respuesta.codigo()))
@@ -81,7 +81,7 @@ public class TuristasRestControlador {
             @Valid @RequestBody ModificarTuristaSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return turistaMapeador.aRespuesta(turistasControlador.modificar(
+        return turistaMapeador.aRespuesta(turistaServicio.modificar(
                 actor,
                 codigo,
                 solicitud.nombre(),
@@ -98,39 +98,8 @@ public class TuristasRestControlador {
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        turistasControlador.eliminar(actor, codigo);
+        turistaServicio.eliminar(actor, codigo);
         return ResponseEntity.noContent().build();
     }
 
-    private Turista ingresarTitular(Usuario actor, CrearTuristaSolicitud solicitud) {
-        if (solicitud.codigoSucursal() == null) {
-            throw new IllegalArgumentException(
-                    "El codigo de sucursal es obligatorio para un turista titular");
-        }
-        return turistasControlador.ingresarTitular(
-                actor,
-                solicitud.nombre(),
-                solicitud.apellido(),
-                solicitud.direccion(),
-                solicitud.email(),
-                solicitud.telefonoFijo(),
-                solicitud.telefonoCelular(),
-                solicitud.codigoSucursal());
-    }
-
-    private Turista ingresarFamiliar(Usuario actor, CrearTuristaSolicitud solicitud) {
-        if (solicitud.codigoSucursal() != null) {
-            throw new IllegalArgumentException(
-                    "Un turista familiar hereda la sucursal del titular");
-        }
-        return turistasControlador.ingresarFamiliar(
-                actor,
-                solicitud.codigoTitular(),
-                solicitud.nombre(),
-                solicitud.apellido(),
-                solicitud.direccion(),
-                solicitud.email(),
-                solicitud.telefonoFijo(),
-                solicitud.telefonoCelular());
-    }
 }

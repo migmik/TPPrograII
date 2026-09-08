@@ -1,9 +1,10 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
@@ -17,25 +18,29 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 
 @Service
 @Transactional(readOnly = true)
-public class SucursalesControlador {
+public class SucursalServicio {
+    private final BloqueoEscrituras bloqueoEscrituras;
     private final SucursalRepositorio sucursalRepositorio;
     private final ReservaRepositorio reservaRepositorio;
     private final TuristaRepositorio turistaRepositorio;
-    private final AutorizacionControlador autorizacion;
+    private final AutorizacionServicio autorizacion;
 
-    public SucursalesControlador(
+    public SucursalServicio(
             SucursalRepositorio sucursalRepositorio,
             ReservaRepositorio reservaRepositorio,
             TuristaRepositorio turistaRepositorio,
-            AutorizacionControlador autorizacion) {
+            AutorizacionServicio autorizacion,
+            BloqueoEscrituras bloqueoEscrituras) {
+        this.bloqueoEscrituras = bloqueoEscrituras;
         this.sucursalRepositorio = sucursalRepositorio;
         this.reservaRepositorio = reservaRepositorio;
         this.turistaRepositorio = turistaRepositorio;
         this.autorizacion = autorizacion;
     }
 
-    @Transactional
-    public Sucursal ingresar(Usuario actor, String direccion, String telefono) {
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Sucursal crear(Usuario actor, String direccion, String telefono) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
         Sucursal sucursal = new Sucursal(direccion, telefono);
         if (sucursalRepositorio.existsByDireccionIgnoreCase(sucursal.getDireccion())) {
@@ -53,8 +58,9 @@ public class SucursalesControlador {
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la sucursal " + codigo));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Sucursal modificar(Usuario actor, Integer codigo, String direccion, String telefono) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
         Sucursal propuesta = new Sucursal(direccion, telefono);
         if (sucursalRepositorio.existsByDireccionIgnoreCaseAndCodigoNot(propuesta.getDireccion(), codigo)) {
@@ -66,8 +72,9 @@ public class SucursalesControlador {
         return sucursalRepositorio.save(sucursal);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigo) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
         Sucursal sucursal = encontrarPorId(codigo);
         if (reservaRepositorio.existsBySucursalContratacionCodigo(codigo)

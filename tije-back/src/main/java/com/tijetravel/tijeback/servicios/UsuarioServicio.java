@@ -1,10 +1,11 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.tijetravel.tijeback.enums.Permiso;
@@ -14,36 +15,42 @@ import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.UsuarioFactory;
+import com.tijetravel.tijeback.servicios.usuarios.UsuarioFactory;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @Service
 @Transactional(readOnly = true)
-public class UsuariosControlador {
+public class UsuarioServicio {
+    private final BloqueoEscrituras bloqueoEscrituras;
+    private final UsuarioFactory usuarioFactory;
     private final UsuarioRepositorio usuarioRepositorio;
     private final TuristaRepositorio turistaRepositorio;
-    private final AutorizacionControlador autorizacion;
+    private final AutorizacionServicio autorizacion;
     private final PasswordEncoder codificadorContrasenias;
 
-    public UsuariosControlador(
+    public UsuarioServicio(
             UsuarioRepositorio usuarioRepositorio,
             TuristaRepositorio turistaRepositorio,
-            AutorizacionControlador autorizacion,
-            PasswordEncoder codificadorContrasenias) {
+            AutorizacionServicio autorizacion,
+            PasswordEncoder codificadorContrasenias,
+            BloqueoEscrituras bloqueoEscrituras, UsuarioFactory usuarioFactory) {
+        this.usuarioFactory = usuarioFactory;
+        this.bloqueoEscrituras = bloqueoEscrituras;
         this.usuarioRepositorio = usuarioRepositorio;
         this.turistaRepositorio = turistaRepositorio;
         this.autorizacion = autorizacion;
         this.codificadorContrasenias = codificadorContrasenias;
     }
 
-    @Transactional
-    public Usuario ingresar(
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Usuario crear(
             Usuario actor,
             String nombreUsuario,
             String contrasenia,
             RolUsuario rol,
             Integer codigoTurista) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         if (rol == null) {
             throw new IllegalArgumentException("El campo rol es obligatorio");
@@ -53,6 +60,9 @@ public class UsuariosControlador {
             throw new EntidadDuplicadaException("Ya existe el nombre de usuario indicado");
         }
 
+        if (rol != RolUsuario.CLIENTE && codigoTurista != null) {
+            throw new IllegalArgumentException("Solo un cliente puede asociarse a un turista");
+        }
         Turista turista = null;
         if (rol == RolUsuario.CLIENTE) {
             if (codigoTurista == null) {
@@ -66,7 +76,7 @@ public class UsuariosControlador {
             }
         }
 
-        Usuario usuario = UsuarioFactory.crear(
+        Usuario usuario = usuarioFactory.crear(
                 nombreUsuario,
                 codificarContrasenia(contrasenia),
                 rol,
@@ -97,19 +107,13 @@ public class UsuariosControlador {
         return usuario;
     }
 
-    public Usuario encontrarPorNombre(String nombreUsuario) {
-        String nombreNormalizado = normalizarNombreUsuario(nombreUsuario);
-        return usuarioRepositorio.findByNombreUsuarioIgnoreCase(nombreNormalizado)
-                .orElseThrow(() -> new EntidadNoEncontradaException(
-                        "No se encontro el usuario " + nombreNormalizado));
-    }
-
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Usuario modificarCredenciales(
             Usuario actor,
             Integer codigo,
             String nombreUsuario,
             String contrasenia) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         String nombreNormalizado = normalizarNombreUsuario(nombreUsuario);
         if (usuarioRepositorio.existsByNombreUsuarioIgnoreCaseAndCodigoNot(nombreNormalizado, codigo)) {
@@ -123,8 +127,9 @@ public class UsuariosControlador {
         return usuarioRepositorio.save(usuario);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigo) {
+        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         Usuario usuario = encontrarPorId(codigo);
         if (esMismoUsuario(actor, usuario)) {

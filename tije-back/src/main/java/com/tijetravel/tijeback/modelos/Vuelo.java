@@ -2,6 +2,9 @@ package com.tijetravel.tijeback.modelos;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -14,6 +17,7 @@ public class Vuelo {
     private Integer numero;
 
     @Column(name = "fecha_hora", nullable = false)
+    @JdbcTypeCode(SqlTypes.LOCAL_DATE_TIME)
     private LocalDateTime fechaYHora;
 
     @Column(nullable = false)
