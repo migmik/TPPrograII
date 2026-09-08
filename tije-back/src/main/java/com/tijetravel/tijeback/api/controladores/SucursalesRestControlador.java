@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tijetravel.tijeback.api.dto.GuardarSucursalSolicitud;
 import com.tijetravel.tijeback.api.dto.SucursalRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.SucursalMapeador;
-import com.tijetravel.tijeback.controladores.SucursalesControlador;
+import com.tijetravel.tijeback.servicios.SucursalServicio;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
@@ -29,22 +29,22 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/sucursales")
 public class SucursalesRestControlador {
-    private final SucursalesControlador sucursalesControlador;
+    private final SucursalServicio sucursalServicio;
     private final SucursalMapeador sucursalMapeador;
     private final UsuarioActualServicio usuarioActualServicio;
 
     public SucursalesRestControlador(
-            SucursalesControlador sucursalesControlador,
+            SucursalServicio sucursalServicio,
             SucursalMapeador sucursalMapeador,
             UsuarioActualServicio usuarioActualServicio) {
-        this.sucursalesControlador = sucursalesControlador;
+        this.sucursalServicio = sucursalServicio;
         this.sucursalMapeador = sucursalMapeador;
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
     @GetMapping
     public List<SucursalRespuesta> listar() {
-        return sucursalesControlador.listar().stream()
+        return sucursalServicio.listar().stream()
                 .map(sucursalMapeador::aRespuesta)
                 .sorted(Comparator.comparing(SucursalRespuesta::codigo))
                 .toList();
@@ -53,15 +53,15 @@ public class SucursalesRestControlador {
     @GetMapping("/{codigo}")
     public SucursalRespuesta encontrarPorId(
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo) {
-        return sucursalMapeador.aRespuesta(sucursalesControlador.encontrarPorId(codigo));
+        return sucursalMapeador.aRespuesta(sucursalServicio.encontrarPorId(codigo));
     }
 
     @PostMapping
-    public ResponseEntity<SucursalRespuesta> ingresar(
+    public ResponseEntity<SucursalRespuesta> crear(
             @Valid @RequestBody GuardarSucursalSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Sucursal sucursal = sucursalesControlador.ingresar(
+        Sucursal sucursal = sucursalServicio.crear(
                 actor,
                 solicitud.direccion(),
                 solicitud.telefono());
@@ -77,7 +77,7 @@ public class SucursalesRestControlador {
             @Valid @RequestBody GuardarSucursalSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return sucursalMapeador.aRespuesta(sucursalesControlador.modificar(
+        return sucursalMapeador.aRespuesta(sucursalServicio.modificar(
                 actor,
                 codigo,
                 solicitud.direccion(),
@@ -89,7 +89,7 @@ public class SucursalesRestControlador {
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        sucursalesControlador.eliminar(actor, codigo);
+        sucursalServicio.eliminar(actor, codigo);
         return ResponseEntity.noContent().build();
     }
 }

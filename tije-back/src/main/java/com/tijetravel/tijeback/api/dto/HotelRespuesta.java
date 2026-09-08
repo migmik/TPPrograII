@@ -6,5 +6,5 @@ public record HotelRespuesta(
         String direccion,
         String ciudad,
         String telefono,
-        int plazasDisponibles) {
+        int capacidadTotal) {
 }

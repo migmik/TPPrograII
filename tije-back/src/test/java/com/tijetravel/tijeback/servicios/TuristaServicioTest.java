@@ -1,4 +1,4 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,7 +24,7 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @ExtendWith(MockitoExtension.class)
-class TuristasControladorTest {
+class TuristaServicioTest {
     @Mock
     private TuristaRepositorio turistaRepositorio;
 
@@ -37,18 +37,19 @@ class TuristasControladorTest {
     @Mock
     private UsuarioRepositorio usuarioRepositorio;
 
-    private TuristasControlador controlador;
+    private TuristaServicio servicio;
     private Administrador administrador;
     private Turista turista;
 
     @BeforeEach
-    void prepararControlador() {
-        controlador = new TuristasControlador(
+    void prepararServicio() {
+        servicio = new TuristaServicio(
                 turistaRepositorio,
                 sucursalRepositorio,
                 reservaRepositorio,
                 usuarioRepositorio,
-                new AutorizacionControlador());
+                new AutorizacionServicio(),
+                org.mockito.Mockito.mock(BloqueoEscrituras.class));
         administrador = new Administrador("admin", "clave");
         turista = new Turista(
                 "Ana",
@@ -67,7 +68,7 @@ class TuristasControladorTest {
 
         assertThrows(
                 OperacionNoPermitidaException.class,
-                () -> controlador.eliminar(administrador, 1));
+                () -> servicio.eliminar(administrador, 1));
 
         verify(turistaRepositorio, never()).delete(any());
     }
@@ -78,7 +79,7 @@ class TuristasControladorTest {
 
         assertThrows(
                 OperacionNoPermitidaException.class,
-                () -> controlador.eliminar(administrador, 1));
+                () -> servicio.eliminar(administrador, 1));
 
         verify(turistaRepositorio, never()).delete(any());
     }
@@ -89,14 +90,14 @@ class TuristasControladorTest {
 
         assertThrows(
                 OperacionNoPermitidaException.class,
-                () -> controlador.eliminar(administrador, 1));
+                () -> servicio.eliminar(administrador, 1));
 
         verify(turistaRepositorio, never()).delete(any());
     }
 
     @Test
     void eliminaTuristaSinRelaciones() {
-        controlador.eliminar(administrador, 1);
+        servicio.eliminar(administrador, 1);
 
         verify(turistaRepositorio).delete(turista);
     }

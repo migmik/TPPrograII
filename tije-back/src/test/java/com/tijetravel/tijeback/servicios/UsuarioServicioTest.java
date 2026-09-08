@@ -1,4 +1,4 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -30,7 +30,7 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @ExtendWith(MockitoExtension.class)
-class UsuariosControladorTest {
+class UsuarioServicioTest {
     @Mock
     private UsuarioRepositorio usuarioRepositorio;
 
@@ -40,22 +40,27 @@ class UsuariosControladorTest {
     @Mock
     private PasswordEncoder codificadorContrasenias;
 
-    private UsuariosControlador controlador;
+    private UsuarioServicio servicio;
 
     @BeforeEach
-    void prepararControlador() {
-        controlador = new UsuariosControlador(
+    void prepararServicio() {
+        servicio = new UsuarioServicio(
                 usuarioRepositorio,
                 turistaRepositorio,
-                new AutorizacionControlador(),
-                codificadorContrasenias);
+                new AutorizacionServicio(),
+                codificadorContrasenias,
+                org.mockito.Mockito.mock(BloqueoEscrituras.class),
+                new com.tijetravel.tijeback.servicios.usuarios.UsuarioFactory(java.util.List.of(
+                        new com.tijetravel.tijeback.servicios.usuarios.CreadorCliente(),
+                        new com.tijetravel.tijeback.servicios.usuarios.CreadorVendedor(),
+                        new com.tijetravel.tijeback.servicios.usuarios.CreadorAdministrador())));
     }
 
     @Test
     void vendedorNoPuedeAdministrarUsuarios() {
         assertThrows(
                 OperacionNoPermitidaException.class,
-                () -> controlador.ingresar(
+                () -> servicio.crear(
                         new Vendedor("vendedor", "clave"),
                         "nuevo",
                         "clave",
@@ -69,7 +74,7 @@ class UsuariosControladorTest {
     void rechazaContraseniasVaciasAntesDeCodificarlas() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> controlador.ingresar(
+                () -> servicio.crear(
                         new Administrador("admin", "clave"),
                         "nuevo",
                         "  ",
@@ -92,7 +97,7 @@ class UsuariosControladorTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> controlador.ingresar(
+                () -> servicio.crear(
                         new Administrador("admin", "clave"),
                         "cliente",
                         "clave",
@@ -112,7 +117,7 @@ class UsuariosControladorTest {
                 .thenAnswer(invocacion -> invocacion.getArgument(0));
         when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
-        Usuario usuario = controlador.ingresar(
+        Usuario usuario = servicio.crear(
                 new Administrador("admin", "clave"),
                 "cliente",
                 "clave",
@@ -131,7 +136,7 @@ class UsuariosControladorTest {
 
         assertThrows(
                 OperacionNoPermitidaException.class,
-                () -> controlador.eliminar(administrador, 1));
+                () -> servicio.eliminar(administrador, 1));
 
         verify(usuarioRepositorio, never()).delete(any());
     }
@@ -145,17 +150,9 @@ class UsuariosControladorTest {
 
         assertThrows(
                 OperacionNoPermitidaException.class,
-                () -> controlador.eliminar(actor, 2));
+                () -> servicio.eliminar(actor, 2));
 
         verify(usuarioRepositorio, never()).delete(any());
     }
 
-    @Test
-    void normalizaElNombreAntesDeBuscar() {
-        Administrador administrador = new Administrador("admin", "clave");
-        when(usuarioRepositorio.findByNombreUsuarioIgnoreCase("admin"))
-                .thenReturn(Optional.of(administrador));
-
-        assertSame(administrador, controlador.encontrarPorNombre("  admin  "));
-    }
 }

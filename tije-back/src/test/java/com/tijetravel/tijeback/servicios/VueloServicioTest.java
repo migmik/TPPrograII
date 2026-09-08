@@ -1,4 +1,4 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,22 +22,23 @@ import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
 @ExtendWith(MockitoExtension.class)
-class VuelosControladorTest {
+class VueloServicioTest {
     @Mock
     private VueloRepositorio vueloRepositorio;
 
     @Mock
     private ReservaRepositorio reservaRepositorio;
 
-    private VuelosControlador controlador;
+    private VueloServicio servicio;
     private Vuelo vuelo;
 
     @BeforeEach
-    void prepararControlador() {
-        controlador = new VuelosControlador(
+    void prepararServicio() {
+        servicio = new VueloServicio(
                 vueloRepositorio,
                 reservaRepositorio,
-                new AutorizacionControlador());
+                new AutorizacionServicio(),
+                org.mockito.Mockito.mock(BloqueoEscrituras.class));
         vuelo = new Vuelo(
                 100,
                 LocalDateTime.of(2026, 10, 1, 10, 0),
@@ -75,7 +76,7 @@ class VuelosControladorTest {
     }
 
     private Vuelo modificarVuelo(int plazasTurista, int plazasPrimera) {
-        return controlador.modificar(
+        return servicio.modificar(
                 new Administrador("admin", "clave"),
                 100,
                 LocalDateTime.of(2026, 10, 1, 12, 0),
