@@ -26,9 +26,8 @@ en `db/dev`. Esos datos no se cargan con el perfil `prod`.
 
 ## Primer administrador
 
-Los datos heredados no incluyen usuarios porque sus claves estaban guardadas
-como texto plano. Para crear el primer administrador, iniciar una vez el
-backend con estas variables definidas:
+Los datos de demostracion no incluyen cuentas de acceso. Para crear el primer
+administrador, iniciar una vez el backend con estas variables definidas:
 
 ```powershell
 $env:APP_ADMIN_ENABLED = "true"
