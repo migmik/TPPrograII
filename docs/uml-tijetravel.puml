@@ -40,7 +40,6 @@ package "com.tijetravel.tijeback.modelos" {
     class Hotel
     class Vuelo
     class Reserva
-    class UsuarioFactory
 }
 
 Usuario <|-- Administrador
@@ -50,14 +49,13 @@ Cliente --> Turista
 Turista --> Sucursal : sucursalContratacion
 Turista --> Turista : titular
 Reserva --> Turista
-Reserva --> Sucursal : sucursalContratacion derivada
+Reserva --> Sucursal : sucursal historica
 Reserva --> Vuelo
 Reserva --> Hotel
 Reserva --> ClaseVuelo
 Reserva --> TipoHospedaje
 Usuario --> RolUsuario
 Usuario ..> Permiso
-UsuarioFactory ..> Usuario
 
 @enduml
 
@@ -90,19 +88,34 @@ package "seguridad" {
     class AdministradorInicializador
 }
 
-package "controladores" {
-    class SucursalesControlador
-    class HotelesControlador
-    class VuelosControlador
-    class TuristasControlador
-    class ReservasControlador
-    class UsuariosControlador
-    class AutenticacionControlador
-    class AutorizacionControlador
+package "servicios.usuarios" {
+    class UsuarioFactory
+    interface CreadorUsuario
+    class CreadorAdministrador
+    class CreadorVendedor
+    class CreadorCliente
+}
+UsuarioFactory --> CreadorUsuario : registro por rol
+CreadorUsuario <|.. CreadorAdministrador
+CreadorUsuario <|.. CreadorVendedor
+CreadorUsuario <|.. CreadorCliente
+UsuarioServicio --> UsuarioFactory
+
+package "servicios" {
+    class SucursalServicio
+    class HotelServicio
+    class VueloServicio
+    class TuristaServicio
+    class ReservaServicio
+    class UsuarioServicio
+    class BloqueoEscrituras
+    class OcupacionHotel
+    class DisponibilidadServicio
+    class AutorizacionServicio
 }
 
 package "repositorios" {
-    interface GenericoRepositorio
+    interface JpaRepository
     interface SucursalRepositorio
     interface HotelRepositorio
     interface VueloRepositorio
@@ -140,18 +153,18 @@ UsuariosRestControlador --> DTOsSolicitudYRespuesta
 SucursalesRestControlador --> Mapeadores
 HotelesRestControlador --> Mapeadores
 VuelosRestControlador --> Mapeadores
-SucursalesRestControlador --> SucursalesControlador
-HotelesRestControlador --> HotelesControlador
-VuelosRestControlador --> VuelosControlador
+SucursalesRestControlador --> SucursalServicio
+HotelesRestControlador --> HotelServicio
+VuelosRestControlador --> VueloServicio
 AutenticacionRestControlador --> ConfiguracionSeguridad : autentica y crea sesion
 SucursalesRestControlador --> UsuarioActualServicio
 HotelesRestControlador --> UsuarioActualServicio
 VuelosRestControlador --> UsuarioActualServicio
-HotelesRestControlador --> ReservasControlador : consulta disponibilidad
-VuelosRestControlador --> ReservasControlador : consulta disponibilidad
-TuristasRestControlador --> TuristasControlador
-ReservasRestControlador --> ReservasControlador
-UsuariosRestControlador --> UsuariosControlador
+HotelesRestControlador --> DisponibilidadServicio : consulta disponibilidad
+VuelosRestControlador --> DisponibilidadServicio : consulta disponibilidad
+TuristasRestControlador --> TuristaServicio
+ReservasRestControlador --> ReservaServicio
+UsuariosRestControlador --> UsuarioServicio
 TuristasRestControlador --> UsuarioActualServicio
 ReservasRestControlador --> UsuarioActualServicio
 UsuariosRestControlador --> UsuarioActualServicio
@@ -163,20 +176,31 @@ UsuarioDetallesServicio --> UsuarioRepositorio
 UsuarioDetallesServicio --> UsuarioAutenticado
 AdministradorInicializador --> UsuarioRepositorio
 
-SucursalesControlador --> SucursalRepositorio
-HotelesControlador --> HotelRepositorio
-VuelosControlador --> VueloRepositorio
-TuristasControlador --> TuristaRepositorio
-ReservasControlador --> ReservaRepositorio
-UsuariosControlador --> UsuarioRepositorio
-AutenticacionControlador --> UsuarioRepositorio
+SucursalServicio --> SucursalRepositorio
+HotelServicio --> HotelRepositorio
+VueloServicio --> VueloRepositorio
+TuristaServicio --> TuristaRepositorio
+ReservaServicio --> BloqueoEscrituras
+    HotelServicio --> BloqueoEscrituras
+    VueloServicio --> BloqueoEscrituras
+    TuristaServicio --> BloqueoEscrituras
+    UsuarioServicio --> BloqueoEscrituras
+    SucursalServicio --> BloqueoEscrituras
+    HotelServicio --> OcupacionHotel
+    DisponibilidadServicio --> OcupacionHotel
+    ReservaServicio --> DisponibilidadServicio
+DisponibilidadServicio --> ReservaRepositorio
+DisponibilidadServicio --> VueloRepositorio
+DisponibilidadServicio --> HotelRepositorio
+ReservaServicio --> ReservaRepositorio
+UsuarioServicio --> UsuarioRepositorio
 
-GenericoRepositorio <|-- SucursalRepositorio
-GenericoRepositorio <|-- HotelRepositorio
-GenericoRepositorio <|-- VueloRepositorio
-GenericoRepositorio <|-- TuristaRepositorio
-GenericoRepositorio <|-- ReservaRepositorio
-GenericoRepositorio <|-- UsuarioRepositorio
+JpaRepository <|-- SucursalRepositorio
+JpaRepository <|-- HotelRepositorio
+JpaRepository <|-- VueloRepositorio
+JpaRepository <|-- TuristaRepositorio
+JpaRepository <|-- ReservaRepositorio
+JpaRepository <|-- UsuarioRepositorio
 
 SucursalRepositorio --> Sucursal
 HotelRepositorio --> Hotel
@@ -184,7 +208,7 @@ VueloRepositorio --> Vuelo
 TuristaRepositorio --> Turista
 ReservaRepositorio --> Reserva
 UsuarioRepositorio --> Usuario
-GenericoRepositorio --> MySQL
+JpaRepository --> MySQL
 Flyway --> MySQL : aplica migraciones
 
 ReglaNegocioException <|-- EntidadNoEncontradaException

@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(properties =
-        "spring.datasource.url=jdbc:h2:mem:tijetravel-dev;MODE=MySQL;DB_CLOSE_DELAY=-1")
+        "spring.datasource.url=${TEST_DB_URL_DEV:jdbc:h2:mem:tijetravel-dev;MODE=MySQL;DB_CLOSE_DELAY=-1}")
 @ActiveProfiles({"test", "dev"})
 class DatosDesarrolloMigracionTest {
     @Autowired
@@ -35,7 +35,7 @@ class DatosDesarrolloMigracionTest {
 
     @Test
     void cargaLosDatosHeredadosSinContraseniasEnTextoPlano() {
-        assertEquals("3", flyway.info().current().getVersion().getVersion());
+        assertEquals("4", flyway.info().current().getVersion().getVersion());
         assertEquals(2, sucursalRepositorio.count());
         assertEquals(4, hotelRepositorio.count());
         assertEquals(4, vueloRepositorio.count());

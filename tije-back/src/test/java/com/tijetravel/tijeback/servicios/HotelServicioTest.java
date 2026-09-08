@@ -1,4 +1,4 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,24 +30,25 @@ import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 
 @ExtendWith(MockitoExtension.class)
-class HotelesControladorTest {
+class HotelServicioTest {
     @Mock
     private HotelRepositorio hotelRepositorio;
 
     @Mock
     private ReservaRepositorio reservaRepositorio;
 
-    private HotelesControlador controlador;
+    private HotelServicio servicio;
     private Hotel hotel;
     private Sucursal sucursal;
     private Vuelo vuelo;
 
     @BeforeEach
-    void prepararControlador() {
-        controlador = new HotelesControlador(
+    void prepararServicio() {
+        servicio = new HotelServicio(
                 hotelRepositorio,
                 reservaRepositorio,
-                new AutorizacionControlador());
+                new AutorizacionServicio(),
+                org.mockito.Mockito.mock(BloqueoEscrituras.class));
         hotel = new Hotel("Hotel Centro", "Calle 1", "Cordoba", "351-1000", 5);
         ReflectionTestUtils.setField(hotel, "codigo", 1);
         sucursal = new Sucursal("Av. Colon 100", "351-2000");
@@ -69,7 +70,7 @@ class HotelesControladorTest {
 
         assertThrows(
                 CapacidadExcedidaException.class,
-                () -> controlador.modificar(
+                () -> servicio.modificar(
                         new Administrador("admin", "clave"),
                         1,
                         "Hotel Centro",
@@ -89,7 +90,7 @@ class HotelesControladorTest {
         when(hotelRepositorio.save(any(Hotel.class)))
                 .thenAnswer(invocacion -> invocacion.getArgument(0));
 
-        Hotel modificado = controlador.modificar(
+        Hotel modificado = servicio.modificar(
                 new Administrador("admin", "clave"),
                 1,
                 "Hotel Centro",
@@ -98,7 +99,7 @@ class HotelesControladorTest {
                 "351-1000",
                 2);
 
-        assertEquals(2, modificado.getPlazasDisponibles());
+        assertEquals(2, modificado.getCapacidadTotal());
     }
 
     private Reserva reserva(String email, LocalDate llegada, LocalDate partida) {

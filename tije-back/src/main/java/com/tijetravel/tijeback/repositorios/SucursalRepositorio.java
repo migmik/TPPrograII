@@ -1,8 +1,9 @@
 package com.tijetravel.tijeback.repositorios;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.tijetravel.tijeback.modelos.Sucursal;
 
-public interface SucursalRepositorio extends GenericoRepositorio<Sucursal, Integer> {
+public interface SucursalRepositorio extends JpaRepository<Sucursal, Integer> {
 
     boolean existsByDireccionIgnoreCase(String direccion);
 

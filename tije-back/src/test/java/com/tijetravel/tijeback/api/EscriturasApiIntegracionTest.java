@@ -32,7 +32,7 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:tijetravel-escrituras;MODE=MySQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.url=${TEST_DB_URL_ESCRITURAS:jdbc:h2:mem:tijetravel-escrituras;MODE=MySQL;DB_CLOSE_DELAY=-1}",
         "app.seguridad.administrador-inicial.habilitado=true",
         "app.seguridad.administrador-inicial.nombre-usuario=admin-escrituras",
         "app.seguridad.administrador-inicial.contrasenia=ClaveAdmin123!"

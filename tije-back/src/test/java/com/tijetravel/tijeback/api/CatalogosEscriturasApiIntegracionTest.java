@@ -32,7 +32,7 @@ import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:tijetravel-catalogos-escrituras;MODE=MySQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.url=${TEST_DB_URL_CATALOGOS:jdbc:h2:mem:tijetravel-catalogos-escrituras;MODE=MySQL;DB_CLOSE_DELAY=-1}",
         "app.seguridad.administrador-inicial.habilitado=true",
         "app.seguridad.administrador-inicial.nombre-usuario=admin-catalogos",
         "app.seguridad.administrador-inicial.contrasenia=ClaveAdmin123!"
@@ -126,7 +126,7 @@ class CatalogosEscriturasApiIntegracionTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", Matchers.matchesPattern(
                         "/api/v1/hoteles/\\d+")))
-                .andExpect(jsonPath("$.plazasDisponibles").value(25));
+                .andExpect(jsonPath("$.capacidadTotal").value(25));
 
         Hotel hotel = hotelRepositorio
                 .findAll()
@@ -145,12 +145,12 @@ class CatalogosEscriturasApiIntegracionTest {
                                   "direccion": "Costanera 200",
                                   "ciudad": "Rosario",
                                   "telefono": "2222-2000",
-                                  "plazasDisponibles": 30
+                                  "capacidadTotal": 30
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Hotel Prueba Actualizado"))
-                .andExpect(jsonPath("$.plazasDisponibles").value(30));
+                .andExpect(jsonPath("$.capacidadTotal").value(30));
 
         mockMvc.perform(post("/api/v1/vuelos")
                         .session(sesion)
@@ -320,7 +320,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                   "direccion": "Ruta Provincial 5 Km 70",
                                   "ciudad": "Cordoba",
                                   "telefono": "0351-555-1111",
-                                  "plazasDisponibles": 0
+                                  "capacidadTotal": 0
                                 }
                                 """))
                 .andExpect(status().isConflict())

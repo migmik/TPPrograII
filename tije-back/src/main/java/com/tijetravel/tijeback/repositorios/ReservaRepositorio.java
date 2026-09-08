@@ -1,6 +1,6 @@
 package com.tijetravel.tijeback.repositorios;
 
-import java.time.LocalDate;
+import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.modelos.Reserva;
 
-public interface ReservaRepositorio extends GenericoRepositorio<Reserva, Integer> {
+public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
     @Override
     @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
@@ -27,17 +27,6 @@ public interface ReservaRepositorio extends GenericoRepositorio<Reserva, Integer
             Integer numeroVuelo,
             ClaseVuelo claseVuelo,
             Integer codigoReserva);
-
-    long countByHotelCodigoAndFechaLlegadaLessThanAndFechaPartidaGreaterThan(
-            Integer codigoHotel,
-            LocalDate fechaPartida,
-            LocalDate fechaLlegada);
-
-    long countByHotelCodigoAndCodigoNotAndFechaLlegadaLessThanAndFechaPartidaGreaterThan(
-            Integer codigoHotel,
-            Integer codigoReserva,
-            LocalDate fechaPartida,
-            LocalDate fechaLlegada);
 
     boolean existsByTuristaCodigoAndVueloNumero(Integer codigoTurista, Integer numeroVuelo);
 
@@ -56,6 +45,8 @@ public interface ReservaRepositorio extends GenericoRepositorio<Reserva, Integer
 
     @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
     List<Reserva> findByTuristaCodigo(Integer codigoTurista);
+
+    List<Reserva> findByVueloNumero(Integer numeroVuelo);
 
     List<Reserva> findByHotelCodigo(Integer codigoHotel);
 

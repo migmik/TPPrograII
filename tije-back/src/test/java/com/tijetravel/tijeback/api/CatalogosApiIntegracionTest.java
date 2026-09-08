@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties =
-        "spring.datasource.url=jdbc:h2:mem:tijetravel-api;MODE=MySQL;DB_CLOSE_DELAY=-1")
+        "spring.datasource.url=${TEST_DB_URL_API:jdbc:h2:mem:tijetravel-api;MODE=MySQL;DB_CLOSE_DELAY=-1}")
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "dev"})
 class CatalogosApiIntegracionTest {
@@ -40,7 +40,8 @@ class CatalogosApiIntegracionTest {
                 .andExpect(jsonPath("$.codigo").value(4))
                 .andExpect(jsonPath("$.nombre").value("Hotel Taragui"))
                 .andExpect(jsonPath("$.ciudad").value("Goya"))
-                .andExpect(jsonPath("$.plazasDisponibles").value(10));
+                .andExpect(jsonPath("$.capacidadTotal").value(10))
+                .andExpect(jsonPath("$.plazasDisponibles").doesNotExist());
     }
 
     @Test
