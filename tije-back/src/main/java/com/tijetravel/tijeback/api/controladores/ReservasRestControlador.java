@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tijetravel.tijeback.api.dto.GuardarReservaSolicitud;
 import com.tijetravel.tijeback.api.dto.ReservaRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.ReservaMapeador;
-import com.tijetravel.tijeback.controladores.ReservasControlador;
+import com.tijetravel.tijeback.servicios.ReservaServicio;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
@@ -29,15 +29,15 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/reservas")
 public class ReservasRestControlador {
-    private final ReservasControlador reservasControlador;
+    private final ReservaServicio reservaServicio;
     private final ReservaMapeador reservaMapeador;
     private final UsuarioActualServicio usuarioActualServicio;
 
     public ReservasRestControlador(
-            ReservasControlador reservasControlador,
+            ReservaServicio reservaServicio,
             ReservaMapeador reservaMapeador,
             UsuarioActualServicio usuarioActualServicio) {
-        this.reservasControlador = reservasControlador;
+        this.reservaServicio = reservaServicio;
         this.reservaMapeador = reservaMapeador;
         this.usuarioActualServicio = usuarioActualServicio;
     }
@@ -45,7 +45,7 @@ public class ReservasRestControlador {
     @GetMapping
     public List<ReservaRespuesta> listar(Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return reservasControlador.listarPara(actor).stream()
+        return reservaServicio.listarPara(actor).stream()
                 .map(reservaMapeador::aRespuesta)
                 .sorted(Comparator.comparing(ReservaRespuesta::codigo))
                 .toList();
@@ -57,15 +57,15 @@ public class ReservasRestControlador {
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
         return reservaMapeador.aRespuesta(
-                reservasControlador.encontrarVisiblePara(actor, codigo));
+                reservaServicio.encontrarVisiblePara(actor, codigo));
     }
 
     @PostMapping
-    public ResponseEntity<ReservaRespuesta> ingresar(
+    public ResponseEntity<ReservaRespuesta> crear(
             @Valid @RequestBody GuardarReservaSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Reserva reserva = reservasControlador.ingresar(
+        Reserva reserva = reservaServicio.crear(
                 actor,
                 solicitud.codigoTurista(),
                 solicitud.numeroVuelo(),
@@ -86,7 +86,7 @@ public class ReservasRestControlador {
             @Valid @RequestBody GuardarReservaSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return reservaMapeador.aRespuesta(reservasControlador.modificar(
+        return reservaMapeador.aRespuesta(reservaServicio.modificar(
                 actor,
                 codigo,
                 solicitud.codigoTurista(),
@@ -103,7 +103,7 @@ public class ReservasRestControlador {
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        reservasControlador.eliminar(actor, codigo);
+        reservaServicio.eliminar(actor, codigo);
         return ResponseEntity.noContent().build();
     }
 }

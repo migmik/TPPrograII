@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
 
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Administrador;
@@ -24,16 +26,19 @@ import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 public class AdministradorInicializador implements ApplicationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdministradorInicializador.class);
 
+    private final BloqueoEscrituras bloqueoEscrituras;
     private final UsuarioRepositorio usuarioRepositorio;
     private final PasswordEncoder codificadorContrasenias;
     private final String nombreUsuario;
     private final String contrasenia;
 
     public AdministradorInicializador(
+            BloqueoEscrituras bloqueoEscrituras,
             UsuarioRepositorio usuarioRepositorio,
             PasswordEncoder codificadorContrasenias,
             @Value("${app.seguridad.administrador-inicial.nombre-usuario:}") String nombreUsuario,
             @Value("${app.seguridad.administrador-inicial.contrasenia:}") String contrasenia) {
+        this.bloqueoEscrituras = bloqueoEscrituras;
         this.usuarioRepositorio = usuarioRepositorio;
         this.codificadorContrasenias = codificadorContrasenias;
         this.nombreUsuario = nombreUsuario;
@@ -41,8 +46,9 @@ public class AdministradorInicializador implements ApplicationRunner {
     }
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void run(ApplicationArguments argumentos) {
+        bloqueoEscrituras.adquirir();
         if (usuarioRepositorio.countByRol(RolUsuario.ADMINISTRADOR) > 0) {
             return;
         }

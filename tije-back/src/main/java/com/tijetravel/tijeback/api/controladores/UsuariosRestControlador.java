@@ -19,7 +19,7 @@ import com.tijetravel.tijeback.api.dto.CrearUsuarioSolicitud;
 import com.tijetravel.tijeback.api.dto.ModificarUsuarioSolicitud;
 import com.tijetravel.tijeback.api.dto.UsuarioRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.UsuarioMapeador;
-import com.tijetravel.tijeback.controladores.UsuariosControlador;
+import com.tijetravel.tijeback.servicios.UsuarioServicio;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
 
@@ -29,15 +29,15 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/usuarios")
 public class UsuariosRestControlador {
-    private final UsuariosControlador usuariosControlador;
+    private final UsuarioServicio usuarioServicio;
     private final UsuarioMapeador usuarioMapeador;
     private final UsuarioActualServicio usuarioActualServicio;
 
     public UsuariosRestControlador(
-            UsuariosControlador usuariosControlador,
+            UsuarioServicio usuarioServicio,
             UsuarioMapeador usuarioMapeador,
             UsuarioActualServicio usuarioActualServicio) {
-        this.usuariosControlador = usuariosControlador;
+        this.usuarioServicio = usuarioServicio;
         this.usuarioMapeador = usuarioMapeador;
         this.usuarioActualServicio = usuarioActualServicio;
     }
@@ -45,7 +45,7 @@ public class UsuariosRestControlador {
     @GetMapping
     public List<UsuarioRespuesta> listar(Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return usuariosControlador.listarPara(actor).stream()
+        return usuarioServicio.listarPara(actor).stream()
                 .map(usuarioMapeador::aRespuesta)
                 .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
                 .toList();
@@ -57,15 +57,15 @@ public class UsuariosRestControlador {
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
         return usuarioMapeador.aRespuesta(
-                usuariosControlador.encontrarVisiblePara(actor, codigo));
+                usuarioServicio.encontrarVisiblePara(actor, codigo));
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioRespuesta> ingresar(
+    public ResponseEntity<UsuarioRespuesta> crear(
             @Valid @RequestBody CrearUsuarioSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Usuario usuario = usuariosControlador.ingresar(
+        Usuario usuario = usuarioServicio.crear(
                 actor,
                 solicitud.nombreUsuario(),
                 solicitud.contrasenia(),
@@ -83,7 +83,7 @@ public class UsuariosRestControlador {
             @Valid @RequestBody ModificarUsuarioSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return usuarioMapeador.aRespuesta(usuariosControlador.modificarCredenciales(
+        return usuarioMapeador.aRespuesta(usuarioServicio.modificarCredenciales(
                 actor,
                 codigo,
                 solicitud.nombreUsuario(),
@@ -95,7 +95,7 @@ public class UsuariosRestControlador {
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        usuariosControlador.eliminar(actor, codigo);
+        usuarioServicio.eliminar(actor, codigo);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -22,7 +24,8 @@ public record GuardarHotelSolicitud(
         @Size(max = 255, message = "El telefono no puede superar 255 caracteres")
         String telefono,
 
-        @NotNull(message = "Las plazas disponibles son obligatorias")
-        @PositiveOrZero(message = "Las plazas disponibles no pueden ser negativas")
-        Integer plazasDisponibles) {
+        @JsonAlias("plazasDisponibles")
+        @NotNull(message = "La capacidad total es obligatoria")
+        @PositiveOrZero(message = "La capacidad total no puede ser negativa")
+        Integer capacidadTotal) {
 }

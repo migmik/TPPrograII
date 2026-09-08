@@ -87,8 +87,17 @@ public class Turista {
         this.email = ValidacionModelo.email(email);
         this.telefonoFijo = ValidacionModelo.textoObligatorio(telefonoFijo, "telefonoFijo");
         this.telefonoCelular = ValidacionModelo.textoObligatorio(telefonoCelular, "telefonoCelular");
-        this.sucursalContratacion = ValidacionModelo.obligatorio(
-                sucursalContratacion, "sucursalContratacion");
+        cambiarSucursal(sucursalContratacion);
+    }
+
+    public void cambiarSucursal(Sucursal sucursal) {
+        ValidacionModelo.obligatorio(sucursal, "sucursalContratacion");
+        if (titular != null && titular.getSucursalContratacion() != sucursal
+                && (sucursal.getCodigo() == null
+                    || !sucursal.getCodigo().equals(titular.getSucursalContratacion().getCodigo()))) {
+            throw new IllegalArgumentException("Un familiar debe compartir la sucursal del titular");
+        }
+        this.sucursalContratacion = sucursal;
     }
 
     public Integer getCodigo() {

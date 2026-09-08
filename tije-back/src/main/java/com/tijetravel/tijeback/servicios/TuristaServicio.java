@@ -1,10 +1,11 @@
-package com.tijetravel.tijeback.controladores;
+package com.tijetravel.tijeback.servicios;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.RolUsuario;
@@ -21,19 +22,22 @@ import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @Service
 @Transactional(readOnly = true)
-public class TuristasControlador {
+public class TuristaServicio {
+    private final BloqueoEscrituras bloqueoEscrituras;
     private final TuristaRepositorio turistaRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
     private final ReservaRepositorio reservaRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
-    private final AutorizacionControlador autorizacion;
+    private final AutorizacionServicio autorizacion;
 
-    public TuristasControlador(
+    public TuristaServicio(
             TuristaRepositorio turistaRepositorio,
             SucursalRepositorio sucursalRepositorio,
             ReservaRepositorio reservaRepositorio,
             UsuarioRepositorio usuarioRepositorio,
-            AutorizacionControlador autorizacion) {
+            AutorizacionServicio autorizacion,
+            BloqueoEscrituras bloqueoEscrituras) {
+        this.bloqueoEscrituras = bloqueoEscrituras;
         this.turistaRepositorio = turistaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
         this.reservaRepositorio = reservaRepositorio;
@@ -41,8 +45,26 @@ public class TuristasControlador {
         this.autorizacion = autorizacion;
     }
 
-    @Transactional
-    public Turista ingresarTitular(
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Turista crear(Usuario actor, String nombre, String apellido, String direccion,
+            String email, String telefonoFijo, String telefonoCelular,
+            Integer codigoSucursal, Integer codigoTitular) {
+        if (codigoTitular == null) {
+            if (codigoSucursal == null) {
+                throw new IllegalArgumentException("El codigo de sucursal es obligatorio para un turista titular");
+            }
+            return crearTitular(actor, nombre, apellido, direccion, email,
+                    telefonoFijo, telefonoCelular, codigoSucursal);
+        }
+        if (codigoSucursal != null) {
+            throw new IllegalArgumentException("Un turista familiar hereda la sucursal del titular");
+        }
+        return crearFamiliar(actor, codigoTitular, nombre, apellido, direccion, email,
+                telefonoFijo, telefonoCelular);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Turista crearTitular(
             Usuario actor,
             String nombre,
             String apellido,
@@ -51,7 +73,8 @@ public class TuristasControlador {
             String telefonoFijo,
             String telefonoCelular,
             Integer codigoSucursal) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_CLIENTES);
+        bloqueoEscrituras.adquirir();
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = new Turista(
                 nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
@@ -59,8 +82,8 @@ public class TuristasControlador {
         return turistaRepositorio.save(turista);
     }
 
-    @Transactional
-    public Turista ingresarFamiliar(
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Turista crearFamiliar(
             Usuario actor,
             Integer codigoTitular,
             String nombre,
@@ -69,7 +92,8 @@ public class TuristasControlador {
             String email,
             String telefonoFijo,
             String telefonoCelular) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_CLIENTES);
+        bloqueoEscrituras.adquirir();
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
         Turista titular = encontrarPorId(codigoTitular);
         if (!titular.isTitular()) {
             throw new OperacionNoPermitidaException("El turista indicado no es titular");
@@ -98,19 +122,11 @@ public class TuristasControlador {
             return listar();
         }
 
-        Integer codigoTitular = obtenerCodigoTurista(actor);
+        Integer codigoTitular = autorizacion.codigoTitular(actor);
         List<Turista> grupoFamiliar = new ArrayList<>();
         grupoFamiliar.add(encontrarPorId(codigoTitular));
         grupoFamiliar.addAll(turistaRepositorio.findByTitularCodigo(codigoTitular));
         return List.copyOf(grupoFamiliar);
-    }
-
-    public List<Turista> listarFamiliares(Integer codigoTitular) {
-        Turista titular = encontrarPorId(codigoTitular);
-        if (!titular.isTitular()) {
-            throw new OperacionNoPermitidaException("El turista indicado no es titular");
-        }
-        return turistaRepositorio.findByTitularCodigo(codigoTitular);
     }
 
     public Turista encontrarPorId(Integer codigo) {
@@ -121,14 +137,14 @@ public class TuristasControlador {
     public Turista encontrarVisiblePara(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         Turista turista = encontrarPorId(codigo);
-        if (actor.getRol() == RolUsuario.CLIENTE && !perteneceAlGrupoFamiliar(actor, turista)) {
+        if (actor.getRol() == RolUsuario.CLIENTE && !autorizacion.perteneceAlGrupoFamiliar(actor, turista)) {
             throw new OperacionNoPermitidaException(
                     "El cliente no puede consultar turistas de otro grupo familiar");
         }
         return turista;
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Turista modificar(
             Usuario actor,
             Integer codigo,
@@ -139,7 +155,8 @@ public class TuristasControlador {
             String telefonoFijo,
             String telefonoCelular,
             Integer codigoSucursal) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_CLIENTES);
+        bloqueoEscrituras.adquirir();
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = encontrarPorId(codigo);
         String emailNormalizado = normalizarTexto(email, "email");
@@ -148,12 +165,17 @@ public class TuristasControlador {
         }
         turista.actualizarDatos(
                 nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
+        if (turista.isTitular()) {
+            turistaRepositorio.findByTitularCodigo(codigo)
+                    .forEach(familiar -> familiar.cambiarSucursal(sucursal));
+        }
         return turistaRepositorio.save(turista);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigo) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_CLIENTES);
+        bloqueoEscrituras.adquirir();
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
         Turista turista = encontrarPorId(codigo);
         if (reservaRepositorio.existsByTuristaCodigo(codigo)) {
             throw new OperacionNoPermitidaException("No se puede eliminar un turista que tiene reservas");
@@ -185,18 +207,4 @@ public class TuristasControlador {
         return valor.trim();
     }
 
-    private boolean perteneceAlGrupoFamiliar(Usuario actor, Turista turista) {
-        Integer codigoTitular = obtenerCodigoTurista(actor);
-        return codigoTitular.equals(turista.getCodigo())
-                || codigoTitular.equals(turista.getCodigoTitular());
-    }
-
-    private Integer obtenerCodigoTurista(Usuario actor) {
-        Integer codigoTurista = actor.getCodigoTurista();
-        if (codigoTurista == null) {
-            throw new OperacionNoPermitidaException(
-                    "El cliente no tiene un turista titular asociado");
-        }
-        return codigoTurista;
-    }
 }

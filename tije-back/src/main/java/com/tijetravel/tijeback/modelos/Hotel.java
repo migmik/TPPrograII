@@ -32,13 +32,13 @@ public class Hotel {
     private String telefono;
 
     @Column(name = "plazas_disponibles", nullable = false)
-    private int plazasDisponibles;
+    private int capacidadTotal;
 
     protected Hotel() {
     }
 
-    public Hotel(String nombre, String direccion, String ciudad, String telefono, int plazasDisponibles) {
-        actualizarDatos(nombre, direccion, ciudad, telefono, plazasDisponibles);
+    public Hotel(String nombre, String direccion, String ciudad, String telefono, int capacidadTotal) {
+        actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal);
     }
 
     public void actualizarDatos(
@@ -46,12 +46,12 @@ public class Hotel {
             String direccion,
             String ciudad,
             String telefono,
-            int plazasDisponibles) {
+            int capacidadTotal) {
         this.nombre = ValidacionModelo.textoObligatorio(nombre, "nombre");
         this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
         this.ciudad = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
         this.telefono = ValidacionModelo.textoObligatorio(telefono, "telefono");
-        this.plazasDisponibles = ValidacionModelo.enteroNoNegativo(plazasDisponibles, "plazasDisponibles");
+        this.capacidadTotal = ValidacionModelo.enteroNoNegativo(capacidadTotal, "capacidadTotal");
     }
 
     public Integer getCodigo() {
@@ -74,13 +74,13 @@ public class Hotel {
         return telefono;
     }
 
-    public int getPlazasDisponibles() {
-        return plazasDisponibles;
+    public int getCapacidadTotal() {
+        return capacidadTotal;
     }
 
     @Override
     public String toString() {
         return "Hotel | codigo=" + codigo + ", nombre=" + nombre + ", ciudad=" + ciudad
-                + ", plazas=" + plazasDisponibles;
+                + ", plazas=" + capacidadTotal;
     }
 }

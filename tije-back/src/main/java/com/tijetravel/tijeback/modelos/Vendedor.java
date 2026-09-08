@@ -20,7 +20,7 @@ public class Vendedor extends Usuario {
     @Override
     public boolean tienePermiso(Permiso permiso) {
         return permiso == Permiso.CONSULTAR
-                || permiso == Permiso.ADMINISTRAR_CLIENTES
+                || permiso == Permiso.ADMINISTRAR_TURISTAS
                 || permiso == Permiso.ADMINISTRAR_RESERVAS;
     }
 }

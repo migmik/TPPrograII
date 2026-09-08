@@ -14,7 +14,7 @@ la primera entrega. Los diagramas vigentes son `docs/uml-tijetravel.md` y
 
 - Modelos convertidos en entidades JPA.
 - Repositorios Spring Data definidos para todas las entidades.
-- Reglas de negocio separadas en controladores por recurso.
+- Reglas de negocio separadas en servicios por recurso.
 - Validaciones de dominio y excepciones explicitas.
 - Transacciones declaradas en las operaciones de escritura.
 - Pruebas unitarias, integracion JPA y arranque de contexto con H2.
@@ -46,7 +46,7 @@ Spring Security                     sesion, CSRF, CORS y roles
 Controllers REST + DTOs             api/ (catalogos y datos protegidos)
         |
         v
-Controladores de negocio            controladores/
+Servicios de negocio                servicios/
         |
         v
 Repositorios Spring Data JPA        repositorios/
@@ -55,10 +55,11 @@ Repositorios Spring Data JPA        repositorios/
 MySQL + migraciones Flyway          configurado
 ```
 
-Los controladores de negocio usan `@Service`. Se conserva el nombre
-`controladores` para mantener el estilo del proyecto Gestion Militar. Los
-controllers HTTP viven en `api/controladores` y delegan las operaciones sin
-duplicar reglas de negocio.
+Los servicios de negocio usan `@Service` y viven en `servicios`. Los
+controladores HTTP usan `@RestController`, viven en `api/controladores` y
+delegan las operaciones sin duplicar reglas de negocio. `DisponibilidadServicio`
+centraliza las consultas y verificaciones de cupos de hoteles y vuelos.
+La autenticacion web se realiza exclusivamente mediante Spring Security.
 
 ## Estructura
 
@@ -79,7 +80,7 @@ TPPrograII/
             dto/                    contratos JSON de respuesta
             errores/                traduccion de excepciones a HTTP
             mapeadores/              conversion de modelos a DTOs
-          controladores/            casos de uso y reglas de negocio
+          servicios/                casos de uso y reglas de negocio
           enums/                    roles, permisos y tipos del dominio
           excepciones/              errores esperables del negocio
           modelos/                  entidades y validaciones
@@ -109,7 +110,7 @@ TPPrograII/
 - Las relaciones usan objetos JPA en vez de codigos sueltos.
 - `Usuario` mantiene herencia y polimorfismo mediante `Administrador`,
   `Vendedor` y `Cliente`.
-- Los controladores reciben repositorios por constructor y no conocen detalles
+- Los servicios reciben repositorios por constructor y no conocen detalles
   de consola, archivos ni SQL.
 - La API nunca devuelve directamente entidades JPA; los mapeadores construyen
   DTOs que definen el contrato entregado al frontend.
@@ -241,10 +242,11 @@ hereda la sucursal del titular y `codigoSucursal` debe omitirse. La
 modificacion de usuarios cambia nombre y contrasenia, pero no su rol ni el
 turista asociado.
 
-Al crear o modificar una reserva no se envia `codigoSucursal`: el backend toma
-la sucursal de contratacion del turista. El DTO de respuesta la informa como
+Al crear una reserva no se envia `codigoSucursal`: el backend toma
+la sucursal de contratacion del turista. Al modificarla conserva la sucursal
+original, incluso si cambia el turista asociado. El DTO de respuesta la informa como
 `codigoSucursalContratacion`. La disponibilidad de vuelo se consulta por
-`TURISTA` o `PRIMERA`; la de hotel cuenta las reservas que se superponen con el
+`TURISTA` o `PRIMERA`; la de hotel calcula la ocupacion maxima simultanea dentro del
 rango solicitado.
 
 Los identificadores deben ser positivos. Los errores se devuelven como JSON
@@ -297,3 +299,51 @@ HTTP y verifican DTOs, validaciones, estados y respuestas de error.
 1. Implementar el frontend y consumir exclusivamente la API del backend.
 2. Preparar despliegue HTTPS y, solo si hay multiples instancias del backend,
    externalizar las sesiones con Spring Session.
+
+## Nombres del contrato de hoteles
+
+`capacidadTotal` representa la capacidad base del hotel en las solicitudes y
+respuestas de catalogo. Las solicitudes tambien aceptan el nombre anterior
+`plazasDisponibles` como alias de entrada; las respuestas de catalogo usan
+`capacidadTotal`. Los endpoints de disponibilidad conservan `plazasDisponibles`
+para las plazas libres calculadas. La columna SQL `plazas_disponibles` mantiene
+su nombre mediante `@Column`, sin modificar migraciones ya aplicadas ni datos.
+El permiso para gestionar turistas se llama `ADMINISTRAR_TURISTAS`; los
+consumidores del listado de permisos de sesion deben usar este nombre.
+
+## Reglas y decisiones de la segunda entrega
+
+- Los repositorios heredan directamente de `JpaRepository`: cumplen el papel
+  de DAO. No existe una interfaz generica propia sin comportamiento adicional.
+- `servicios/usuarios/UsuarioFactory` recibe de Spring una lista de
+  `CreadorUsuario`. Cada implementacion declara su rol y construye el subtipo.
+  La fabrica recorre `RolUsuario.values()` y falla al iniciar si falta un
+  creador o hay roles duplicados. Un nuevo rol requiere su creador, entidad,
+  permisos y ajustes de persistencia, pero no cambiar la fabrica.
+- `OcupacionHotel` calcula entradas y salidas en intervalos [llegada, partida).
+  Se usa tanto para disponibilidad como para validar reducciones de capacidad.
+  Al editar una reserva se excluye su propia ocupacion del calculo.
+- Cambiar ciudad del hotel, destino o dia del vuelo se rechaza cuando deja
+  reservas existentes incompatibles. Cambios de hora dentro del mismo dia y
+  cambios de datos descriptivos siguen permitidos si respetan las demas reglas.
+- Titular y familiares comparten sucursal. El cambio del titular actualiza a
+  sus familiares en la misma transaccion. Un familiar no puede elegir otra.
+- La sucursal de una reserva es historica: se captura al crearla, no cambia
+  por traslados del turista ni por ediciones de la reserva. Las reservas nuevas
+  usan la sucursal vigente. JPA marca esa relacion como `updatable=false`.
+- La decision entre crear titular o familiar vive en `TuristaServicio`.
+  `AutorizacionServicio` comparte las reglas de acceso al grupo familiar.
+- Las escrituras de negocio y el administrador inicial adquieren el bloqueo
+  de la fila de `control_escrituras` creada por Flyway V4. El bloqueo SQL se
+  mantiene hasta commit o rollback. El aislamiento de escritura es
+  `READ_COMMITTED`, para consultar datos confirmados despues de esperar.
+  Esto coordina reservas, cupos y cambios relacionados entre conexiones.
+  Es una decision deliberada para el TP: serializa todas las escrituras y
+  prioriza sencillez y consistencia sobre rendimiento. Las consultas normales
+  no toman este bloqueo. El acceso directo por SQL no participa del protocolo.
+- Se mantienen los formatos de los listados; la paginacion queda pendiente.
+
+Las pruebas de reglas incluyen ocupaciones consecutivas, cambios incompatibles,
+traslados familiares, sucursal historica y dos conexiones intentando reservar
+la ultima plaza de hotel o vuelo. Se ejecutan con H2; debe verificarse tambien
+el escenario de despliegue con MySQL antes de la presentacion.
