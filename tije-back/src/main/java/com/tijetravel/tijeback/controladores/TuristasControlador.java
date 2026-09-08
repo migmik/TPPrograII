@@ -1,11 +1,13 @@
 package com.tijetravel.tijeback.controladores;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.enums.Permiso;
+import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
@@ -90,6 +92,19 @@ public class TuristasControlador {
         return turistaRepositorio.findAll();
     }
 
+    public List<Turista> listarPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        if (actor.getRol() != RolUsuario.CLIENTE) {
+            return listar();
+        }
+
+        Integer codigoTitular = obtenerCodigoTurista(actor);
+        List<Turista> grupoFamiliar = new ArrayList<>();
+        grupoFamiliar.add(encontrarPorId(codigoTitular));
+        grupoFamiliar.addAll(turistaRepositorio.findByTitularCodigo(codigoTitular));
+        return List.copyOf(grupoFamiliar);
+    }
+
     public List<Turista> listarFamiliares(Integer codigoTitular) {
         Turista titular = encontrarPorId(codigoTitular);
         if (!titular.isTitular()) {
@@ -101,6 +116,16 @@ public class TuristasControlador {
     public Turista encontrarPorId(Integer codigo) {
         return turistaRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el turista " + codigo));
+    }
+
+    public Turista encontrarVisiblePara(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        Turista turista = encontrarPorId(codigo);
+        if (actor.getRol() == RolUsuario.CLIENTE && !perteneceAlGrupoFamiliar(actor, turista)) {
+            throw new OperacionNoPermitidaException(
+                    "El cliente no puede consultar turistas de otro grupo familiar");
+        }
+        return turista;
     }
 
     @Transactional
@@ -158,5 +183,20 @@ public class TuristasControlador {
             throw new IllegalArgumentException("El campo " + campo + " es obligatorio");
         }
         return valor.trim();
+    }
+
+    private boolean perteneceAlGrupoFamiliar(Usuario actor, Turista turista) {
+        Integer codigoTitular = obtenerCodigoTurista(actor);
+        return codigoTitular.equals(turista.getCodigo())
+                || codigoTitular.equals(turista.getCodigoTitular());
+    }
+
+    private Integer obtenerCodigoTurista(Usuario actor) {
+        Integer codigoTurista = actor.getCodigoTurista();
+        if (codigoTurista == null) {
+            throw new OperacionNoPermitidaException(
+                    "El cliente no tiene un turista titular asociado");
+        }
+        return codigoTurista;
     }
 }

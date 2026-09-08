@@ -50,7 +50,7 @@ Cliente --> Turista
 Turista --> Sucursal : sucursalContratacion
 Turista --> Turista : titular
 Reserva --> Turista
-Reserva --> Sucursal
+Reserva --> Sucursal : sucursalContratacion derivada
 Reserva --> Vuelo
 Reserva --> Hotel
 Reserva --> ClaseVuelo
@@ -69,9 +69,25 @@ skinparam shadowing false
 skinparam packageStyle rectangle
 hide empty members
 
-package "api (pendiente)" {
-    class ControllersREST
-    class DTOs
+package "api" {
+    class SucursalesRestControlador
+    class HotelesRestControlador
+    class VuelosRestControlador
+    class AutenticacionRestControlador
+    class TuristasRestControlador
+    class ReservasRestControlador
+    class UsuariosRestControlador
+    class DTOsSolicitudYRespuesta
+    class Mapeadores
+    class ManejadorGlobalExcepciones
+}
+
+package "seguridad" {
+    class ConfiguracionSeguridad
+    class UsuarioDetallesServicio
+    class UsuarioActualServicio
+    class UsuarioAutenticado
+    class AdministradorInicializador
 }
 
 package "controladores" {
@@ -113,14 +129,39 @@ package "excepciones" {
 }
 
 database MySQL
+component Flyway
 
-ControllersREST --> DTOs
-ControllersREST --> SucursalesControlador
-ControllersREST --> HotelesControlador
-ControllersREST --> VuelosControlador
-ControllersREST --> TuristasControlador
-ControllersREST --> ReservasControlador
-ControllersREST --> UsuariosControlador
+SucursalesRestControlador --> DTOsSolicitudYRespuesta
+HotelesRestControlador --> DTOsSolicitudYRespuesta
+VuelosRestControlador --> DTOsSolicitudYRespuesta
+TuristasRestControlador --> DTOsSolicitudYRespuesta
+ReservasRestControlador --> DTOsSolicitudYRespuesta
+UsuariosRestControlador --> DTOsSolicitudYRespuesta
+SucursalesRestControlador --> Mapeadores
+HotelesRestControlador --> Mapeadores
+VuelosRestControlador --> Mapeadores
+SucursalesRestControlador --> SucursalesControlador
+HotelesRestControlador --> HotelesControlador
+VuelosRestControlador --> VuelosControlador
+AutenticacionRestControlador --> ConfiguracionSeguridad : autentica y crea sesion
+SucursalesRestControlador --> UsuarioActualServicio
+HotelesRestControlador --> UsuarioActualServicio
+VuelosRestControlador --> UsuarioActualServicio
+HotelesRestControlador --> ReservasControlador : consulta disponibilidad
+VuelosRestControlador --> ReservasControlador : consulta disponibilidad
+TuristasRestControlador --> TuristasControlador
+ReservasRestControlador --> ReservasControlador
+UsuariosRestControlador --> UsuariosControlador
+TuristasRestControlador --> UsuarioActualServicio
+ReservasRestControlador --> UsuarioActualServicio
+UsuariosRestControlador --> UsuarioActualServicio
+ManejadorGlobalExcepciones ..> ReglaNegocioException
+
+ConfiguracionSeguridad --> UsuarioDetallesServicio
+UsuarioActualServicio --> UsuarioRepositorio
+UsuarioDetallesServicio --> UsuarioRepositorio
+UsuarioDetallesServicio --> UsuarioAutenticado
+AdministradorInicializador --> UsuarioRepositorio
 
 SucursalesControlador --> SucursalRepositorio
 HotelesControlador --> HotelRepositorio
@@ -144,6 +185,7 @@ TuristaRepositorio --> Turista
 ReservaRepositorio --> Reserva
 UsuarioRepositorio --> Usuario
 GenericoRepositorio --> MySQL
+Flyway --> MySQL : aplica migraciones
 
 ReglaNegocioException <|-- EntidadNoEncontradaException
 ReglaNegocioException <|-- EntidadDuplicadaException

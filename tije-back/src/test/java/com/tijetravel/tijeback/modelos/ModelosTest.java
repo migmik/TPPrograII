@@ -57,7 +57,6 @@ class ModelosTest {
                 IllegalArgumentException.class,
                 () -> new Reserva(
                         turista,
-                        sucursal,
                         vuelo,
                         hotel,
                         ClaseVuelo.TURISTA,

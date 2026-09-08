@@ -106,7 +106,6 @@ class HotelesControladorTest {
                 "Nombre", "Apellido", "Direccion", email, "100", "200", sucursal);
         return new Reserva(
                 turista,
-                sucursal,
                 vuelo,
                 hotel,
                 ClaseVuelo.TURISTA,

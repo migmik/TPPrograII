@@ -35,7 +35,7 @@ public class Reserva {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sucursal_codigo", nullable = false)
-    private Sucursal sucursal;
+    private Sucursal sucursalContratacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vuelo_numero", nullable = false)
@@ -64,7 +64,6 @@ public class Reserva {
 
     public Reserva(
             Turista turista,
-            Sucursal sucursal,
             Vuelo vuelo,
             Hotel hotel,
             ClaseVuelo claseVuelo,
@@ -73,7 +72,6 @@ public class Reserva {
             LocalDate fechaPartida) {
         actualizarDatos(
                 turista,
-                sucursal,
                 vuelo,
                 hotel,
                 claseVuelo,
@@ -84,7 +82,6 @@ public class Reserva {
 
     public void actualizarDatos(
             Turista turista,
-            Sucursal sucursal,
             Vuelo vuelo,
             Hotel hotel,
             ClaseVuelo claseVuelo,
@@ -93,7 +90,8 @@ public class Reserva {
             LocalDate fechaPartida) {
         validarFechas(fechaLlegada, fechaPartida);
         this.turista = ValidacionModelo.obligatorio(turista, "turista");
-        this.sucursal = ValidacionModelo.obligatorio(sucursal, "sucursal");
+        this.sucursalContratacion = ValidacionModelo.obligatorio(
+                turista.getSucursalContratacion(), "sucursalContratacion");
         this.vuelo = ValidacionModelo.obligatorio(vuelo, "vuelo");
         this.hotel = ValidacionModelo.obligatorio(hotel, "hotel");
         this.claseVuelo = ValidacionModelo.obligatorio(claseVuelo, "claseVuelo");
@@ -118,8 +116,8 @@ public class Reserva {
         return turista;
     }
 
-    public Sucursal getSucursal() {
-        return sucursal;
+    public Sucursal getSucursalContratacion() {
+        return sucursalContratacion;
     }
 
     public Vuelo getVuelo() {

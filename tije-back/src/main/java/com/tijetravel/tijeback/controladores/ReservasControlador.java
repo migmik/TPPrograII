@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
+import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
@@ -15,13 +16,11 @@ import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
-import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
-import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
@@ -30,7 +29,6 @@ import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 public class ReservasControlador {
     private final ReservaRepositorio reservaRepositorio;
     private final TuristaRepositorio turistaRepositorio;
-    private final SucursalRepositorio sucursalRepositorio;
     private final VueloRepositorio vueloRepositorio;
     private final HotelRepositorio hotelRepositorio;
     private final AutorizacionControlador autorizacion;
@@ -38,13 +36,11 @@ public class ReservasControlador {
     public ReservasControlador(
             ReservaRepositorio reservaRepositorio,
             TuristaRepositorio turistaRepositorio,
-            SucursalRepositorio sucursalRepositorio,
             VueloRepositorio vueloRepositorio,
             HotelRepositorio hotelRepositorio,
             AutorizacionControlador autorizacion) {
         this.reservaRepositorio = reservaRepositorio;
         this.turistaRepositorio = turistaRepositorio;
-        this.sucursalRepositorio = sucursalRepositorio;
         this.vueloRepositorio = vueloRepositorio;
         this.hotelRepositorio = hotelRepositorio;
         this.autorizacion = autorizacion;
@@ -54,7 +50,6 @@ public class ReservasControlador {
     public Reserva ingresar(
             Usuario actor,
             Integer codigoTurista,
-            Integer codigoSucursal,
             Integer numeroVuelo,
             Integer codigoHotel,
             ClaseVuelo claseVuelo,
@@ -65,7 +60,6 @@ public class ReservasControlador {
         validarFechas(fechaLlegada, fechaPartida);
 
         Turista turista = encontrarTurista(codigoTurista);
-        Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
 
@@ -78,7 +72,6 @@ public class ReservasControlador {
 
         Reserva reserva = new Reserva(
                 turista,
-                sucursal,
                 vuelo,
                 hotel,
                 claseVuelo,
@@ -92,9 +85,27 @@ public class ReservasControlador {
         return reservaRepositorio.findAll();
     }
 
+    public List<Reserva> listarPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        if (actor.getRol() == RolUsuario.CLIENTE) {
+            return listarPorTitularYFamiliares(obtenerCodigoTurista(actor));
+        }
+        return listar();
+    }
+
     public Reserva encontrarPorId(Integer codigo) {
         return reservaRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la reserva " + codigo));
+    }
+
+    public Reserva encontrarVisiblePara(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        Reserva reserva = encontrarPorId(codigo);
+        if (actor.getRol() == RolUsuario.CLIENTE && !perteneceAlGrupoFamiliar(actor, reserva)) {
+            throw new OperacionNoPermitidaException(
+                    "El cliente no puede consultar reservas de otro grupo familiar");
+        }
+        return reserva;
     }
 
     public List<Reserva> listarPorTurista(Integer codigoTurista) {
@@ -134,7 +145,6 @@ public class ReservasControlador {
             Usuario actor,
             Integer codigoReserva,
             Integer codigoTurista,
-            Integer codigoSucursal,
             Integer numeroVuelo,
             Integer codigoHotel,
             ClaseVuelo claseVuelo,
@@ -146,7 +156,6 @@ public class ReservasControlador {
 
         Reserva reserva = encontrarPorId(codigoReserva);
         Turista turista = encontrarTurista(codigoTurista);
-        Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
 
@@ -160,7 +169,6 @@ public class ReservasControlador {
 
         reserva.actualizarDatos(
                 turista,
-                sucursal,
                 vuelo,
                 hotel,
                 claseVuelo,
@@ -238,11 +246,6 @@ public class ReservasControlador {
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el turista " + codigo));
     }
 
-    private Sucursal encontrarSucursal(Integer codigo) {
-        return sucursalRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la sucursal " + codigo));
-    }
-
     private Vuelo encontrarVuelo(Integer numero) {
         return vueloRepositorio.findById(numero)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el vuelo " + numero));
@@ -251,5 +254,21 @@ public class ReservasControlador {
     private Hotel encontrarHotel(Integer codigo) {
         return hotelRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el hotel " + codigo));
+    }
+
+    private boolean perteneceAlGrupoFamiliar(Usuario actor, Reserva reserva) {
+        Integer codigoTitular = obtenerCodigoTurista(actor);
+        Turista turista = reserva.getTurista();
+        return codigoTitular.equals(turista.getCodigo())
+                || codigoTitular.equals(turista.getCodigoTitular());
+    }
+
+    private Integer obtenerCodigoTurista(Usuario actor) {
+        Integer codigoTurista = actor.getCodigoTurista();
+        if (codigoTurista == null) {
+            throw new OperacionNoPermitidaException(
+                    "El cliente no tiene un turista titular asociado");
+        }
+        return codigoTurista;
     }
 }

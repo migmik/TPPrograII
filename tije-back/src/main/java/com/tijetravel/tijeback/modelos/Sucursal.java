@@ -6,9 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "sucursales")
+@Table(
+        name = "sucursales",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_sucursal_direccion",
+                columnNames = "direccion"))
 public class Sucursal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

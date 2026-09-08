@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +28,9 @@ import com.tijetravel.tijeback.modelos.Vuelo;
 @ActiveProfiles("test")
 @Transactional
 class RepositoriosIntegracionTest {
+    @Autowired
+    private Flyway flyway;
+
     @Autowired
     private SucursalRepositorio sucursalRepositorio;
 
@@ -78,7 +82,6 @@ class RepositoriosIntegracionTest {
         usuarioRepositorio.save(new Cliente("ana", "clave", titular));
         reservaRepositorio.saveAndFlush(new Reserva(
                 familiar,
-                sucursal,
                 vuelo,
                 hotel,
                 ClaseVuelo.TURISTA,
@@ -94,5 +97,10 @@ class RepositoriosIntegracionTest {
         assertEquals(1, usuarioRepositorio.contarClientesPorTurista(titular.getCodigo()));
         assertEquals(1, turistaRepositorio.findByTitularCodigo(titular.getCodigo()).size());
         assertEquals(1, reservaRepositorio.listarPorTitularYFamiliares(titular.getCodigo()).size());
+    }
+
+    @Test
+    void aplicaLaMigracionInicialAntesDeValidarJpa() {
+        assertEquals("1", flyway.info().current().getVersion().getVersion());
     }
 }
