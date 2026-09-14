@@ -1,3 +1,0 @@
-juan;juan;CLIENTE;1
-vendedor;1234;VENDEDOR;
-admin;admin;ADMINISTRADOR;

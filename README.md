@@ -1,159 +1,95 @@
-# Tije Travel - TP Programacion II
+# Tije Travel
 
-Trabajo practico de Programacion II para gestionar una cadena de agencias de viajes.
+Trabajo práctico de Programación II para administrar una cadena de agencias de
+viajes. Permite gestionar sucursales, hoteles, vuelos, turistas, reservas y usuarios.
 
-Esta version corresponde a la entrega del TP original: una aplicacion de consola en Java, con persistencia en archivos de texto y sin base de datos ni interfaz grafica.
-
-## Alcance
-
-El sistema administra la informacion principal de Tije Travel:
-
-- Sucursales de la agencia.
-- Hoteles contratados.
-- Vuelos disponibles.
-- Turistas titulares y familiares.
-- Reservas de vuelos y hospedajes.
-- Usuarios con distintos roles de acceso.
-
-La aplicacion aplica conceptos de programacion orientada a objetos: abstraccion, encapsulamiento, herencia, polimorfismo y persistencia.
+El backend está implementado y probado con MySQL. El frontend web está pendiente.
 
 ## Funcionalidades
 
-- Inicio de sesion con usuarios de tipo cliente, vendedor y administrador.
-- Consultas generales de hoteles, vuelos y sucursales.
-- Consulta de reservas por parte de clientes.
-- Administracion de clientes y reservas por parte de vendedores.
-- Administracion completa por parte de administradores.
-- Alta, modificacion, busqueda, listado y baja de entidades principales.
-- Validacion de permisos segun el rol del usuario.
-- Validacion de disponibilidad de vuelos y hoteles al crear o modificar reservas.
-- Validacion de compatibilidad entre vuelo, hotel y fecha de llegada.
-- Validacion de relaciones entre turistas titulares y familiares.
-- Persistencia de los cambios en archivos de texto.
+- Consulta de hoteles, vuelos, sucursales y disponibilidad.
+- Alta, modificación y eliminación de datos según los permisos del usuario.
+- Reservas con control de fechas, destino y plazas disponibles.
+- Gestión de turistas titulares y sus familiares.
+- Inicio y cierre de sesión.
 
-## Usuarios de prueba
+| Usuario | Qué puede hacer |
+|---|---|
+| Administrador | Administrar todos los recursos. |
+| Vendedor | Administrar turistas y reservas. |
+| Cliente | Consultar su grupo familiar y sus reservas. |
 
-Los usuarios iniciales estan definidos en `TijeTravel/datos/usuarios.txt`.
+Los catálogos de hoteles, vuelos y sucursales pueden consultarse sin iniciar sesión.
 
-| Usuario | Contrasenia | Rol | Descripcion |
-| --- | --- | --- | --- |
-| `admin` | `admin` | Administrador | Puede administrar todo el sistema. |
-| `vendedor` | `1234` | Vendedor | Puede administrar clientes y reservas. |
-| `juan` | `juan` | Cliente | Puede consultar hoteles, vuelos y sus reservas. |
+## Tecnologías
 
-## Estructura del proyecto
+Java 21, Spring Boot, Spring Data JPA con Hibernate, Spring Security y MySQL.
+Maven compila el proyecto y ejecuta las pruebas. Flyway crea y actualiza las tablas
+a partir de los scripts SQL del proyecto.
+
+## Organización
 
 ```text
-TPPrograII/
-  README.md
-  consignas.txt
-  pruebas.txt
-  docs/
-  TijeTravel/
-    build.xml
-    manifest.mf
-    nbproject/
-    datos/
-    src/
-      tijetravel/
-        Main.java
-        controladores/
-        modelos/
-        persistencia/
-        vistas/
+tije-back/     Backend Java y pruebas
+tije-front/    Carpeta destinada al frontend
+database/      Script para crear la base y guía de configuración
+docs/         Documentación de la API y diagramas UML
 ```
 
-## Paquetes principales
+En el backend, los controladores REST reciben las solicitudes, los servicios
+aplican las reglas del negocio y los repositorios acceden a la base de datos.
+Los modelos representan las entidades y los DTOs definen los datos de la API.
 
-- `modelos`: contiene las clases del dominio, como `Agencia`, `Sucursal`, `Hotel`, `Vuelo`, `Turista`, `Reserva` y `Usuario`.
-- `controladores`: contiene la logica que coordina las operaciones del sistema y valida permisos.
-- `persistencia`: contiene las clases encargadas de cargar y guardar datos en archivos de texto.
-- `vistas`: contiene los menus de consola para cada tipo de usuario.
+Cada tipo de usuario define sus permisos; Spring Security y los servicios usan
+esa misma definición. Los servicios agrupan cada cambio en una transacción:
+JPA guarda las modificaciones al finalizar, o las revierte si ocurre un error.
 
-## Modelo de usuarios
+## Ejecutar el backend
 
-El sistema trabaja con tres roles:
+Se necesita Java 21 y MySQL en ejecución.
 
-- `Cliente`: puede consultar hoteles, vuelos y reservas propias.
-- `Vendedor`: puede administrar clientes y reservas.
-- `Administrador`: puede administrar sucursales, hoteles, vuelos, clientes, reservas y usuarios.
-
-Para aplicar herencia y polimorfismo, `Cliente`, `Vendedor` y `Administrador` heredan de `Usuario`. Cada tipo de usuario define su comportamiento frente a los permisos disponibles.
-
-La clase `UsuarioFactory` centraliza la creacion del tipo correcto de usuario cuando se cargan datos desde archivo o cuando se administra un usuario desde el sistema.
-
-## Persistencia
-
-Los datos se guardan en archivos `.txt` dentro de `TijeTravel/datos`:
-
-- `sucursales.txt`
-- `hoteles.txt`
-- `vuelos.txt`
-- `turistas.txt`
-- `usuarios.txt`
-- `reservas.txt`
-
-Cada linea representa un registro y los campos se separan con `;`.
-
-La aplicacion carga los datos al iniciar y guarda los cambios cuando se realizan altas, bajas o modificaciones desde los menus.
-
-## Compilar y ejecutar
-
-Los comandos deben ejecutarse desde la raiz del repositorio.
-
-### PowerShell
+1. Crear la base ejecutando `database/crear_base.sql` en MySQL o Workbench.
+2. Configurar `DB_URL`, `DB_USER` y `DB_PASSWORD` para esa base.
+3. Desde la raíz del proyecto, ejecutar en PowerShell:
 
 ```powershell
-New-Item -ItemType Directory -Force TijeTravel\out | Out-Null
-javac -encoding UTF-8 -d TijeTravel\out (Get-ChildItem -Recurse TijeTravel\src -Filter *.java).FullName
-java -cp TijeTravel\out tijetravel.Main
+cd tije-back
+$env:SPRING_PROFILES_ACTIVE = "dev"
+.\mvnw.cmd spring-boot:run
 ```
 
-### Linux/macOS
+El perfil `dev` carga datos de demostración. El backend atiende por defecto en
+`http://localhost:8080`; por ejemplo, `GET /api/v1/hoteles` devuelve los hoteles.
 
-```bash
-mkdir -p TijeTravel/out
-javac -encoding UTF-8 -d TijeTravel/out $(find TijeTravel/src -name "*.java")
-java -cp TijeTravel/out tijetravel.Main
+La [guía de base de datos](database/README.md) explica la configuración y cómo
+crear el primer administrador. Las credenciales locales no deben subirse a Git.
+
+## Pruebas
+
+Desde `tije-back`:
+
+```powershell
+.\mvnw.cmd test
 ```
 
-## Ejecutar desde NetBeans
+Por defecto se usa H2 en memoria, sin necesitar MySQL. Las pruebas cubren reglas
+de negocio, persistencia, API, permisos y operaciones simultáneas. La suite también
+se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 
-Tambien se puede abrir la carpeta `TijeTravel` como proyecto de NetBeans y ejecutar la clase principal:
+## Reglas importantes
 
-```text
-tijetravel.Main
-```
+- Un turista no puede reservar dos veces el mismo vuelo.
+- Las fechas, el destino del vuelo y la ciudad del hotel deben ser compatibles.
+- La disponibilidad hotelera considera la ocupación simultánea durante la estadía.
+- Cambiar capacidades o datos de un viaje no puede dejar reservas incompatibles.
+- Los familiares comparten la sucursal del titular. Las reservas conservan la
+  sucursal donde se contrataron, aunque el grupo cambie de sucursal después.
+- Las escrituras se procesan de a una para evitar conflictos al reservar cupos.
 
-Los archivos privados de NetBeans no forman parte del repositorio.
+## Documentación y próximos pasos
 
-## Pruebas manuales sugeridas
+- [API REST](docs/api.md)
+- [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
 
-El archivo `pruebas.txt` contiene una lista de pruebas manuales para revisar el funcionamiento general.
-
-Casos recomendados:
-
-- Iniciar el sistema y salir con la opcion `0`.
-- Entrar como `admin/admin` y verificar el menu de administrador.
-- Entrar como `vendedor/1234` y verificar el menu de vendedor.
-- Entrar como `juan/juan` y verificar el menu de cliente.
-- Listar sucursales, hoteles, vuelos, clientes, reservas y usuarios.
-- Crear una reserva valida con vuelo y hotel del mismo destino.
-- Intentar crear una reserva con hotel de otra ciudad y verificar que el sistema la rechace.
-- Intentar usar una fecha de llegada distinta a la fecha del vuelo y verificar que el sistema la rechace.
-- Modificar y cancelar una reserva.
-- Cerrar y volver a abrir el programa para verificar que los cambios persisten.
-
-## Documentacion
-
-La carpeta `docs` contiene documentacion complementaria de la entrega:
-
-- Documentacion del TP en PDF y DOCX.
-- Diagrama UML en PDF y SVG.
-- Fuente del diagrama UML en PlantUML.
-
-## Estado de esta version
-
-Esta version esta pensada como cierre de la entrega original del TP.
-
-Para una version futura con base de datos y frontend web, conviene mantener esta entrega marcada en Git con un tag, por ejemplo `v1.0-tp-entregado`, y continuar el desarrollo en una rama separada.
+Falta implementar el frontend y preparar la presentación con MySQL en una PC,
+el backend y frontend en otra, y el acceso desde la computadora del profesor.
