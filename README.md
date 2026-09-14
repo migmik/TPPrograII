@@ -40,6 +40,10 @@ En el backend, los controladores REST reciben las solicitudes, los servicios
 aplican las reglas del negocio y los repositorios acceden a la base de datos.
 Los modelos representan las entidades y los DTOs definen los datos de la API.
 
+Cada tipo de usuario define sus permisos; Spring Security y los servicios usan
+esa misma definición. Los servicios agrupan cada cambio en una transacción:
+JPA guarda las modificaciones al finalizar, o las revierte si ocurre un error.
+
 ## Ejecutar el backend
 
 Se necesita Java 21 y MySQL en ejecución.

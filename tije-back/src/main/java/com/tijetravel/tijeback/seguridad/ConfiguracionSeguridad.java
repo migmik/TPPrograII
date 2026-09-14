@@ -2,6 +2,8 @@ package com.tijetravel.tijeback.seguridad;
 
 import java.util.List;
 
+import com.tijetravel.tijeback.enums.Permiso;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -130,37 +132,22 @@ public class ConfiguracionSeguridad {
                                 "/api/v1/sucursales/**",
                                 "/api/v1/hoteles/**",
                                 "/api/v1/vuelos/**").permitAll()
-                        .requestMatchers("/api/v1/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/v1/sucursales/**",
-                                "/api/v1/hoteles/**",
-                                "/api/v1/vuelos/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/api/v1/sucursales/**",
-                                "/api/v1/hoteles/**",
-                                "/api/v1/vuelos/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/v1/sucursales/**",
-                                "/api/v1/hoteles/**",
-                                "/api/v1/vuelos/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(
-                                HttpMethod.POST,
+                                HttpMethod.GET,
                                 "/api/v1/turistas/**",
-                                "/api/v1/reservas/**").hasAnyRole("VENDEDOR", "ADMINISTRADOR")
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/api/v1/turistas/**",
-                                "/api/v1/reservas/**").hasAnyRole("VENDEDOR", "ADMINISTRADOR")
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/api/v1/turistas/**",
-                                "/api/v1/reservas/**").hasAnyRole("VENDEDOR", "ADMINISTRADOR")
-                        .requestMatchers(
-                                "/api/v1/turistas/**",
-                                "/api/v1/reservas/**").authenticated()
+                                "/api/v1/reservas/**").hasAuthority(Permiso.CONSULTAR.name())
+                        .requestMatchers("/api/v1/usuarios/**")
+                                .hasAuthority(Permiso.ADMINISTRAR_USUARIOS.name())
+                        .requestMatchers("/api/v1/sucursales/**")
+                                .hasAuthority(Permiso.ADMINISTRAR_SUCURSALES.name())
+                        .requestMatchers("/api/v1/hoteles/**")
+                                .hasAuthority(Permiso.ADMINISTRAR_HOTELES.name())
+                        .requestMatchers("/api/v1/vuelos/**")
+                                .hasAuthority(Permiso.ADMINISTRAR_VUELOS.name())
+                        .requestMatchers("/api/v1/turistas/**")
+                                .hasAuthority(Permiso.ADMINISTRAR_TURISTAS.name())
+                        .requestMatchers("/api/v1/reservas/**")
+                                .hasAuthority(Permiso.ADMINISTRAR_RESERVAS.name())
                         .anyRequest().authenticated());
         return http.build();
     }

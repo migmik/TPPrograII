@@ -1,6 +1,7 @@
 package com.tijetravel.tijeback.repositorios;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +50,17 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
     List<Reserva> findByVueloNumero(Integer numeroVuelo);
 
     List<Reserva> findByHotelCodigo(Integer codigoHotel);
+
+    @Query("""
+            select r from Reserva r
+            where r.hotel.codigo = :codigoHotel
+              and r.fechaLlegada < :hasta
+              and r.fechaPartida > :desde
+            """)
+    List<Reserva> buscarSuperpuestasEnHotel(
+            @Param("codigoHotel") Integer codigoHotel,
+            @Param("desde") LocalDate desde,
+            @Param("hasta") LocalDate hasta);
 
     @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
     @Query("""

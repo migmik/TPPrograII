@@ -47,8 +47,8 @@ public class VueloServicio {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
+        bloqueoEscrituras.adquirir();
         if (vueloRepositorio.existsById(numero)) {
             throw new EntidadDuplicadaException("Ya existe el vuelo " + numero);
         }
@@ -76,8 +76,8 @@ public class VueloServicio {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
+        bloqueoEscrituras.adquirir();
         Vuelo vuelo = encontrarPorId(numero);
 
         long reservasTurista = reservaRepositorio.countByVueloNumeroAndClaseVuelo(
@@ -96,13 +96,13 @@ public class VueloServicio {
         }
         vuelo.actualizarDatos(
                 fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
-        return vueloRepositorio.save(vuelo);
+        return vuelo;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer numero) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
+        bloqueoEscrituras.adquirir();
         Vuelo vuelo = encontrarPorId(numero);
         if (reservaRepositorio.existsByVueloNumero(numero)) {
             throw new OperacionNoPermitidaException("No se puede eliminar un vuelo que tiene reservas");

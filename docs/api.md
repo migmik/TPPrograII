@@ -100,11 +100,10 @@ debera agregar Spring Session con un almacen compartido como Redis o JDBC.
 ## Nombres del contrato de hoteles
 
 `capacidadTotal` representa la capacidad base del hotel en las solicitudes y
-respuestas de catalogo. Las solicitudes tambien aceptan el nombre anterior
-`plazasDisponibles` como alias de entrada; las respuestas de catalogo usan
-`capacidadTotal`. Los endpoints de disponibilidad conservan `plazasDisponibles`
-para las plazas libres calculadas. La columna SQL `plazas_disponibles` mantiene
-su nombre mediante `@Column`, sin modificar migraciones ya aplicadas ni datos.
+respuestas de catalogo. Es el unico nombre aceptado para ingresar la capacidad.
+Los endpoints de disponibilidad usan `plazasDisponibles` para las plazas libres
+calculadas en las fechas consultadas. La columna SQL se llama `capacidad_total`;
+la migracion V5 renombra la columna anterior conservando los datos existentes.
 El permiso para gestionar turistas se llama `ADMINISTRAR_TURISTAS`; los
 consumidores del listado de permisos de sesion deben usar este nombre.
 

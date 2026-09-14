@@ -62,8 +62,8 @@ public class ReservaServicio {
             TipoHospedaje tipoHospedaje,
             LocalDate fechaLlegada,
             LocalDate fechaPartida) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
+        bloqueoEscrituras.adquirir();
         disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Turista turista = encontrarTurista(codigoTurista);
@@ -134,8 +134,8 @@ public class ReservaServicio {
             TipoHospedaje tipoHospedaje,
             LocalDate fechaLlegada,
             LocalDate fechaPartida) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
+        bloqueoEscrituras.adquirir();
         disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Reserva reserva = encontrarPorId(codigoReserva);
@@ -159,13 +159,13 @@ public class ReservaServicio {
                 tipoHospedaje,
                 fechaLlegada,
                 fechaPartida);
-        return reservaRepositorio.save(reserva);
+        return reserva;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigoReserva) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
+        bloqueoEscrituras.adquirir();
         Reserva reserva = encontrarPorId(codigoReserva);
         reservaRepositorio.delete(reserva);
     }

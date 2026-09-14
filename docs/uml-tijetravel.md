@@ -8,7 +8,7 @@ encuentra en `uml-tijetravel.puml`.
 ```mermaid
 flowchart TB
     WEB[Frontend web - pendiente]
-    SEC[Spring Security - sesion, CSRF y roles]
+    SEC[Spring Security - sesion, CSRF y permisos]
     API[API REST publica y protegida]
     APIERR[Manejador global de errores]
     CTRL[Servicios de negocio]
