@@ -1,432 +1,219 @@
-@startuml TijeTravel_Modelo
-title TijeTravel - Diagrama de clases del modelo
+@startuml TijeTravel_Modelo_Web
+title Tije Travel - Modelo web
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam packageStyle rectangle
 hide empty members
 
-package "tijetravel.modelos" {
-    class Agencia {
-        - sucursales: ArrayList<Sucursal>
-        - hoteles: ArrayList<Hotel>
-        - vuelos: ArrayList<Vuelo>
-        - turistas: ArrayList<Turista>
-        - usuarios: ArrayList<Usuario>
-        - reservas: ArrayList<Reserva>
-        --
-        + agregarSucursal(sucursal: Sucursal): boolean
-        + agregarHotel(hotel: Hotel): boolean
-        + agregarVuelo(vuelo: Vuelo): boolean
-        + agregarTurista(turista: Turista): boolean
-        + agregarUsuario(usuario: Usuario): boolean
-        + agregarReserva(reserva: Reserva): boolean
-        + buscarTuristaPorCodigo(codigo: int): Turista
-        + buscarSucursalPorCodigo(codigo: int): Sucursal
-        + buscarHotelPorCodigo(codigo: int): Hotel
-        + buscarVueloPorNumero(numero: int): Vuelo
-        + buscarReservaPorCodigo(codigo: int): Reserva
-        + buscarUsuarioPorNombre(nombreUsuario: String): Usuario
-        + eliminarTurista(codigoTurista: int): boolean
-        + eliminarSucursal(codigo: int): boolean
-        + eliminarHotel(codigo: int): boolean
-        + eliminarVuelo(numero: int): boolean
-        + eliminarReserva(codigo: int): boolean
-        + eliminarUsuario(nombreUsuario: String): boolean
-        + generarCodigoTurista(): int
-        + contarAdministradores(): int
-    }
+package "com.tijetravel.tijeback.enums" {
+    enum RolUsuario
+    enum Permiso
+    enum ClaseVuelo
+    enum TipoHospedaje
+}
 
+package "com.tijetravel.tijeback.modelos" {
     abstract class Usuario {
+        - codigo: Integer
         - nombreUsuario: String
         - contrasenia: String
-        --
-        + actualizarCredenciales(nombreUsuario: String, contrasenia: String): boolean
-        + getNombreUsuario(): String
-        + getContrasenia(): String
-        + getCodigoTurista(): Integer
-        + getRol(): RolUsuario
-        + tienePermiso(permiso: Permiso): boolean
+        - rol: RolUsuario
+        + actualizarCredenciales(nombreUsuario, contrasenia): void
+        + tienePermiso(permiso): boolean
     }
-
-    class Administrador {
-        + getRol(): RolUsuario
-        + tienePermiso(permiso: Permiso): boolean
-    }
-
-    class Vendedor {
-        + getRol(): RolUsuario
-        + tienePermiso(permiso: Permiso): boolean
-    }
-
-    class Cliente {
-        - codigoTurista: Integer
-        --
-        + getRol(): RolUsuario
-        + getCodigoTurista(): Integer
-        + tienePermiso(permiso: Permiso): boolean
-    }
-
-    class UsuarioFactory {
-        + crear(nombreUsuario: String, contrasenia: String, rol: RolUsuario, codigoTurista: Integer): Usuario
-    }
-
+    class Administrador
+    class Vendedor
+    class Cliente
     class Turista {
-        - codigo: int
+        - codigo: Integer
         - nombre: String
         - apellido: String
         - direccion: String
         - email: String
         - telefonoFijo: String
         - telefonoCelular: String
-        - esTitular: boolean
-        - codigoTitular: Integer
-        - codigoSucursal: Integer
-        --
-        + actualizarDatos(nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String, codigoSucursal: Integer): boolean
+        + actualizarDatos(): void
+        + isTitular(): boolean
     }
-
-    class Sucursal {
-        - codigo: int
-        - direccion: String
-        - telefono: String
-        --
-        + actualizarDatos(direccion: String, telefono: String): boolean
-    }
-
-    class Hotel {
-        - codigo: int
-        - nombre: String
-        - direccion: String
-        - ciudad: String
-        - telefono: String
-        - plazasDisponibles: int
-        --
-        + actualizarDatos(nombre: String, direccion: String, ciudad: String, telefono: String, plazasDisponibles: int): boolean
-    }
-
-    class Vuelo {
-        - numero: int
-        - fechaYHora: LocalDateTime
-        - origen: String
-        - destino: String
-        - totalPlazas: int
-        - plazasTurista: int
-        - plazasPrimera: int
-        --
-        + actualizarDatos(fechaYHora: LocalDateTime, origen: String, destino: String, totalPlazas: int, plazasTurista: int, plazasPrimera: int): boolean
-    }
-
-    class Reserva {
-        - codigo: int
-        - turista: Turista
-        - sucursal: Sucursal
-        - vuelo: Vuelo
-        - hotel: Hotel
-        - claseVuelo: ClaseVuelo
-        - tipoHospedaje: TipoHospedaje
-        - fechaLlegada: LocalDate
-        - fechaPartida: LocalDate
-        --
-        + actualizarDatos(turista: Turista, sucursal: Sucursal, vuelo: Vuelo, hotel: Hotel, claseVuelo: ClaseVuelo, tipoHospedaje: TipoHospedaje, fechaLlegada: LocalDate, fechaPartida: LocalDate): boolean
-    }
-
-    enum RolUsuario {
-        CLIENTE
-        VENDEDOR
-        ADMINISTRADOR
-    }
-
-    enum Permiso {
-        CONSULTAR
-        ADMINISTRAR_CLIENTES
-        ADMINISTRAR_RESERVAS
-        ADMINISTRAR_SUCURSALES
-        ADMINISTRAR_HOTELES
-        ADMINISTRAR_VUELOS
-        ADMINISTRAR_USUARIOS
-    }
-
-    enum ClaseVuelo {
-        TURISTA
-        PRIMERA
-    }
-
-    enum TipoHospedaje {
-        MEDIA_PENSION
-        PENSION_COMPLETA
-    }
+    class Sucursal
+    class Hotel
+    class Vuelo
+    class Reserva
 }
 
 Usuario <|-- Administrador
 Usuario <|-- Vendedor
 Usuario <|-- Cliente
-
-Agencia "1" o-- "0..*" Sucursal
-Agencia "1" o-- "0..*" Hotel
-Agencia "1" o-- "0..*" Vuelo
-Agencia "1" o-- "0..*" Turista
-Agencia "1" o-- "0..*" Usuario
-Agencia "1" o-- "0..*" Reserva
-
-Reserva "0..*" --> "1" Turista
-Reserva "0..*" --> "1" Sucursal
-Reserva "0..*" --> "1" Vuelo
-Reserva "0..*" --> "1" Hotel
+Cliente --> Turista
+Turista --> Sucursal : sucursalContratacion
+Turista --> Turista : titular
+Reserva --> Turista
+Reserva --> Sucursal : sucursal historica
+Reserva --> Vuelo
+Reserva --> Hotel
 Reserva --> ClaseVuelo
 Reserva --> TipoHospedaje
-
-Usuario ..> RolUsuario
+Usuario --> RolUsuario
 Usuario ..> Permiso
-UsuarioFactory ..> Usuario
-UsuarioFactory ..> RolUsuario
-Cliente ..> Turista : codigoTurista
-Turista ..> Sucursal : codigoSucursal
-Turista ..> Turista : codigoTitular
 
 @enduml
 
-@startuml TijeTravel_Capas
-title TijeTravel - Diagrama general por capas
+@startuml TijeTravel_Capas_Web
+title Tije Travel - Arquitectura backend
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam packageStyle rectangle
 hide empty members
 
-package "tijetravel" {
-    class Main {
-        + main(args: String[]): void
-    }
+package "api" {
+    class SucursalesRestControlador
+    class HotelesRestControlador
+    class VuelosRestControlador
+    class AutenticacionRestControlador
+    class TuristasRestControlador
+    class ReservasRestControlador
+    class UsuariosRestControlador
+    class DTOsSolicitudYRespuesta
+    class Mapeadores
+    class ManejadorGlobalExcepciones
 }
 
-package "tijetravel.vistas" {
-    class VistaPrincipal {
-        - agencia: Agencia
-        - controladorDatos: ControladorDatos
-        - teclado: Scanner
-        --
-        + iniciar(): void
-    }
-
-    class VistaLogin {
-        - controladorLogin: ControladorLogin
-        - teclado: Scanner
-        --
-        + mostrar(): Usuario
-    }
-
-    abstract class VistaUsuario {
-        # agencia: Agencia
-        # controladorDatos: ControladorDatos
-        # controladorReservas: ControladorReservas
-        # controladorTuristas: ControladorTuristas
-        # controladorAdministracion: ControladorAdministracion
-        # controladorUsuarios: ControladorUsuarios
-        # teclado: Scanner
-        --
-        + mostrar(usuario: Usuario): void
-        # guardarCambios(): boolean
-        # leerEntero(mensaje: String): int
-    }
-
-    class VistaCliente {
-        + mostrar(usuario: Usuario): void
-    }
-
-    class VistaVendedor {
-        - usuarioActual: Usuario
-        --
-        + mostrar(usuario: Usuario): void
-    }
-
-    class VistaAdministrador {
-        - usuarioActual: Usuario
-        --
-        + mostrar(usuario: Usuario): void
-    }
+package "seguridad" {
+    class ConfiguracionSeguridad
+    class UsuarioDetallesServicio
+    class UsuarioActualServicio
+    class UsuarioAutenticado
+    class AdministradorInicializador
 }
 
-package "tijetravel.controladores" {
-    class ControladorDatos {
-        - archivoSucursales: ArchivoSucursales
-        - archivoHoteles: ArchivoHoteles
-        - archivoVuelos: ArchivoVuelos
-        - archivoTuristas: ArchivoTuristas
-        - archivoUsuarios: ArchivoUsuarios
-        - archivoReservas: ArchivoReservas
-        --
-        + cargarTodo(): Agencia
-        + guardarTodo(agencia: Agencia): void
-    }
+package "servicios.usuarios" {
+    class UsuarioFactory
+    interface CreadorUsuario
+    class CreadorAdministrador
+    class CreadorVendedor
+    class CreadorCliente
+}
+UsuarioFactory --> CreadorUsuario : registro por rol
+CreadorUsuario <|.. CreadorAdministrador
+CreadorUsuario <|.. CreadorVendedor
+CreadorUsuario <|.. CreadorCliente
+UsuarioServicio --> UsuarioFactory
 
-    class ControladorLogin {
-        - agencia: Agencia
-        --
-        + iniciarSesion(nombreUsuario: String, contrasenia: String): Usuario
-    }
-
-    class ControladorAutorizacion {
-        + tienePermiso(usuario: Usuario, permiso: Permiso): boolean
-    }
-
-    class ControladorAdministracion {
-        - agencia: Agencia
-        - autorizacion: ControladorAutorizacion
-        - reservas: ControladorReservas
-        --
-        + agregarSucursal(u: Usuario, s: Sucursal): boolean
-        + modificarSucursal(u: Usuario, c: int, d: String, t: String): boolean
-        + eliminarSucursal(u: Usuario, c: int): boolean
-        + agregarHotel(u: Usuario, h: Hotel): boolean
-        + modificarHotel(u: Usuario, c: int, n: String, d: String, ciudad: String, tel: String, plazas: int): boolean
-        + eliminarHotel(u: Usuario, c: int): boolean
-        + agregarVuelo(u: Usuario, v: Vuelo): boolean
-        + modificarVuelo(u: Usuario, n: int, f: LocalDateTime, o: String, d: String, total: int, turista: int, primera: int): boolean
-        + eliminarVuelo(u: Usuario, n: int): boolean
-    }
-
-    class ControladorTuristas {
-        - agencia: Agencia
-        - autorizacion: ControladorAutorizacion
-        --
-        + agregarTitular(usuario: Usuario, nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String, codigoSucursal: int): Turista
-        + agregarFamiliar(usuario: Usuario, codigoTitular: int, nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String): Turista
-        + modificar(usuario: Usuario, codigo: int, nombre: String, apellido: String, direccion: String, email: String, telefonoFijo: String, telefonoCelular: String, codigoSucursal: Integer): boolean
-        + eliminar(usuario: Usuario, codigo: int): boolean
-    }
-
-    class ControladorReservas {
-        - agencia: Agencia
-        - autorizacion: ControladorAutorizacion
-        --
-        + generarCodigoReserva(): int
-        + fechasValidas(fechaLlegada: LocalDate, fechaPartida: LocalDate): boolean
-        + contarReservasVuelo(numeroVuelo: int, claseVuelo: ClaseVuelo): int
-        + plazasDisponiblesVuelo(vuelo: Vuelo, claseVuelo: ClaseVuelo): int
-        + plazasDisponiblesHotel(hotel: Hotel, llegada: LocalDate, partida: LocalDate): int
-        + crearReserva(usuario: Usuario, codigoTurista: int, codigoSucursal: int, numeroVuelo: int, codigoHotel: int, claseVuelo: ClaseVuelo, tipoHospedaje: TipoHospedaje, fechaLlegada: LocalDate, fechaPartida: LocalDate): Reserva
-        + buscarReservasDeTurista(codigoTurista: int): ArrayList<Reserva>
-        + buscarReservasDeTitularYFamiliares(codigoTitular: int): ArrayList<Reserva>
-        + cancelarReserva(usuario: Usuario, codigoReserva: int): boolean
-        + modificarReserva(usuario: Usuario, codigoReserva: int, codigoTurista: int, codigoSucursal: int, numeroVuelo: int, codigoHotel: int, claseVuelo: ClaseVuelo, tipoHospedaje: TipoHospedaje, fechaLlegada: LocalDate, fechaPartida: LocalDate): boolean
-    }
-
-    class ControladorUsuarios {
-        - agencia: Agencia
-        - autorizacion: ControladorAutorizacion
-        --
-        + agregar(actor: Usuario, nuevo: Usuario): boolean
-        + modificar(actor: Usuario, actual: String, nuevoNombre: String, contrasenia: String, rol: RolUsuario, codigoTurista: Integer): boolean
-        + eliminar(actor: Usuario, nombre: String): boolean
-    }
+package "servicios" {
+    class SucursalServicio
+    class HotelServicio
+    class VueloServicio
+    class TuristaServicio
+    class ReservaServicio
+    class UsuarioServicio
+    class BloqueoEscrituras
+    class OcupacionHotel
+    class DisponibilidadServicio
+    class AutorizacionServicio
 }
 
-package "tijetravel.persistencia" {
-    interface Archivo<T> {
-        + cargar(): ArrayList<T>
-        + guardar(lista: List<T>): void
-    }
-
-    abstract class ArchivoTexto {
-        # SEPARADOR: String
-        --
-        # rutaDatos(nombreArchivo: String): Path
-        # lineaVacia(linea: String): boolean
-        # separarCampos(linea: String): String[]
-        # abrirLector(ruta: Path): BufferedReader
-        # guardarAtomico(ruta: Path, escritura: EscrituraArchivo): void
-        # errorCarga(ruta: Path, causa: Exception): PersistenciaException
-    }
-
-    interface EscrituraArchivo {
-        + escribir(escritor: BufferedWriter): void
-    }
-
-    class PersistenciaException
-    class ArchivoSucursales
-    class ArchivoHoteles
-    class ArchivoVuelos
-    class ArchivoTuristas
-    class ArchivoUsuarios
-    class ArchivoReservas {
-        + cargar(agencia: Agencia): ArrayList<Reserva>
-        + guardar(reservas: List<Reserva>): void
-    }
+package "repositorios" {
+    interface JpaRepository
+    interface SucursalRepositorio
+    interface HotelRepositorio
+    interface VueloRepositorio
+    interface TuristaRepositorio
+    interface ReservaRepositorio
+    interface UsuarioRepositorio
 }
 
-package "tijetravel.modelos" {
-    class Agencia
-    class Usuario
+package "modelos" {
     class Sucursal
     class Hotel
     class Vuelo
     class Turista
     class Reserva
-    enum Permiso
-    enum RolUsuario
-    enum ClaseVuelo
-    enum TipoHospedaje
+    class Usuario
 }
 
-Main ..> ControladorDatos
-Main ..> VistaPrincipal
+package "excepciones" {
+    class ReglaNegocioException
+    class EntidadNoEncontradaException
+    class EntidadDuplicadaException
+    class CapacidadExcedidaException
+    class OperacionNoPermitidaException
+}
 
-VistaUsuario <|-- VistaCliente
-VistaUsuario <|-- VistaVendedor
-VistaUsuario <|-- VistaAdministrador
-VistaPrincipal ..> VistaLogin
-VistaPrincipal ..> VistaCliente
-VistaPrincipal ..> VistaVendedor
-VistaPrincipal ..> VistaAdministrador
+database MySQL
+component Flyway
 
-VistaPrincipal --> Agencia
-VistaPrincipal --> ControladorDatos
-VistaLogin --> ControladorLogin
-VistaUsuario --> Agencia
-VistaUsuario --> ControladorDatos
-VistaUsuario --> ControladorReservas
-VistaUsuario --> ControladorTuristas
-VistaUsuario --> ControladorAdministracion
-VistaUsuario --> ControladorUsuarios
+SucursalesRestControlador --> DTOsSolicitudYRespuesta
+HotelesRestControlador --> DTOsSolicitudYRespuesta
+VuelosRestControlador --> DTOsSolicitudYRespuesta
+TuristasRestControlador --> DTOsSolicitudYRespuesta
+ReservasRestControlador --> DTOsSolicitudYRespuesta
+UsuariosRestControlador --> DTOsSolicitudYRespuesta
+SucursalesRestControlador --> Mapeadores
+HotelesRestControlador --> Mapeadores
+VuelosRestControlador --> Mapeadores
+SucursalesRestControlador --> SucursalServicio
+HotelesRestControlador --> HotelServicio
+VuelosRestControlador --> VueloServicio
+AutenticacionRestControlador --> ConfiguracionSeguridad : autentica y crea sesion
+SucursalesRestControlador --> UsuarioActualServicio
+HotelesRestControlador --> UsuarioActualServicio
+VuelosRestControlador --> UsuarioActualServicio
+HotelesRestControlador --> DisponibilidadServicio : consulta disponibilidad
+VuelosRestControlador --> DisponibilidadServicio : consulta disponibilidad
+TuristasRestControlador --> TuristaServicio
+ReservasRestControlador --> ReservaServicio
+UsuariosRestControlador --> UsuarioServicio
+TuristasRestControlador --> UsuarioActualServicio
+ReservasRestControlador --> UsuarioActualServicio
+UsuariosRestControlador --> UsuarioActualServicio
+ManejadorGlobalExcepciones ..> ReglaNegocioException
 
-ControladorLogin --> Agencia
-ControladorAutorizacion ..> Usuario
-ControladorAutorizacion ..> Permiso
-ControladorAdministracion --> Agencia
-ControladorAdministracion --> ControladorAutorizacion
-ControladorAdministracion --> ControladorReservas
-ControladorTuristas --> Agencia
-ControladorTuristas --> ControladorAutorizacion
-ControladorReservas --> Agencia
-ControladorReservas --> ControladorAutorizacion
-ControladorUsuarios --> Agencia
-ControladorUsuarios --> ControladorAutorizacion
-ControladorDatos --> Agencia
+ConfiguracionSeguridad --> UsuarioDetallesServicio
+UsuarioActualServicio --> UsuarioRepositorio
+UsuarioDetallesServicio --> UsuarioRepositorio
+UsuarioDetallesServicio --> UsuarioAutenticado
+AdministradorInicializador --> UsuarioRepositorio
 
-ControladorDatos *-- ArchivoSucursales
-ControladorDatos *-- ArchivoHoteles
-ControladorDatos *-- ArchivoVuelos
-ControladorDatos *-- ArchivoTuristas
-ControladorDatos *-- ArchivoUsuarios
-ControladorDatos *-- ArchivoReservas
+SucursalServicio --> SucursalRepositorio
+HotelServicio --> HotelRepositorio
+VueloServicio --> VueloRepositorio
+TuristaServicio --> TuristaRepositorio
+ReservaServicio --> BloqueoEscrituras
+    HotelServicio --> BloqueoEscrituras
+    VueloServicio --> BloqueoEscrituras
+    TuristaServicio --> BloqueoEscrituras
+    UsuarioServicio --> BloqueoEscrituras
+    SucursalServicio --> BloqueoEscrituras
+    HotelServicio --> OcupacionHotel
+    DisponibilidadServicio --> OcupacionHotel
+    ReservaServicio --> DisponibilidadServicio
+DisponibilidadServicio --> ReservaRepositorio
+DisponibilidadServicio --> VueloRepositorio
+DisponibilidadServicio --> HotelRepositorio
+ReservaServicio --> ReservaRepositorio
+UsuarioServicio --> UsuarioRepositorio
 
-ArchivoTexto <|-- ArchivoSucursales
-ArchivoTexto <|-- ArchivoHoteles
-ArchivoTexto <|-- ArchivoVuelos
-ArchivoTexto <|-- ArchivoTuristas
-ArchivoTexto <|-- ArchivoUsuarios
-ArchivoTexto <|-- ArchivoReservas
+JpaRepository <|-- SucursalRepositorio
+JpaRepository <|-- HotelRepositorio
+JpaRepository <|-- VueloRepositorio
+JpaRepository <|-- TuristaRepositorio
+JpaRepository <|-- ReservaRepositorio
+JpaRepository <|-- UsuarioRepositorio
 
-Archivo <|.. ArchivoSucursales
-Archivo <|.. ArchivoHoteles
-Archivo <|.. ArchivoVuelos
-Archivo <|.. ArchivoTuristas
-Archivo <|.. ArchivoUsuarios
+SucursalRepositorio --> Sucursal
+HotelRepositorio --> Hotel
+VueloRepositorio --> Vuelo
+TuristaRepositorio --> Turista
+ReservaRepositorio --> Reserva
+UsuarioRepositorio --> Usuario
+JpaRepository --> MySQL
+Flyway --> MySQL : aplica migraciones
 
-ArchivoTexto ..> EscrituraArchivo
-ArchivoTexto ..> PersistenciaException
-ArchivoReservas ..> Agencia
-ArchivoReservas ..> Reserva
+ReglaNegocioException <|-- EntidadNoEncontradaException
+ReglaNegocioException <|-- EntidadDuplicadaException
+ReglaNegocioException <|-- CapacidadExcedidaException
+ReglaNegocioException <|-- OperacionNoPermitidaException
 
 @enduml

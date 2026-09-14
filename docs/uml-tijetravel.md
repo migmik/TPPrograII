@@ -1,290 +1,178 @@
-# UML TijeTravel
+# UML Tije Travel
 
-Este archivo contiene una version previsualizable del UML. Para una version mas detallada y formal, usar `uml-tijetravel.puml`.
+Este diagrama representa el nucleo de la version web. La version PlantUML se
+encuentra en `uml-tijetravel.puml`.
 
-## Modelo
+## Capas
+
+```mermaid
+flowchart TB
+    WEB[Frontend web - pendiente]
+    SEC[Spring Security - sesion, CSRF y permisos]
+    API[API REST publica y protegida]
+    APIERR[Manejador global de errores]
+    CTRL[Servicios de negocio]
+    REPO[Repositorios Spring Data JPA]
+    MODEL[Modelos y enums]
+    ERR[Excepciones de negocio]
+    MIG[Flyway - migraciones SQL]
+    DB[(MySQL)]
+
+    WEB --> SEC
+    SEC --> API
+    SEC --> REPO
+    API --> CTRL
+    API --> APIERR
+    CTRL --> REPO
+    CTRL --> MODEL
+    CTRL --> ERR
+    REPO --> MODEL
+    REPO --> DB
+    MIG --> DB
+```
+
+## Dominio
 
 ```mermaid
 classDiagram
-    direction LR
-
-    class Agencia {
-        -ArrayList~Sucursal~ sucursales
-        -ArrayList~Hotel~ hoteles
-        -ArrayList~Vuelo~ vuelos
-        -ArrayList~Turista~ turistas
-        -ArrayList~Usuario~ usuarios
-        -ArrayList~Reserva~ reservas
-        +agregarSucursal(Sucursal) boolean
-        +agregarHotel(Hotel) boolean
-        +agregarVuelo(Vuelo) boolean
-        +agregarTurista(Turista) boolean
-        +agregarUsuario(Usuario) boolean
-        +agregarReserva(Reserva) boolean
-        +buscarReservaPorCodigo(int) Reserva
-        +eliminarUsuario(String) boolean
-    }
-
     class Usuario {
         <<abstract>>
+        -Integer codigo
         -String nombreUsuario
         -String contrasenia
-        +actualizarCredenciales(String, String) boolean
-        +getRol() RolUsuario
-        +getCodigoTurista() Integer
+        -RolUsuario rol
+        +actualizarCredenciales()
         +tienePermiso(Permiso) boolean
     }
-
     class Administrador
     class Vendedor
-    class Cliente {
-        -Integer codigoTurista
-    }
-
-    class UsuarioFactory {
-        +crear(String, String, RolUsuario, Integer) Usuario
-    }
-
+    class Cliente
     class Turista {
-        -int codigo
+        -Integer codigo
         -String nombre
         -String apellido
-        -String direccion
         -String email
-        -String telefonoFijo
-        -String telefonoCelular
-        -boolean esTitular
-        -Integer codigoTitular
-        -Integer codigoSucursal
-        +actualizarDatos() boolean
+        +actualizarDatos()
+        +isTitular() boolean
     }
-
     class Sucursal {
-        -int codigo
+        -Integer codigo
         -String direccion
         -String telefono
-        +actualizarDatos(String, String) boolean
     }
-
     class Hotel {
-        -int codigo
+        -Integer codigo
         -String nombre
-        -String direccion
         -String ciudad
-        -String telefono
-        -int plazasDisponibles
-        +actualizarDatos() boolean
+        -int capacidadTotal
     }
-
     class Vuelo {
-        -int numero
+        -Integer numero
         -LocalDateTime fechaYHora
         -String origen
         -String destino
         -int totalPlazas
         -int plazasTurista
         -int plazasPrimera
-        +actualizarDatos() boolean
     }
-
     class Reserva {
-        -int codigo
-        -Turista turista
-        -Sucursal sucursal
-        -Vuelo vuelo
-        -Hotel hotel
+        -Integer codigo
         -ClaseVuelo claseVuelo
         -TipoHospedaje tipoHospedaje
         -LocalDate fechaLlegada
         -LocalDate fechaPartida
-        +actualizarDatos() boolean
-    }
-
-    class RolUsuario {
-        <<enumeration>>
-        CLIENTE
-        VENDEDOR
-        ADMINISTRADOR
-    }
-
-    class Permiso {
-        <<enumeration>>
-        CONSULTAR
-        ADMINISTRAR_CLIENTES
-        ADMINISTRAR_RESERVAS
-        ADMINISTRAR_SUCURSALES
-        ADMINISTRAR_HOTELES
-        ADMINISTRAR_VUELOS
-        ADMINISTRAR_USUARIOS
-    }
-
-    class ClaseVuelo {
-        <<enumeration>>
-        TURISTA
-        PRIMERA
-    }
-
-    class TipoHospedaje {
-        <<enumeration>>
-        MEDIA_PENSION
-        PENSION_COMPLETA
     }
 
     Usuario <|-- Administrador
     Usuario <|-- Vendedor
     Usuario <|-- Cliente
-
-    Agencia o-- "0..*" Sucursal
-    Agencia o-- "0..*" Hotel
-    Agencia o-- "0..*" Vuelo
-    Agencia o-- "0..*" Turista
-    Agencia o-- "0..*" Usuario
-    Agencia o-- "0..*" Reserva
-
+    Cliente --> Turista
+    Turista --> Sucursal : sucursalContratacion
+    Turista --> Turista : titular
     Reserva --> Turista
-    Reserva --> Sucursal
+    Reserva --> Sucursal : sucursal historica
     Reserva --> Vuelo
     Reserva --> Hotel
-    Reserva --> ClaseVuelo
-    Reserva --> TipoHospedaje
-
-    Usuario --> RolUsuario
-    Usuario --> Permiso
-    UsuarioFactory ..> Usuario
-    Cliente ..> Turista : codigoTurista
-    Turista ..> Sucursal : codigoSucursal
-    Turista ..> Turista : codigoTitular
 ```
 
-## Capas
+## Componentes
 
 ```mermaid
 classDiagram
-    direction TB
-
-    class Main
-
-    class VistaPrincipal
-    class VistaLogin
-    class VistaUsuario {
-        <<abstract>>
-        #Agencia agencia
-        #ControladorDatos controladorDatos
-        #ControladorReservas controladorReservas
-        #ControladorTuristas controladorTuristas
-        #ControladorAdministracion controladorAdministracion
-        #ControladorUsuarios controladorUsuarios
-        +mostrar(Usuario) void
-    }
-    class VistaCliente
-    class VistaVendedor
-    class VistaAdministrador
-
-    class ControladorDatos {
-        +cargarTodo() Agencia
-        +guardarTodo(Agencia) void
-    }
-    class ControladorLogin {
-        +iniciarSesion(String, String) Usuario
-    }
-    class ControladorAutorizacion {
-        +tienePermiso(Usuario, Permiso) boolean
-    }
-    class ControladorAdministracion
-    class ControladorTuristas
-    class ControladorReservas
-    class ControladorUsuarios
-
-    class Archivo {
+    class JpaRepository {
         <<interface>>
-        +cargar() ArrayList~T~
-        +guardar(List~T~) void
     }
-    class ArchivoTexto {
-        <<abstract>>
-        #guardarAtomico(Path, EscrituraArchivo) void
-        #errorCarga(Path, Exception) PersistenciaException
-    }
-    class EscrituraArchivo {
+    class SucursalRepositorio
+    class HotelRepositorio
+    class VueloRepositorio
+    class TuristaRepositorio
+    class ReservaRepositorio
+    class UsuarioRepositorio
+
+    class SucursalServicio
+    class HotelServicio
+    class VueloServicio
+    class TuristaServicio
+    class ReservaServicio
+    class UsuarioServicio
+    class BloqueoEscrituras
+    class OcupacionHotel
+    class DisponibilidadServicio
+    class UsuarioFactory
+    class CreadorUsuario {
         <<interface>>
-        +escribir(BufferedWriter) void
     }
-    class PersistenciaException
-    class ArchivoSucursales
-    class ArchivoHoteles
-    class ArchivoVuelos
-    class ArchivoTuristas
-    class ArchivoUsuarios
-    class ArchivoReservas
+    UsuarioServicio --> UsuarioFactory
+    UsuarioFactory --> CreadorUsuario
+    class AutorizacionServicio
+    class AutenticacionRestControlador
+    class TuristasRestControlador
+    class ReservasRestControlador
+    class UsuariosRestControlador
+    class ConfiguracionSeguridad
+    class UsuarioDetallesServicio
+    class UsuarioActualServicio
+    class UsuarioAutenticado
 
-    class Agencia
-    class Usuario
-    class Sucursal
-    class Hotel
-    class Vuelo
-    class Turista
-    class Reserva
-    class Permiso
-    class RolUsuario
-    class ClaseVuelo
-    class TipoHospedaje
+    JpaRepository <|-- SucursalRepositorio
+    JpaRepository <|-- HotelRepositorio
+    JpaRepository <|-- VueloRepositorio
+    JpaRepository <|-- TuristaRepositorio
+    JpaRepository <|-- ReservaRepositorio
+    JpaRepository <|-- UsuarioRepositorio
 
-    Main ..> ControladorDatos
-    Main ..> VistaPrincipal
-
-    VistaUsuario <|-- VistaCliente
-    VistaUsuario <|-- VistaVendedor
-    VistaUsuario <|-- VistaAdministrador
-    VistaPrincipal ..> VistaLogin
-    VistaPrincipal ..> VistaCliente
-    VistaPrincipal ..> VistaVendedor
-    VistaPrincipal ..> VistaAdministrador
-
-    VistaPrincipal --> Agencia
-    VistaPrincipal --> ControladorDatos
-    VistaLogin --> ControladorLogin
-    VistaUsuario --> ControladorDatos
-    VistaUsuario --> ControladorReservas
-    VistaUsuario --> ControladorTuristas
-    VistaUsuario --> ControladorAdministracion
-    VistaUsuario --> ControladorUsuarios
-
-    ControladorLogin --> Agencia
-    ControladorAutorizacion ..> Usuario
-    ControladorAutorizacion ..> Permiso
-    ControladorAdministracion --> Agencia
-    ControladorAdministracion --> ControladorAutorizacion
-    ControladorAdministracion --> ControladorReservas
-    ControladorTuristas --> Agencia
-    ControladorTuristas --> ControladorAutorizacion
-    ControladorReservas --> Agencia
-    ControladorReservas --> ControladorAutorizacion
-    ControladorUsuarios --> Agencia
-    ControladorUsuarios --> ControladorAutorizacion
-    ControladorDatos --> Agencia
-
-    ControladorDatos *-- ArchivoSucursales
-    ControladorDatos *-- ArchivoHoteles
-    ControladorDatos *-- ArchivoVuelos
-    ControladorDatos *-- ArchivoTuristas
-    ControladorDatos *-- ArchivoUsuarios
-    ControladorDatos *-- ArchivoReservas
-
-    ArchivoTexto <|-- ArchivoSucursales
-    ArchivoTexto <|-- ArchivoHoteles
-    ArchivoTexto <|-- ArchivoVuelos
-    ArchivoTexto <|-- ArchivoTuristas
-    ArchivoTexto <|-- ArchivoUsuarios
-    ArchivoTexto <|-- ArchivoReservas
-
-    Archivo <|.. ArchivoSucursales
-    Archivo <|.. ArchivoHoteles
-    Archivo <|.. ArchivoVuelos
-    Archivo <|.. ArchivoTuristas
-    Archivo <|.. ArchivoUsuarios
-
-    ArchivoTexto ..> EscrituraArchivo
-    ArchivoTexto ..> PersistenciaException
-    ArchivoReservas ..> Agencia
-    ArchivoReservas ..> Reserva
+    SucursalServicio --> SucursalRepositorio
+    HotelServicio --> HotelRepositorio
+    VueloServicio --> VueloRepositorio
+    TuristaServicio --> TuristaRepositorio
+    ReservaServicio --> BloqueoEscrituras
+    HotelServicio --> BloqueoEscrituras
+    VueloServicio --> BloqueoEscrituras
+    TuristaServicio --> BloqueoEscrituras
+    UsuarioServicio --> BloqueoEscrituras
+    SucursalServicio --> BloqueoEscrituras
+    HotelServicio --> OcupacionHotel
+    DisponibilidadServicio --> OcupacionHotel
+    ReservaServicio --> DisponibilidadServicio
+    DisponibilidadServicio --> ReservaRepositorio
+    DisponibilidadServicio --> VueloRepositorio
+    DisponibilidadServicio --> HotelRepositorio
+    ReservaServicio --> ReservaRepositorio
+    UsuarioServicio --> UsuarioRepositorio
+    AutenticacionRestControlador --> ConfiguracionSeguridad
+    SucursalesRestControlador --> UsuarioActualServicio
+    HotelesRestControlador --> UsuarioActualServicio
+    VuelosRestControlador --> UsuarioActualServicio
+    HotelesRestControlador --> DisponibilidadServicio : consulta disponibilidad
+    VuelosRestControlador --> DisponibilidadServicio : consulta disponibilidad
+    TuristasRestControlador --> TuristaServicio
+    ReservasRestControlador --> ReservaServicio
+    UsuariosRestControlador --> UsuarioServicio
+    TuristasRestControlador --> UsuarioActualServicio
+    ReservasRestControlador --> UsuarioActualServicio
+    UsuariosRestControlador --> UsuarioActualServicio
+    ConfiguracionSeguridad --> UsuarioDetallesServicio
+    UsuarioActualServicio --> UsuarioRepositorio
+    UsuarioDetallesServicio --> UsuarioRepositorio
+    UsuarioDetallesServicio --> UsuarioAutenticado
 ```
