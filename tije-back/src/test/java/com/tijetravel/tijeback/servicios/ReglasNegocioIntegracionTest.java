@@ -97,6 +97,43 @@ class ReglasNegocioIntegracionTest {
         hoteles.modificar(admin, d.hotel(), "Renombrado " + d.hotel(), "Nueva direccion", "Cordoba", "2", 5);
         vuelos.modificar(admin, d.vuelo(), DIA.atTime(12, 0), "Buenos Aires", "Cordoba", 10, 10, 0);
         assertEquals("Cordoba", hotelRepo.findById(d.hotel()).orElseThrow().getCiudad());
+        assertEquals("Renombrado " + d.hotel(), hotelRepo.findById(d.hotel()).orElseThrow().getNombre());
+        assertEquals(DIA.atTime(12, 0), vueloRepo.findById(d.vuelo()).orElseThrow().getFechaYHora());
+    }
+
+    @Test
+    void unErrorAlModificarHotelRevierteInclusoLosCamposYaAsignados() {
+        Datos d = preparar(5, 10);
+        Hotel original = hotelRepo.findById(d.hotel()).orElseThrow();
+        assertThrows(IllegalArgumentException.class, () -> hoteles.modificar(
+                admin, d.hotel(), "Nombre cambiado", "Otra direccion", "Cordoba", " ", 8));
+        Hotel guardado = hotelRepo.findById(d.hotel()).orElseThrow();
+        assertEquals(original.getNombre(), guardado.getNombre());
+        assertEquals(original.getDireccion(), guardado.getDireccion());
+        assertEquals(5, guardado.getCapacidadTotal());
+    }
+
+    @Test
+    void listaElTitularYFamiliaresSinIncluirOtroGrupo() {
+        Datos d = preparar(5, 10);
+        preparar(5, 10);
+        Cliente cliente = new Cliente("cliente", "hash", turistaRepo.findById(d.titular()).orElseThrow());
+        var codigos = turistas.listarPara(cliente).stream().map(Turista::getCodigo)
+                .collect(java.util.stream.Collectors.toSet());
+        assertEquals(java.util.Set.of(d.titular(), d.familiar()), codigos);
+    }
+
+    @Test
+    void elCorreoNormalizadoNoPuedeDuplicarseEnAltasNiModificaciones() {
+        Datos d = preparar(5, 10);
+        String email = turistaRepo.findById(d.titular()).orElseThrow().getEmail();
+        assertThrows(EntidadDuplicadaException.class, () -> turistas.crearTitular(
+                admin, "Otra", "Persona", "Calle", " " + email.toUpperCase(java.util.Locale.ROOT) + " ",
+                "1", "2", d.sucursal()));
+        String emailFamiliar = turistaRepo.findById(d.familiar()).orElseThrow().getEmail();
+        assertThrows(EntidadDuplicadaException.class, () -> turistas.modificar(
+                admin, d.familiar(), "Luis", "Perez", "Calle", " " + email + " ", "1", "2", d.sucursal()));
+        assertEquals(emailFamiliar, turistaRepo.findById(d.familiar()).orElseThrow().getEmail());
     }
 
     @Test

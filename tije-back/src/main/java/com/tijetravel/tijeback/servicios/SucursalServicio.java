@@ -12,6 +12,7 @@ import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.modelos.ValidacionModelo;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
@@ -40,8 +41,8 @@ public class SucursalServicio {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Sucursal crear(Usuario actor, String direccion, String telefono) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
+        bloqueoEscrituras.adquirir();
         Sucursal sucursal = new Sucursal(direccion, telefono);
         if (sucursalRepositorio.existsByDireccionIgnoreCase(sucursal.getDireccion())) {
             throw new EntidadDuplicadaException("Ya existe una sucursal en esa direccion");
@@ -60,22 +61,22 @@ public class SucursalServicio {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Sucursal modificar(Usuario actor, Integer codigo, String direccion, String telefono) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
-        Sucursal propuesta = new Sucursal(direccion, telefono);
-        if (sucursalRepositorio.existsByDireccionIgnoreCaseAndCodigoNot(propuesta.getDireccion(), codigo)) {
+        bloqueoEscrituras.adquirir();
+        String direccionNormalizada = ValidacionModelo.textoObligatorio(direccion, "direccion");
+        if (sucursalRepositorio.existsByDireccionIgnoreCaseAndCodigoNot(direccionNormalizada, codigo)) {
             throw new EntidadDuplicadaException("Ya existe una sucursal en esa direccion");
         }
 
         Sucursal sucursal = encontrarPorId(codigo);
-        sucursal.actualizarDatos(direccion, telefono);
-        return sucursalRepositorio.save(sucursal);
+        sucursal.actualizarDatos(direccionNormalizada, telefono);
+        return sucursal;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigo) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
+        bloqueoEscrituras.adquirir();
         Sucursal sucursal = encontrarPorId(codigo);
         if (reservaRepositorio.existsBySucursalContratacionCodigo(codigo)
                 || turistaRepositorio.existsBySucursalContratacionCodigo(codigo)) {
