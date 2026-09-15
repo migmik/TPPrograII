@@ -2,7 +2,6 @@ package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -87,8 +86,6 @@ class HotelServicioTest {
                 reserva("luis@example.com", LocalDate.of(2026, 10, 2), LocalDate.of(2026, 10, 3)),
                 reserva("maria@example.com", LocalDate.of(2026, 10, 4), LocalDate.of(2026, 10, 5))));
         when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
-        when(hotelRepositorio.save(any(Hotel.class)))
-                .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         Hotel modificado = servicio.modificar(
                 new Administrador("admin", "clave"),

@@ -3,6 +3,8 @@ package com.tijetravel.tijeback.seguridad;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,11 +20,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
@@ -46,6 +51,23 @@ class SeguridadApiIntegracionTest {
 
     @Autowired
     private PasswordEncoder codificadorContrasenias;
+
+    @Test
+    void autorizaPorElPermisoSinNecesitarRepetirElRolEnElFiltroWeb() throws Exception {
+        Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO).orElseThrow();
+        var autenticacion = UsernamePasswordAuthenticationToken.authenticated(
+                UsuarioAutenticado.desde(administrador), null,
+                java.util.List.of(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name())));
+        mockMvc.perform(get("/api/v1/usuarios").with(authentication(autenticacion)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void elNombreDelRolSoloNoReemplazaElPermisoRequerido() throws Exception {
+        mockMvc.perform(get("/api/v1/usuarios").with(user("sin-permiso").roles("ADMINISTRADOR")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
+    }
 
     @Test
     void creaElAdministradorInicialConContraseniaHasheada() {

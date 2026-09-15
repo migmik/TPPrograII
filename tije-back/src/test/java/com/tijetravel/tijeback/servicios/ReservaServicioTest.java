@@ -152,7 +152,8 @@ class ReservaServicioTest {
     @Test
     void rechazaReservaCuandoElHotelEstaCompletoEnLasFechasSolicitadas() {
         prepararBusquedas();
-        when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(java.util.List.of(
+        when(reservaRepositorio.buscarSuperpuestasEnHotel(
+                1, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3))).thenReturn(java.util.List.of(
                 new Reserva(turista, vuelo, hotel, ClaseVuelo.TURISTA,
                         TipoHospedaje.MEDIA_PENSION, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3))));
 

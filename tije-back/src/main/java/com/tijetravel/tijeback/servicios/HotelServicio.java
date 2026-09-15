@@ -14,6 +14,7 @@ import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.modelos.ValidacionModelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 
@@ -44,8 +45,8 @@ public class HotelServicio {
             String ciudad,
             String telefono,
             int capacidadTotal) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
+        bloqueoEscrituras.adquirir();
         Hotel hotel = new Hotel(nombre, direccion, ciudad, telefono, capacidadTotal);
         if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCase(
                 hotel.getNombre(), hotel.getCiudad())) {
@@ -72,17 +73,18 @@ public class HotelServicio {
             String ciudad,
             String telefono,
             int capacidadTotal) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
-        Hotel propuesta = new Hotel(nombre, direccion, ciudad, telefono, capacidadTotal);
+        bloqueoEscrituras.adquirir();
+        String nombreNormalizado = ValidacionModelo.textoObligatorio(nombre, "nombre");
+        String ciudadNormalizada = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
         if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCaseAndCodigoNot(
-                propuesta.getNombre(), propuesta.getCiudad(), codigo)) {
+                nombreNormalizado, ciudadNormalizada, codigo)) {
             throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
         }
 
         List<Reserva> reservas = reservaRepositorio.findByHotelCodigo(codigo);
         if (reservas.stream().anyMatch(reserva ->
-                !reserva.getVuelo().getDestino().trim().equalsIgnoreCase(propuesta.getCiudad()))) {
+                !reserva.getVuelo().getDestino().equalsIgnoreCase(ciudadNormalizada))) {
             throw new OperacionNoPermitidaException("La ciudad dejaría reservas incompatibles con su vuelo");
         }
         int ocupacionMaxima = OcupacionHotel.maxima(reservas, null, null, null);
@@ -92,14 +94,14 @@ public class HotelServicio {
         }
 
         Hotel hotel = encontrarPorId(codigo);
-        hotel.actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal);
-        return hotelRepositorio.save(hotel);
+        hotel.actualizarDatos(nombreNormalizado, direccion, ciudadNormalizada, telefono, capacidadTotal);
+        return hotel;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigo) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
+        bloqueoEscrituras.adquirir();
         Hotel hotel = encontrarPorId(codigo);
         if (reservaRepositorio.existsByHotelCodigo(codigo)) {
             throw new OperacionNoPermitidaException("No se puede eliminar un hotel que tiene reservas");

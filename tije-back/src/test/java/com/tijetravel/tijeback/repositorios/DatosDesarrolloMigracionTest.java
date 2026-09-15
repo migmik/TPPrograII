@@ -34,8 +34,8 @@ class DatosDesarrolloMigracionTest {
     private UsuarioRepositorio usuarioRepositorio;
 
     @Test
-    void cargaLosDatosHeredadosSinContraseniasEnTextoPlano() {
-        assertEquals("4", flyway.info().current().getVersion().getVersion());
+    void cargaLosDatosDeDemostracionSinContraseniasEnTextoPlano() {
+        assertEquals("5", flyway.info().current().getVersion().getVersion());
         assertEquals(2, sucursalRepositorio.count());
         assertEquals(4, hotelRepositorio.count());
         assertEquals(4, vueloRepositorio.count());

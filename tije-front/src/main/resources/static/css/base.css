@@ -1,0 +1,10 @@
+body { font-family: sans-serif; margin: 2rem; line-height: 1.5; }
+main { max-width: 60rem; }
+table { border-collapse: collapse; }
+caption, th, td { text-align: left; padding: 0.5rem; }
+th, td { border-bottom: 1px solid #ccc; }
+label, .error { display: block; }
+dt { font-weight: bold; }
+dd { margin: 0 0 0.5rem; }
+button, input { font: inherit; }
+.error { color: #a00; }

@@ -72,6 +72,19 @@ class CatalogosEscriturasApiIntegracionTest {
     }
 
     @Test
+    void laCapacidadDelHotelDebeIngresarseConElNombreActual() throws Exception {
+        MockHttpSession sesion = iniciarSesion(USUARIO_ADMIN, CONTRASENIA_ADMIN);
+        mockMvc.perform(post("/api/v1/hoteles")
+                        .session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre":"Hotel antiguo", "direccion":"Calle", "ciudad":"Cordoba",
+                                 "telefono":"123", "plazasDisponibles":25}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void administradorGestionaCatalogosDePuntaAPunta() throws Exception {
         MockHttpSession sesion = iniciarSesion(USUARIO_ADMIN, CONTRASENIA_ADMIN);
 
@@ -120,7 +133,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                   "direccion": "Costanera 100",
                                   "ciudad": "Rosario",
                                   "telefono": "2222-1000",
-                                  "plazasDisponibles": 25
+                                  "capacidadTotal": 25
                                 }
                                 """))
                 .andExpect(status().isCreated())

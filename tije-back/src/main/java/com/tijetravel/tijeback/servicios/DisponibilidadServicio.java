@@ -43,7 +43,8 @@ public class DisponibilidadServicio {
             LocalDate fechaPartida) {
         validarFechas(fechaLlegada, fechaPartida);
         Hotel hotel = encontrarHotel(codigoHotel);
-        int ocupadas = OcupacionHotel.maxima(reservaRepositorio.findByHotelCodigo(codigoHotel),
+        int ocupadas = OcupacionHotel.maxima(
+                reservaRepositorio.buscarSuperpuestasEnHotel(codigoHotel, fechaLlegada, fechaPartida),
                 fechaLlegada, fechaPartida, null);
         return Math.max(0, hotel.getCapacidadTotal() - ocupadas);
     }
@@ -70,7 +71,8 @@ public class DisponibilidadServicio {
             LocalDate fechaPartida,
             Integer codigoReservaIgnorada) {
         validarFechas(fechaLlegada, fechaPartida);
-        int ocupadas = OcupacionHotel.maxima(reservaRepositorio.findByHotelCodigo(hotel.getCodigo()),
+        int ocupadas = OcupacionHotel.maxima(
+                reservaRepositorio.buscarSuperpuestasEnHotel(hotel.getCodigo(), fechaLlegada, fechaPartida),
                 fechaLlegada, fechaPartida, codigoReservaIgnorada);
         if (ocupadas >= hotel.getCapacidadTotal()) {
             throw new CapacidadExcedidaException("No quedan plazas disponibles en el hotel para esas fechas");
