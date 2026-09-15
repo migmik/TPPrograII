@@ -1,0 +1,7 @@
+<%@ page pageEncoding="UTF-8" %>
+<nav aria-label="Navegación principal">
+    <a href="<c:url value='/'/>">Inicio</a> |
+    <a href="<c:url value='/hoteles'/>">Hoteles</a> |
+    <a href="<c:url value='/vuelos'/>">Vuelos</a>
+</nav>
+<hr>
