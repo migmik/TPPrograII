@@ -12,11 +12,13 @@ No usa JavaScript ni se conecta directamente a MySQL.
 - Formulario para consultar plazas disponibles entre dos fechas.
 - Listado y detalle de vuelos, con fechas en formato día/mes/año y hora.
 - Capacidad y plazas libres por clase: turista y primera.
+- Inicio y cierre de sesión con los usuarios existentes del backend.
+- Pantalla «Mi cuenta» con el nombre de usuario y el rol informado por la API.
 - Mensajes para fechas inválidas, recursos inexistentes y problemas de conexión.
 
-Las consultas son públicas. El inicio de sesión, las altas, modificaciones,
-eliminaciones y las pantallas de los otros recursos quedan para las siguientes
-etapas. El CSS actual solo facilita la lectura.
+Los catálogos son públicos. Las altas, modificaciones, eliminaciones y las
+pantallas de los otros recursos quedan para las siguientes etapas. El CSS actual
+solo facilita la lectura.
 
 ## Cómo ejecutarlo
 
@@ -135,6 +137,66 @@ expresiones JSP sea fácil de seguir. Por ejemplo, `${hotel.nombre}` lee
 muestra los errores del formulario. No hay bloques de lógica Java dentro de las JSP.
 Las reglas del negocio permanecen en los servicios del backend.
 
+## Inicio y cierre de sesión
+
+Las rutas nuevas son `GET /login` para mostrar el formulario, `POST /login` para
+ingresar, `GET /cuenta` para consultar la cuenta y `POST /logout` para salir.
+Se usa un usuario existente en la base del backend; el frontend no crea usuarios
+ni tiene una tabla de contraseñas.
+
+El ingreso funciona así:
+
+1. `login.jsp` muestra los campos de usuario y contraseña. La etiqueta `form:form`
+   agrega el token CSRF al formulario mediante la integración de Spring Security.
+2. `SesionControlador` recibe `IniciarSesionFormulario` y comprueba los campos
+   obligatorios y sus longitudes.
+3. `AutenticacionApiCliente` pide un token a `/api/v1/autenticacion/csrf` y luego
+   envía las credenciales a `/api/v1/autenticacion/login`.
+4. El backend verifica la contraseña y devuelve los datos de la sesión. Su cookie
+   queda guardada en el cliente HTTP Java, dentro del servidor del frontend.
+5. El controlador renueva el identificador de la sesión del navegador y su token
+   CSRF, guarda solamente los datos del usuario y redirige a `/cuenta`.
+6. Antes de mostrar la cuenta, consulta `/api/v1/autenticacion/sesion` para confirmar
+   que la sesión del backend sigue vigente. Si venció, vuelve al ingreso.
+
+Hay dos cookies con funciones distintas: el navegador usa `TIJEFRONTSESSION`
+para identificarse ante el frontend; el cliente HTTP Java conserva `TIJESESSION`
+para identificarse ante el backend. No se envía la cookie del backend al navegador.
+`@SessionScope` crea un `AutenticacionApiCliente` por sesión del navegador, cada
+uno con su propio `CookieManager`. Por eso las cookies de dos usuarios no se mezclan.
+Los clientes de hoteles y vuelos conservan su conexión pública compartida.
+
+`DatosNavegacion` agrega el usuario guardado al modelo de las páginas para mostrar
+«Mi cuenta» y «Cerrar sesión», e indica al navegador que no guarde esas páginas
+en caché. Ese dato del usuario sirve para la presentación; no reemplaza
+las comprobaciones de sesión y permisos que hace la API. Esta etapa muestra el rol;
+las pantallas para realizar operaciones según ese rol se incorporarán después.
+
+El botón de salida envía un POST con CSRF. El cliente pide un token actualizado al
+backend, llama a su logout y el controlador invalida la sesión local. Si la API
+no responde, igualmente se cierra la sesión local y se informa que no se pudo
+confirmar el cierre remoto. La sesión remota quedará sujeta a su vencimiento.
+
+`ConfiguracionSeguridad` usa Spring Security para proteger los formularios y
+agregar las cabeceras de seguridad. El ingreso y la salida los atiende nuestro
+controlador, que delega en la API. Por eso se desactivan los formularios automáticos
+de Spring y la creación del usuario local por defecto. Las rutas pasan por esa
+protección; `/cuenta` verifica la sesión en el controlador antes de entregar datos.
+CSRF protege el envío del formulario: no es un segundo ingreso ni una contraseña.
+
+| Archivo nuevo | Responsabilidad |
+|---|---|
+| `configuracion/ConfiguracionSeguridad.java` | Protección de formularios y almacenamiento del token CSRF local. |
+| `clientes/AutenticacionApiCliente.java` | Cookies por sesión y llamadas de autenticación a la API. |
+| `controladores/SesionControlador.java` | Ingreso, consulta de cuenta y salida. |
+| `controladores/DatosNavegacion.java` | Datos del usuario para la navegación compartida. |
+| `formularios/IniciarSesionFormulario.java` | Campos y validaciones del ingreso. |
+| `dto/SesionRespuesta.java` y `dto/CsrfRespuesta.java` | Respuestas recibidas de la API. |
+| `webapp/WEB-INF/vistas/sesion/` | Formulario de ingreso y página de cuenta. |
+
+Referencias: [CSRF y formularios con Spring Security](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html)
+y [cliente HTTP de Spring para Java](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/http/client/JdkClientHttpRequestFactory.html).
+
 ## Pruebas y WAR
 
 ```powershell
@@ -175,9 +237,18 @@ Verificá que el valor de `$carpetaFront` tampoco contenga espacios. Esa copia s
 sirve para ejecutar: el código se sigue editando en el repositorio. Al recompilar,
 detené la aplicación antes de reemplazar la copia del WAR.
 
-La suite contiene 22 pruebas automatizadas para hoteles y vuelos. Comprueba,
+La suite contiene 37 pruebas automatizadas para hoteles, vuelos y sesiones. Comprueba,
 entre otras cosas, que se lean correctamente las fechas del JSON y que se muestren
 las plazas libres recibidas aunque sean menores a la capacidad del vuelo.
+También verifica el aislamiento de cookies, los tokens CSRF, el cambio de
+identificador al ingresar, las credenciales incorrectas, las sesiones vencidas y
+la salida cuando la API no responde.
+
+La etapa de sesiones también se verificó ejecutando el WAR contra el backend y
+una base MySQL de pruebas existente: formulario JSP con CSRF, ingreso correcto e
+incorrecto, dos sesiones independientes, salida normal, salida local con el backend
+apagado y vencimiento de sesión después de reiniciar ese backend de prueba.
+No se guardaron credenciales de prueba en el código ni en esta documentación.
 
 El 15/09/2026 también se ejecutó el WAR y se verificaron las páginas por HTTP
 contra el backend conectado a MySQL: listado, detalle y disponibilidad de los
