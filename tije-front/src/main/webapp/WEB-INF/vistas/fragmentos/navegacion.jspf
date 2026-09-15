@@ -3,5 +3,18 @@
     <a href="<c:url value='/'/>">Inicio</a> |
     <a href="<c:url value='/hoteles'/>">Hoteles</a> |
     <a href="<c:url value='/vuelos'/>">Vuelos</a>
+    <c:choose>
+        <c:when test="${not empty usuarioActual}">
+            | <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
+            <span>Usuario: <c:out value="${usuarioActual.nombreUsuario}"/></span>
+            <form method="post" action="<c:url value='/logout'/>">
+                <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        </c:when>
+        <c:otherwise>
+            | <a href="<c:url value='/login'/>">Iniciar sesión</a>
+        </c:otherwise>
+    </c:choose>
 </nav>
 <hr>

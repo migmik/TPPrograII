@@ -4,7 +4,8 @@ Trabajo práctico de Programación II para administrar una cadena de agencias de
 viajes. Permite gestionar sucursales, hoteles, vuelos, turistas, reservas y usuarios.
 
 El backend está implementado y probado con MySQL. El frontend tiene una primera
-versión con inicio, listados y detalles de hoteles y vuelos, y consulta de disponibilidad.
+versión con inicio, listados y detalles de hoteles y vuelos, consulta de disponibilidad,
+inicio y cierre de sesión y una pantalla de cuenta.
 
 ## Funcionalidades
 
@@ -109,6 +110,6 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 - [API REST](docs/api.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
 
-Falta ampliar el frontend con login, gestión de datos y los demás recursos,
+Falta ampliar el frontend con gestión de datos según el rol y los demás recursos,
 trabajar el diseño visual y preparar la presentación con MySQL en una PC,
 el backend y frontend en otra, y el acceso desde la computadora del profesor.
