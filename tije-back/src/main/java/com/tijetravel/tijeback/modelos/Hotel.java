@@ -31,7 +31,7 @@ public class Hotel {
     @Column(nullable = false)
     private String telefono;
 
-    @Column(name = "plazas_disponibles", nullable = false)
+    @Column(name = "capacidad_total", nullable = false)
     private int capacidadTotal;
 
     protected Hotel() {
@@ -81,6 +81,6 @@ public class Hotel {
     @Override
     public String toString() {
         return "Hotel | codigo=" + codigo + ", nombre=" + nombre + ", ciudad=" + ciudad
-                + ", plazas=" + capacidadTotal;
+                + ", capacidadTotal=" + capacidadTotal;
     }
 }

@@ -1,6 +1,5 @@
 package com.tijetravel.tijeback.servicios;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.modelos.ValidacionModelo;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
@@ -73,8 +73,8 @@ public class TuristaServicio {
             String telefonoFijo,
             String telefonoCelular,
             Integer codigoSucursal) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        bloqueoEscrituras.adquirir();
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = new Turista(
                 nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
@@ -92,8 +92,8 @@ public class TuristaServicio {
             String email,
             String telefonoFijo,
             String telefonoCelular) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        bloqueoEscrituras.adquirir();
         Turista titular = encontrarPorId(codigoTitular);
         if (!titular.isTitular()) {
             throw new OperacionNoPermitidaException("El turista indicado no es titular");
@@ -123,9 +123,10 @@ public class TuristaServicio {
         }
 
         Integer codigoTitular = autorizacion.codigoTitular(actor);
-        List<Turista> grupoFamiliar = new ArrayList<>();
-        grupoFamiliar.add(encontrarPorId(codigoTitular));
-        grupoFamiliar.addAll(turistaRepositorio.findByTitularCodigo(codigoTitular));
+        List<Turista> grupoFamiliar = turistaRepositorio.findByCodigoOrTitularCodigo(codigoTitular, codigoTitular);
+        if (grupoFamiliar.isEmpty()) {
+            throw new EntidadNoEncontradaException("No se encontro el turista " + codigoTitular);
+        }
         return List.copyOf(grupoFamiliar);
     }
 
@@ -155,27 +156,27 @@ public class TuristaServicio {
             String telefonoFijo,
             String telefonoCelular,
             Integer codigoSucursal) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        bloqueoEscrituras.adquirir();
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = encontrarPorId(codigo);
-        String emailNormalizado = normalizarTexto(email, "email");
+        String emailNormalizado = ValidacionModelo.email(email);
         if (turistaRepositorio.existsByEmailIgnoreCaseAndCodigoNot(emailNormalizado, codigo)) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese email");
         }
         turista.actualizarDatos(
-                nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
+                nombre, apellido, direccion, emailNormalizado, telefonoFijo, telefonoCelular, sucursal);
         if (turista.isTitular()) {
             turistaRepositorio.findByTitularCodigo(codigo)
                     .forEach(familiar -> familiar.cambiarSucursal(sucursal));
         }
-        return turistaRepositorio.save(turista);
+        return turista;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void eliminar(Usuario actor, Integer codigo) {
-        bloqueoEscrituras.adquirir();
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        bloqueoEscrituras.adquirir();
         Turista turista = encontrarPorId(codigo);
         if (reservaRepositorio.existsByTuristaCodigo(codigo)) {
             throw new OperacionNoPermitidaException("No se puede eliminar un turista que tiene reservas");
@@ -195,16 +196,9 @@ public class TuristaServicio {
     }
 
     private void verificarEmailDisponible(String email) {
-        if (turistaRepositorio.findByEmailIgnoreCase(email).isPresent()) {
+        if (turistaRepositorio.existsByEmailIgnoreCase(email)) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese email");
         }
-    }
-
-    private String normalizarTexto(String valor, String campo) {
-        if (valor == null || valor.isBlank()) {
-            throw new IllegalArgumentException("El campo " + campo + " es obligatorio");
-        }
-        return valor.trim();
     }
 
 }

@@ -101,6 +101,6 @@ class RepositoriosIntegracionTest {
 
     @Test
     void aplicaLaMigracionInicialAntesDeValidarJpa() {
-        assertEquals("4", flyway.info().current().getVersion().getVersion());
+        assertEquals("5", flyway.info().current().getVersion().getVersion());
     }
 }

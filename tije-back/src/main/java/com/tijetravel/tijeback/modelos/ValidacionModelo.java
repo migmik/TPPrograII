@@ -2,20 +2,20 @@ package com.tijetravel.tijeback.modelos;
 
 import java.util.regex.Pattern;
 
-final class ValidacionModelo {
+public final class ValidacionModelo {
     private static final Pattern EMAIL_VALIDO = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private ValidacionModelo() {
     }
 
-    static String textoObligatorio(String valor, String campo) {
+    public static String textoObligatorio(String valor, String campo) {
         if (valor == null || valor.isBlank()) {
             throw new IllegalArgumentException("El campo " + campo + " es obligatorio");
         }
         return valor.trim();
     }
 
-    static String email(String valor) {
+    public static String email(String valor) {
         String email = textoObligatorio(valor, "email");
         if (!EMAIL_VALIDO.matcher(email).matches()) {
             throw new IllegalArgumentException("El email no tiene un formato valido");

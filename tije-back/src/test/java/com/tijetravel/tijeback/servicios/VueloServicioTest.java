@@ -2,7 +2,6 @@ package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -66,8 +65,6 @@ class VueloServicioTest {
                 .thenReturn(5L);
         when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.PRIMERA))
                 .thenReturn(2L);
-        when(vueloRepositorio.save(any(Vuelo.class)))
-                .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         Vuelo modificado = modificarVuelo(5, 2);
 
