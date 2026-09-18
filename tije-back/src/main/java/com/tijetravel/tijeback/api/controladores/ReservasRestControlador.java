@@ -29,81 +29,82 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/reservas")
 public class ReservasRestControlador {
-    private final ReservaServicio reservaServicio;
-    private final ReservaMapeador reservaMapeador;
-    private final UsuarioActualServicio usuarioActualServicio;
+        private final ReservaServicio reservaServicio;
+        private final ReservaMapeador reservaMapeador;
+        private final UsuarioActualServicio usuarioActualServicio;
 
-    public ReservasRestControlador(
-            ReservaServicio reservaServicio,
-            ReservaMapeador reservaMapeador,
-            UsuarioActualServicio usuarioActualServicio) {
-        this.reservaServicio = reservaServicio;
-        this.reservaMapeador = reservaMapeador;
-        this.usuarioActualServicio = usuarioActualServicio;
-    }
+        public ReservasRestControlador(
+                        ReservaServicio reservaServicio,
+                        ReservaMapeador reservaMapeador,
+                        UsuarioActualServicio usuarioActualServicio) {
+                this.reservaServicio = reservaServicio;
+                this.reservaMapeador = reservaMapeador;
+                this.usuarioActualServicio = usuarioActualServicio;
+        }
 
-    @GetMapping
-    public List<ReservaRespuesta> listar(Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return reservaServicio.listarPara(actor).stream()
-                .map(reservaMapeador::aRespuesta)
-                .sorted(Comparator.comparing(ReservaRespuesta::codigo))
-                .toList();
-    }
+        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
+        @GetMapping
+        public List<ReservaRespuesta> listar(Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return reservaServicio.listarPara(actor).stream()
+                                .map(reservaMapeador::aRespuesta)
+                                .sorted(Comparator.comparing(ReservaRespuesta::codigo))
+                                .toList();
+        }
 
-    @GetMapping("/{codigo}")
-    public ReservaRespuesta encontrarPorId(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return reservaMapeador.aRespuesta(
-                reservaServicio.encontrarVisiblePara(actor, codigo));
-    }
+        @GetMapping("/{codigo}")
+        public ReservaRespuesta encontrarPorId(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return reservaMapeador.aRespuesta(
+                                reservaServicio.encontrarVisiblePara(actor, codigo));
+        }
 
-    @PostMapping
-    public ResponseEntity<ReservaRespuesta> crear(
-            @Valid @RequestBody GuardarReservaSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Reserva reserva = reservaServicio.crear(
-                actor,
-                solicitud.codigoTurista(),
-                solicitud.numeroVuelo(),
-                solicitud.codigoHotel(),
-                solicitud.claseVuelo(),
-                solicitud.tipoHospedaje(),
-                solicitud.fechaLlegada(),
-                solicitud.fechaPartida());
-        ReservaRespuesta respuesta = reservaMapeador.aRespuesta(reserva);
-        return ResponseEntity
-                .created(URI.create("/api/v1/reservas/" + respuesta.codigo()))
-                .body(respuesta);
-    }
+        @PostMapping
+        public ResponseEntity<ReservaRespuesta> crear(
+                        @Valid @RequestBody GuardarReservaSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                Reserva reserva = reservaServicio.crear(
+                                actor,
+                                solicitud.codigoTurista(),
+                                solicitud.numeroVuelo(),
+                                solicitud.codigoHotel(),
+                                solicitud.claseVuelo(),
+                                solicitud.tipoHospedaje(),
+                                solicitud.fechaLlegada(),
+                                solicitud.fechaPartida());
+                ReservaRespuesta respuesta = reservaMapeador.aRespuesta(reserva);
+                return ResponseEntity
+                                .created(URI.create("/api/v1/reservas/" + respuesta.codigo()))
+                                .body(respuesta);
+        }
 
-    @PutMapping("/{codigo}")
-    public ReservaRespuesta modificar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            @Valid @RequestBody GuardarReservaSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return reservaMapeador.aRespuesta(reservaServicio.modificar(
-                actor,
-                codigo,
-                solicitud.codigoTurista(),
-                solicitud.numeroVuelo(),
-                solicitud.codigoHotel(),
-                solicitud.claseVuelo(),
-                solicitud.tipoHospedaje(),
-                solicitud.fechaLlegada(),
-                solicitud.fechaPartida()));
-    }
+        @PutMapping("/{codigo}")
+        public ReservaRespuesta modificar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        @Valid @RequestBody GuardarReservaSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return reservaMapeador.aRespuesta(reservaServicio.modificar(
+                                actor,
+                                codigo,
+                                solicitud.codigoTurista(),
+                                solicitud.numeroVuelo(),
+                                solicitud.codigoHotel(),
+                                solicitud.claseVuelo(),
+                                solicitud.tipoHospedaje(),
+                                solicitud.fechaLlegada(),
+                                solicitud.fechaPartida()));
+        }
 
-    @DeleteMapping("/{codigo}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        reservaServicio.eliminar(actor, codigo);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{codigo}")
+        public ResponseEntity<Void> eliminar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                reservaServicio.eliminar(actor, codigo);
+                return ResponseEntity.noContent().build();
+        }
 }

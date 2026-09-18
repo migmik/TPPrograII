@@ -94,7 +94,7 @@ public class Turista {
         ValidacionModelo.obligatorio(sucursal, "sucursalContratacion");
         if (titular != null && titular.getSucursalContratacion() != sucursal
                 && (sucursal.getCodigo() == null
-                    || !sucursal.getCodigo().equals(titular.getSucursalContratacion().getCodigo()))) {
+                        || !sucursal.getCodigo().equals(titular.getSucursalContratacion().getCodigo()))) {
             throw new IllegalArgumentException("Un familiar debe compartir la sucursal del titular");
         }
         this.sucursalContratacion = sucursal;
