@@ -25,31 +25,49 @@ class ReglasNegocioIntegracionTest {
     private static final LocalDate DIA = LocalDate.of(2027, 2, 1);
     private final Usuario admin = new Administrador("operador", "hash");
 
-    @Autowired ReservaServicio reservas;
-    @Autowired HotelServicio hoteles;
-    @Autowired VueloServicio vuelos;
-    @Autowired TuristaServicio turistas;
-    @Autowired UsuarioServicio usuarios;
-    @Autowired DisponibilidadServicio disponibilidad;
-    @Autowired SucursalRepositorio sucursalRepo;
-    @Autowired TuristaRepositorio turistaRepo;
-    @Autowired HotelRepositorio hotelRepo;
-    @Autowired VueloRepositorio vueloRepo;
-    @Autowired ReservaRepositorio reservaRepo;
-    @Autowired PlatformTransactionManager transacciones;
-    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @Autowired
+    ReservaServicio reservas;
+    @Autowired
+    HotelServicio hoteles;
+    @Autowired
+    VueloServicio vuelos;
+    @Autowired
+    TuristaServicio turistas;
+    @Autowired
+    UsuarioServicio usuarios;
+    @Autowired
+    DisponibilidadServicio disponibilidad;
+    @Autowired
+    SucursalRepositorio sucursalRepo;
+    @Autowired
+    TuristaRepositorio turistaRepo;
+    @Autowired
+    HotelRepositorio hotelRepo;
+    @Autowired
+    VueloRepositorio vueloRepo;
+    @Autowired
+    ReservaRepositorio reservaRepo;
+    @Autowired
+    PlatformTransactionManager transacciones;
+    @Autowired
+    org.springframework.jdbc.core.JdbcTemplate jdbc;
 
-    record Datos(Integer sucursal, Integer titular, Integer familiar, Integer hotel, Integer vuelo) { }
+    record Datos(Integer sucursal, Integer titular, Integer familiar, Integer hotel, Integer vuelo) {
+    }
 
     private Datos preparar(int capacidadHotel, int capacidadVuelo) {
         int n = SECUENCIA.incrementAndGet();
         return new TransactionTemplate(transacciones).execute(tx -> {
             Sucursal sucursal = sucursalRepo.save(new Sucursal("Sucursal " + n, "123"));
-            Turista titular = turistaRepo.save(new Turista("Ana", "Perez", "Calle", n + "a@ejemplo.com", "1", "2", sucursal));
-            Turista familiar = turistaRepo.save(new Turista("Luis", "Perez", "Calle", n + "b@ejemplo.com", "1", "2", sucursal, titular));
+            Turista titular = turistaRepo
+                    .save(new Turista("Ana", "Perez", "Calle", n + "a@ejemplo.com", "1", "2", sucursal));
+            Turista familiar = turistaRepo
+                    .save(new Turista("Luis", "Perez", "Calle", n + "b@ejemplo.com", "1", "2", sucursal, titular));
             Hotel hotel = hotelRepo.save(new Hotel("Hotel " + n, "Calle", "Cordoba", "1", capacidadHotel));
-            Vuelo vuelo = vueloRepo.save(new Vuelo(n, DIA.atTime(10, 0), "Buenos Aires", "Cordoba", capacidadVuelo, capacidadVuelo, 0));
-            return new Datos(sucursal.getCodigo(), titular.getCodigo(), familiar.getCodigo(), hotel.getCodigo(), vuelo.getNumero());
+            Vuelo vuelo = vueloRepo.save(
+                    new Vuelo(n, DIA.atTime(10, 0), "Buenos Aires", "Cordoba", capacidadVuelo, capacidadVuelo, 0));
+            return new Datos(sucursal.getCodigo(), titular.getCodigo(), familiar.getCodigo(), hotel.getCodigo(),
+                    vuelo.getNumero());
         });
     }
 
@@ -61,7 +79,8 @@ class ReglasNegocioIntegracionTest {
     @Test
     void conservaHoraLocalDelVueloTantoEnSqlComoEnJava() {
         Datos d = preparar(2, 10);
-        String fechaSql = jdbc.queryForObject("SELECT fecha_hora FROM vuelos WHERE numero = ?", String.class, d.vuelo());
+        String fechaSql = jdbc.queryForObject("SELECT fecha_hora FROM vuelos WHERE numero = ?", String.class,
+                d.vuelo());
         assertTrue(fechaSql.startsWith("2027-02-01 10:00:00"), fechaSql);
         assertEquals(DIA.atTime(10, 0), vueloRepo.findById(d.vuelo()).orElseThrow().getFechaYHora());
     }
@@ -91,9 +110,12 @@ class ReglasNegocioIntegracionTest {
     void impideCambiosIncompatiblesPeroPermiteCambiosInocuos() {
         Datos d = preparar(5, 10);
         reservar(d, d.titular());
-        assertThrows(OperacionNoPermitidaException.class, () -> hoteles.modificar(admin, d.hotel(), "Otro", "Calle", "Mendoza", "1", 5));
-        assertThrows(OperacionNoPermitidaException.class, () -> vuelos.modificar(admin, d.vuelo(), DIA.plusDays(1).atTime(10, 0), "Buenos Aires", "Cordoba", 10, 10, 0));
-        assertThrows(OperacionNoPermitidaException.class, () -> vuelos.modificar(admin, d.vuelo(), DIA.atTime(10, 0), "Buenos Aires", "Mendoza", 10, 10, 0));
+        assertThrows(OperacionNoPermitidaException.class,
+                () -> hoteles.modificar(admin, d.hotel(), "Otro", "Calle", "Mendoza", "1", 5));
+        assertThrows(OperacionNoPermitidaException.class, () -> vuelos.modificar(admin, d.vuelo(),
+                DIA.plusDays(1).atTime(10, 0), "Buenos Aires", "Cordoba", 10, 10, 0));
+        assertThrows(OperacionNoPermitidaException.class,
+                () -> vuelos.modificar(admin, d.vuelo(), DIA.atTime(10, 0), "Buenos Aires", "Mendoza", 10, 10, 0));
         hoteles.modificar(admin, d.hotel(), "Renombrado " + d.hotel(), "Nueva direccion", "Cordoba", "2", 5);
         vuelos.modificar(admin, d.vuelo(), DIA.atTime(12, 0), "Buenos Aires", "Cordoba", 10, 10, 0);
         assertEquals("Cordoba", hotelRepo.findById(d.hotel()).orElseThrow().getCiudad());
@@ -113,6 +135,7 @@ class ReglasNegocioIntegracionTest {
         assertEquals(5, guardado.getCapacidadTotal());
     }
 
+    @SuppressWarnings("null") // listarPara devuelve turistas no nulos.
     @Test
     void listaElTitularYFamiliaresSinIncluirOtroGrupo() {
         Datos d = preparar(5, 10);
@@ -140,16 +163,19 @@ class ReglasNegocioIntegracionTest {
     void trasladaFamiliaYConservaSucursalHistoricaInclusoAlEditarReserva() {
         Datos d = preparar(5, 10);
         Reserva anterior = reservar(d, d.familiar());
-        Integer nueva = new TransactionTemplate(transacciones).execute(tx ->
-                sucursalRepo.save(new Sucursal("Nueva " + d.hotel(), "1")).getCodigo());
-        assertThrows(IllegalArgumentException.class, () -> turistas.modificar(admin, d.familiar(), "Luis", "Perez", "Calle", d.hotel() + "f@ejemplo.com", "1", "2", nueva));
+        Integer nueva = new TransactionTemplate(transacciones)
+                .execute(tx -> sucursalRepo.save(new Sucursal("Nueva " + d.hotel(), "1")).getCodigo());
+        assertThrows(IllegalArgumentException.class, () -> turistas.modificar(admin, d.familiar(), "Luis", "Perez",
+                "Calle", d.hotel() + "f@ejemplo.com", "1", "2", nueva));
         turistas.modificar(admin, d.titular(), "Ana", "Perez", "Calle", d.hotel() + "t@ejemplo.com", "1", "2", nueva);
         assertEquals(nueva, turistaRepo.findById(d.familiar()).orElseThrow().getSucursalContratacion().getCodigo());
         reservas.modificar(admin, anterior.getCodigo(), d.familiar(), d.vuelo(), d.hotel(),
                 ClaseVuelo.TURISTA, TipoHospedaje.PENSION_COMPLETA, DIA, DIA.plusDays(3));
-        assertEquals(d.sucursal(), reservaRepo.findById(anterior.getCodigo()).orElseThrow().getSucursalContratacion().getCodigo());
+        assertEquals(d.sucursal(),
+                reservaRepo.findById(anterior.getCodigo()).orElseThrow().getSucursalContratacion().getCodigo());
         assertEquals(nueva, reservar(d, d.titular()).getSucursalContratacion().getCodigo());
-        assertThrows(IllegalArgumentException.class, () -> usuarios.crear(admin, "invalido", "clave", RolUsuario.VENDEDOR, d.titular()));
+        assertThrows(IllegalArgumentException.class,
+                () -> usuarios.crear(admin, "invalido", "clave", RolUsuario.VENDEDOR, d.titular()));
     }
 
     @Test
@@ -184,7 +210,8 @@ class ReglasNegocioIntegracionTest {
             assertThrows(TimeoutException.class, () -> modificacion.get(200, TimeUnit.MILLISECONDS));
             confirmar.countDown();
             primera.get(10, TimeUnit.SECONDS);
-            ExecutionException fallo = assertThrows(ExecutionException.class, () -> modificacion.get(10, TimeUnit.SECONDS));
+            ExecutionException fallo = assertThrows(ExecutionException.class,
+                    () -> modificacion.get(10, TimeUnit.SECONDS));
             assertInstanceOf(CapacidadExcedidaException.class, fallo.getCause());
             assertEquals(1, hotelRepo.findById(d.hotel()).orElseThrow().getCapacidadTotal());
         } finally {
@@ -226,7 +253,8 @@ class ReglasNegocioIntegracionTest {
 
     private void esperar(CountDownLatch latch) {
         try {
-            if (!latch.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("Espera agotada");
+            if (!latch.await(10, TimeUnit.SECONDS))
+                throw new IllegalStateException("Espera agotada");
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(ex);

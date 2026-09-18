@@ -8,15 +8,35 @@ public class DisponibilidadHotelRespuesta {
     private LocalDate fechaPartida;
     private int plazasDisponibles;
 
-    public Integer getCodigoHotel() { return codigoHotel; }
-    public void setCodigoHotel(Integer codigoHotel) { this.codigoHotel = codigoHotel; }
+    public Integer getCodigoHotel() {
+        return codigoHotel;
+    }
 
-    public LocalDate getFechaLlegada() { return fechaLlegada; }
-    public void setFechaLlegada(LocalDate fechaLlegada) { this.fechaLlegada = fechaLlegada; }
+    public void setCodigoHotel(Integer codigoHotel) {
+        this.codigoHotel = codigoHotel;
+    }
 
-    public LocalDate getFechaPartida() { return fechaPartida; }
-    public void setFechaPartida(LocalDate fechaPartida) { this.fechaPartida = fechaPartida; }
+    public LocalDate getFechaLlegada() {
+        return fechaLlegada;
+    }
 
-    public int getPlazasDisponibles() { return plazasDisponibles; }
-    public void setPlazasDisponibles(int plazasDisponibles) { this.plazasDisponibles = plazasDisponibles; }
+    public void setFechaLlegada(LocalDate fechaLlegada) {
+        this.fechaLlegada = fechaLlegada;
+    }
+
+    public LocalDate getFechaPartida() {
+        return fechaPartida;
+    }
+
+    public void setFechaPartida(LocalDate fechaPartida) {
+        this.fechaPartida = fechaPartida;
+    }
+
+    public int getPlazasDisponibles() {
+        return plazasDisponibles;
+    }
+
+    public void setPlazasDisponibles(int plazasDisponibles) {
+        this.plazasDisponibles = plazasDisponibles;
+    }
 }

@@ -36,19 +36,22 @@ import com.tijetravel.tijeback.modelos.Vuelo;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:carga-relaciones;MODE=MySQL;DB_CLOSE_DELAY=-1",
-    "spring.jpa.properties.hibernate.generate_statistics=true",
-    "logging.level.org.hibernate.stat=OFF",
-    "logging.level.org.hibernate.engine.internal.StatisticalLoggingSessionEventListener=OFF"
+        "spring.datasource.url=jdbc:h2:mem:carga-relaciones;MODE=MySQL;DB_CLOSE_DELAY=-1",
+        "spring.jpa.properties.hibernate.generate_statistics=true",
+        "logging.level.org.hibernate.stat=OFF",
+        "logging.level.org.hibernate.engine.internal.StatisticalLoggingSessionEventListener=OFF"
 })
 @ActiveProfiles("test")
 @Transactional
 class CargaRelacionesIntegracionTest {
     private static final LocalDate DIA = LocalDate.of(2027, 2, 1);
 
-    @Autowired private EntityManager entityManager;
-    @Autowired private ReservaRepositorio reservas;
-    @Autowired private UsuarioRepositorio usuarios;
+    @Autowired
+    private EntityManager entityManager;
+    @Autowired
+    private ReservaRepositorio reservas;
+    @Autowired
+    private UsuarioRepositorio usuarios;
 
     private Statistics estadisticas;
     private Integer codigoHotel;
@@ -86,7 +89,8 @@ class CargaRelacionesIntegracionTest {
         codigosUsuarios.add(guardar(new Administrador("administrador", "hash")).getCodigo());
         codigosUsuarios.add(guardar(new Vendedor("vendedor", "hash")).getCodigo());
 
-        // Excluir INSERTs y evitar que la cache de primer nivel oculte consultas adicionales.
+        // Excluir INSERTs y evitar que la cache de primer nivel oculte consultas
+        // adicionales.
         entityManager.flush();
         entityManager.clear();
         estadisticas = entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
@@ -116,7 +120,7 @@ class CargaRelacionesIntegracionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"todas", "codigo", "turista", "familia"})
+    @ValueSource(strings = { "todas", "codigo", "turista", "familia" })
     void cargaElGrafoCompletoSinConsultasAdicionales(String consulta) {
         List<Reserva> resultado = switch (consulta) {
             case "todas" -> reservas.findAll();
@@ -158,7 +162,7 @@ class CargaRelacionesIntegracionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 3, 4})
+    @ValueSource(ints = { 0, 3, 4 })
     void encuentraPorCodigoCualquierRolConSuTuristaCargado(int indice) {
         Usuario resultado = usuarios.findById(codigosUsuarios.get(indice)).orElseThrow();
 
@@ -169,7 +173,7 @@ class CargaRelacionesIntegracionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"CLIENTE1", "ADMINISTRADOR", "VENDEDOR"})
+    @ValueSource(strings = { "CLIENTE1", "ADMINISTRADOR", "VENDEDOR" })
     void encuentraParaLoginSinDistinguirMayusculasYConTuristaCargado(String nombre) {
         Usuario resultado = usuarios.findByNombreUsuarioIgnoreCase(nombre).orElseThrow();
 

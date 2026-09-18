@@ -71,14 +71,14 @@ class VuelosApiClienteTest {
 
     @Test
     void consultaCadaClaseYConservaLaDisponibilidadRecibida() {
-        for (String clase : new String[] {"TURISTA", "PRIMERA"}) {
+        for (String clase : new String[] { "TURISTA", "PRIMERA" }) {
             servidor.expect(requestTo("http://backend/api/v1/vuelos/101/disponibilidad?clase=" + clase))
                     .andExpect(method(HttpMethod.GET))
                     .andRespond(withSuccess("""
                             {"numeroVuelo":101,"claseVuelo":"%s","plazasDisponibles":0}
                             """.formatted(clase), MediaType.APPLICATION_JSON));
         }
-        for (String clase : new String[] {"TURISTA", "PRIMERA"}) {
+        for (String clase : new String[] { "TURISTA", "PRIMERA" }) {
             var disponibilidad = cliente.consultarDisponibilidad(101, clase);
             assertEquals(101, disponibilidad.getNumeroVuelo());
             assertEquals(clase, disponibilidad.getClaseVuelo());

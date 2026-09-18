@@ -80,8 +80,10 @@ class AutenticacionApiClienteTest {
         String id = cookie == null ? "anonima" : cookie.replace("TIJESESSION=", "");
         String ruta = intercambio.getRequestURI().getPath();
         if (ruta.endsWith("/csrf")) {
-            if (cookie == null) intercambio.getResponseHeaders().add("Set-Cookie", "TIJESESSION=anonima; Path=/; HttpOnly");
-            enviar(intercambio, 200, "{\"nombreEncabezado\":\"X-CSRF-TOKEN\",\"nombreParametro\":\"_csrf\",\"token\":\"" + id + "\"}");
+            if (cookie == null)
+                intercambio.getResponseHeaders().add("Set-Cookie", "TIJESESSION=anonima; Path=/; HttpOnly");
+            enviar(intercambio, 200,
+                    "{\"nombreEncabezado\":\"X-CSRF-TOKEN\",\"nombreParametro\":\"_csrf\",\"token\":\"" + id + "\"}");
         } else if (ruta.endsWith("/login")) {
             String cuerpo = new String(intercambio.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             if (!id.equals(intercambio.getRequestHeaders().getFirst("X-CSRF-TOKEN"))) {
@@ -118,7 +120,8 @@ class AutenticacionApiClienteTest {
         byte[] bytes = cuerpo.getBytes(StandardCharsets.UTF_8);
         intercambio.getResponseHeaders().add("Content-Type", "application/json");
         intercambio.sendResponseHeaders(estado, estado == 204 ? -1 : bytes.length);
-        if (estado != 204) intercambio.getResponseBody().write(bytes);
+        if (estado != 204)
+            intercambio.getResponseBody().write(bytes);
         intercambio.close();
     }
 }

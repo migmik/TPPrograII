@@ -21,7 +21,8 @@ import jakarta.annotation.PreDestroy;
 @Service
 @SessionScope
 public class AutenticacionApiCliente {
-    // Cada sesión del navegador tiene su propio cliente y sus propias cookies de la API.
+    // Cada sesión del navegador tiene su propio cliente y sus propias cookies de la
+    // API.
     private final CookieManager cookies = new CookieManager(null, CookiePolicy.ACCEPT_ORIGINAL_SERVER);
     private final HttpClient conexion;
     private final RestClient cliente;
