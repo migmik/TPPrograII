@@ -15,10 +15,24 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
+@NamedEntityGraph(
+        name = "Reserva.completa",
+        attributeNodes = {
+            @NamedAttributeNode(value = "turista", subgraph = "turistaConTitular"),
+            @NamedAttributeNode("sucursalContratacion"),
+            @NamedAttributeNode("vuelo"),
+            @NamedAttributeNode("hotel")
+        },
+        subgraphs = @NamedSubgraph(
+                name = "turistaConTitular",
+                attributeNodes = @NamedAttributeNode("titular")))
 @Table(
         name = "reservas",
         uniqueConstraints = @UniqueConstraint(
