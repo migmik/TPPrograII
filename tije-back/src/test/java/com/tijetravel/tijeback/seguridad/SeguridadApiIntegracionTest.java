@@ -32,177 +32,177 @@ import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=${TEST_DB_URL_SEGURIDAD:jdbc:h2:mem:tijetravel-seguridad;MODE=MySQL;DB_CLOSE_DELAY=-1}",
-        "app.seguridad.administrador-inicial.habilitado=true",
-        "app.seguridad.administrador-inicial.nombre-usuario=admin-pruebas",
-        "app.seguridad.administrador-inicial.contrasenia=ClaveSegura123!"
+                "spring.datasource.url=${TEST_DB_URL_SEGURIDAD:jdbc:h2:mem:tijetravel-seguridad;MODE=MySQL;DB_CLOSE_DELAY=-1}",
+                "app.seguridad.administrador-inicial.habilitado=true",
+                "app.seguridad.administrador-inicial.nombre-usuario=admin-pruebas",
+                "app.seguridad.administrador-inicial.contrasenia=ClaveSegura123!"
 })
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class SeguridadApiIntegracionTest {
-    private static final String USUARIO = "admin-pruebas";
-    private static final String CONTRASENIA = "ClaveSegura123!";
+        private static final String USUARIO = "admin-pruebas";
+        private static final String CONTRASENIA = "ClaveSegura123!";
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private UsuarioRepositorio usuarioRepositorio;
+        @Autowired
+        private UsuarioRepositorio usuarioRepositorio;
 
-    @Autowired
-    private PasswordEncoder codificadorContrasenias;
+        @Autowired
+        private PasswordEncoder codificadorContrasenias;
 
-    @Test
-    void autorizaPorElPermisoSinNecesitarRepetirElRolEnElFiltroWeb() throws Exception {
-        Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO).orElseThrow();
-        var autenticacion = UsernamePasswordAuthenticationToken.authenticated(
-                UsuarioAutenticado.desde(administrador), null,
-                java.util.List.of(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name())));
-        mockMvc.perform(get("/api/v1/usuarios").with(authentication(autenticacion)))
-                .andExpect(status().isOk());
-    }
+        @Test
+        void autorizaPorElPermisoSinNecesitarRepetirElRolEnElFiltroWeb() throws Exception {
+                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO).orElseThrow();
+                var autenticacion = UsernamePasswordAuthenticationToken.authenticated(
+                                UsuarioAutenticado.desde(administrador), null,
+                                java.util.List.of(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name())));
+                mockMvc.perform(get("/api/v1/usuarios").with(authentication(autenticacion)))
+                                .andExpect(status().isOk());
+        }
 
-    @Test
-    void elNombreDelRolSoloNoReemplazaElPermisoRequerido() throws Exception {
-        mockMvc.perform(get("/api/v1/usuarios").with(user("sin-permiso").roles("ADMINISTRADOR")))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
-    }
+        @Test
+        void elNombreDelRolSoloNoReemplazaElPermisoRequerido() throws Exception {
+                mockMvc.perform(get("/api/v1/usuarios").with(user("sin-permiso").roles("ADMINISTRADOR")))
+                                .andExpect(status().isForbidden())
+                                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
+        }
 
-    @Test
-    void creaElAdministradorInicialConContraseniaHasheada() {
-        Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO)
-                .orElseThrow();
+        @Test
+        void creaElAdministradorInicialConContraseniaHasheada() {
+                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO)
+                                .orElseThrow();
 
-        assertNotEquals(CONTRASENIA, administrador.getContrasenia());
-        assertTrue(administrador.getContrasenia().startsWith("{bcrypt}"));
-        assertTrue(codificadorContrasenias.matches(CONTRASENIA, administrador.getContrasenia()));
-    }
+                assertNotEquals(CONTRASENIA, administrador.getContrasenia());
+                assertTrue(administrador.getContrasenia().startsWith("{bcrypt}"));
+                assertTrue(codificadorContrasenias.matches(CONTRASENIA, administrador.getContrasenia()));
+        }
 
-    @Test
-    void entregaUnTokenCsrfAntesDelLogin() throws Exception {
-        mockMvc.perform(get("/api/v1/autenticacion/csrf"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombreEncabezado").value("X-CSRF-TOKEN"))
-                .andExpect(jsonPath("$.nombreParametro").value("_csrf"))
-                .andExpect(jsonPath("$.token").isNotEmpty());
-    }
+        @Test
+        void entregaUnTokenCsrfAntesDelLogin() throws Exception {
+                mockMvc.perform(get("/api/v1/autenticacion/csrf"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombreEncabezado").value("X-CSRF-TOKEN"))
+                                .andExpect(jsonPath("$.nombreParametro").value("_csrf"))
+                                .andExpect(jsonPath("$.token").isNotEmpty());
+        }
 
-    @Test
-    void permitePeticionesCorsSoloDesdeElFrontendConfigurado() throws Exception {
-        mockMvc.perform(options("/api/v1/autenticacion/login")
-                        .header(HttpHeaders.ORIGIN, "http://localhost:5173")
-                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
-                .andExpect(status().isOk())
-                .andExpect(header().string(
-                        HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
-                        "http://localhost:5173"))
-                .andExpect(header().string(
-                        HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                        "true"));
+        @Test
+        void permitePeticionesCorsSoloDesdeElFrontendConfigurado() throws Exception {
+                mockMvc.perform(options("/api/v1/autenticacion/login")
+                                .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+                                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+                                .andExpect(status().isOk())
+                                .andExpect(header().string(
+                                                HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+                                                "http://localhost:5173"))
+                                .andExpect(header().string(
+                                                HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                                                "true"));
 
-        mockMvc.perform(options("/api/v1/autenticacion/login")
-                        .header(HttpHeaders.ORIGIN, "http://origen-no-permitido.example")
-                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
-                .andExpect(status().isForbidden());
-    }
+                mockMvc.perform(options("/api/v1/autenticacion/login")
+                                .header(HttpHeaders.ORIGIN, "http://origen-no-permitido.example")
+                                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+                                .andExpect(status().isForbidden());
+        }
 
-    @Test
-    void iniciaSesionYLaConservaEntrePeticiones() throws Exception {
-        MvcResult login = iniciarSesion();
-        MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);
+        @Test
+        void iniciaSesionYLaConservaEntrePeticiones() throws Exception {
+                MvcResult login = iniciarSesion();
+                MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);
 
-        mockMvc.perform(get("/api/v1/autenticacion/sesion").session(sesion))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombreUsuario").value(USUARIO))
-                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
-    }
+                mockMvc.perform(get("/api/v1/autenticacion/sesion").session(sesion))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombreUsuario").value(USUARIO))
+                                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
+        }
 
-    @Test
-    void rechazaLoginSinTokenCsrf() throws Exception {
-        mockMvc.perform(post("/api/v1/autenticacion/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(credenciales(USUARIO, CONTRASENIA)))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
-    }
+        @Test
+        void rechazaLoginSinTokenCsrf() throws Exception {
+                mockMvc.perform(post("/api/v1/autenticacion/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(credenciales(USUARIO, CONTRASENIA)))
+                                .andExpect(status().isForbidden())
+                                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
+        }
 
-    @Test
-    void rechazaCredencialesIncorrectasSinRevelarElMotivo() throws Exception {
-        mockMvc.perform(post("/api/v1/autenticacion/login")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(credenciales(USUARIO, "ClaveIncorrecta")))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("CREDENCIALES_INVALIDAS"))
-                .andExpect(jsonPath("$.mensaje").value("Usuario o contrasenia incorrectos"));
-    }
+        @Test
+        void rechazaCredencialesIncorrectasSinRevelarElMotivo() throws Exception {
+                mockMvc.perform(post("/api/v1/autenticacion/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(credenciales(USUARIO, "ClaveIncorrecta")))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.error").value("CREDENCIALES_INVALIDAS"))
+                                .andExpect(jsonPath("$.mensaje").value("Usuario o contrasenia incorrectos"));
+        }
 
-    @Test
-    void rechazaContraseniasQueSuperanElLimiteDeBcryptEnBytes() throws Exception {
-        mockMvc.perform(post("/api/v1/autenticacion/login")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(credenciales(USUARIO, "\u00e1".repeat(40))))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("CREDENCIALES_INVALIDAS"));
-    }
+        @Test
+        void rechazaContraseniasQueSuperanElLimiteDeBcryptEnBytes() throws Exception {
+                mockMvc.perform(post("/api/v1/autenticacion/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(credenciales(USUARIO, "\u00e1".repeat(40))))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.error").value("CREDENCIALES_INVALIDAS"));
+        }
 
-    @Test
-    void exigeAutenticacionParaConsultarLaSesion() throws Exception {
-        mockMvc.perform(get("/api/v1/autenticacion/sesion"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("AUTENTICACION_REQUERIDA"));
-    }
+        @Test
+        void exigeAutenticacionParaConsultarLaSesion() throws Exception {
+                mockMvc.perform(get("/api/v1/autenticacion/sesion"))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.error").value("AUTENTICACION_REQUERIDA"));
+        }
 
-    @Test
-    void cierraLaSesionConPostYCsrf() throws Exception {
-        MvcResult login = iniciarSesion();
-        MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);
+        @Test
+        void cierraLaSesionConPostYCsrf() throws Exception {
+                MvcResult login = iniciarSesion();
+                MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);
 
-        mockMvc.perform(post("/api/v1/autenticacion/logout")
-                        .session(sesion)
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
-    }
+                mockMvc.perform(post("/api/v1/autenticacion/logout")
+                                .session(sesion)
+                                .with(csrf()))
+                                .andExpect(status().isNoContent());
+        }
 
-    @Test
-    void impideQueUnVendedorAccedaALaAdministracionDeUsuarios() throws Exception {
-        String usuarioVendedor = "vendedor-pruebas";
-        String contraseniaVendedor = "ClaveVendedor123!";
-        usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor)
-                .orElseGet(() -> usuarioRepositorio.save(new Vendedor(
-                        usuarioVendedor,
-                        codificadorContrasenias.encode(contraseniaVendedor))));
+        @Test
+        void impideQueUnVendedorAccedaALaAdministracionDeUsuarios() throws Exception {
+                String usuarioVendedor = "vendedor-pruebas";
+                String contraseniaVendedor = "ClaveVendedor123!";
+                usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor)
+                                .orElseGet(() -> usuarioRepositorio.save(new Vendedor(
+                                                usuarioVendedor,
+                                                codificadorContrasenias.encode(contraseniaVendedor))));
 
-        MvcResult login = iniciarSesion(usuarioVendedor, contraseniaVendedor);
-        MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);
+                MvcResult login = iniciarSesion(usuarioVendedor, contraseniaVendedor);
+                MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);
 
-        mockMvc.perform(get("/api/v1/usuarios").session(sesion))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
-    }
+                mockMvc.perform(get("/api/v1/usuarios").session(sesion))
+                                .andExpect(status().isForbidden())
+                                .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
+        }
 
-    private MvcResult iniciarSesion() throws Exception {
-        return iniciarSesion(USUARIO, CONTRASENIA);
-    }
+        private MvcResult iniciarSesion() throws Exception {
+                return iniciarSesion(USUARIO, CONTRASENIA);
+        }
 
-    private MvcResult iniciarSesion(String usuario, String contrasenia) throws Exception {
-        return mockMvc.perform(post("/api/v1/autenticacion/login")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(credenciales(usuario, contrasenia)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombreUsuario").value(usuario))
-                .andReturn();
-    }
+        private MvcResult iniciarSesion(String usuario, String contrasenia) throws Exception {
+                return mockMvc.perform(post("/api/v1/autenticacion/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(credenciales(usuario, contrasenia)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.nombreUsuario").value(usuario))
+                                .andReturn();
+        }
 
-    private String credenciales(String usuario, String contrasenia) {
-        return """
-                {
-                  "nombreUsuario": "%s",
-                  "contrasenia": "%s"
-                }
-                """.formatted(usuario, contrasenia);
-    }
+        private String credenciales(String usuario, String contrasenia) {
+                return """
+                                {
+                                  "nombreUsuario": "%s",
+                                  "contrasenia": "%s"
+                                }
+                                """.formatted(usuario, contrasenia);
+        }
 }

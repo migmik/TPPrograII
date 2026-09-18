@@ -108,7 +108,8 @@ public class ReservaServicio {
     public Reserva encontrarVisiblePara(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         Reserva reserva = encontrarPorId(codigo);
-        if (actor.getRol() == RolUsuario.CLIENTE && !autorizacion.perteneceAlGrupoFamiliar(actor, reserva.getTurista())) {
+        if (actor.getRol() == RolUsuario.CLIENTE
+                && !autorizacion.perteneceAlGrupoFamiliar(actor, reserva.getTurista())) {
             throw new OperacionNoPermitidaException(
                     "El cliente no puede consultar reservas de otro grupo familiar");
         }

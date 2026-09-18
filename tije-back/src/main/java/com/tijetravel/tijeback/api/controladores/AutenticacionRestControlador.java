@@ -35,8 +35,7 @@ public class AutenticacionRestControlador {
     private final SessionAuthenticationStrategy estrategiaAutenticacionSesion;
     private final SecurityContextRepository repositorioContextoSeguridad;
     private final SesionMapeador sesionMapeador;
-    private final SecurityContextHolderStrategy contextoEstrategia =
-            SecurityContextHolder.getContextHolderStrategy();
+    private final SecurityContextHolderStrategy contextoEstrategia = SecurityContextHolder.getContextHolderStrategy();
 
     public AutenticacionRestControlador(
             AuthenticationManager administradorAutenticacion,
