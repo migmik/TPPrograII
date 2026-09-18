@@ -91,9 +91,7 @@ public class UsuarioServicio {
 
     public List<Usuario> listarPara(Usuario actor) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
-        List<Usuario> usuarios = listar();
-        usuarios.forEach(Usuario::getCodigoTurista);
-        return usuarios;
+        return listar();
     }
 
     public Usuario encontrarPorId(Integer codigo) {
@@ -103,9 +101,7 @@ public class UsuarioServicio {
 
     public Usuario encontrarVisiblePara(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
-        Usuario usuario = encontrarPorId(codigo);
-        usuario.getCodigoTurista();
-        return usuario;
+        return encontrarPorId(codigo);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
