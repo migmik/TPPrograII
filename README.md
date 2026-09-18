@@ -108,6 +108,7 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 ## Documentación y próximos pasos
 
 - [API REST](docs/api.md)
+- [Revisión de optimización de consultas](docs/optimizacion-consultas.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
 
 Falta ampliar el frontend con gestión de datos según el rol y los demás recursos,
