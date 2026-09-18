@@ -22,9 +22,7 @@ public class UsuarioActualServicio {
             throw new CredencialesInvalidasException("La sesion no es valida");
         }
 
-        Usuario usuario = usuarioRepositorio.findById(principal.getCodigo())
+        return usuarioRepositorio.findById(principal.getCodigo())
                 .orElseThrow(() -> new CredencialesInvalidasException("La sesion no es valida"));
-        usuario.getCodigoTurista();
-        return usuario;
     }
 }

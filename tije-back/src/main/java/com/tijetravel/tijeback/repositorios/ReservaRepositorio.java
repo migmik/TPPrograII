@@ -15,11 +15,11 @@ import com.tijetravel.tijeback.modelos.Reserva;
 public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
     @Override
-    @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
+    @EntityGraph("Reserva.completa")
     List<Reserva> findAll();
 
     @Override
-    @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
+    @EntityGraph("Reserva.completa")
     Optional<Reserva> findById(Integer codigo);
 
     long countByVueloNumeroAndClaseVuelo(Integer numeroVuelo, ClaseVuelo claseVuelo);
@@ -44,11 +44,13 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
     boolean existsByVueloNumero(Integer numeroVuelo);
 
-    @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
+    @EntityGraph("Reserva.completa")
     List<Reserva> findByTuristaCodigo(Integer codigoTurista);
 
+    @EntityGraph(attributePaths = "hotel")
     List<Reserva> findByVueloNumero(Integer numeroVuelo);
 
+    @EntityGraph(attributePaths = "vuelo")
     List<Reserva> findByHotelCodigo(Integer codigoHotel);
 
     @Query("""
@@ -62,7 +64,7 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
             @Param("desde") LocalDate desde,
             @Param("hasta") LocalDate hasta);
 
-    @EntityGraph(attributePaths = {"turista", "turista.titular", "sucursalContratacion", "vuelo", "hotel"})
+    @EntityGraph("Reserva.completa")
     @Query("""
             select r
             from Reserva r
