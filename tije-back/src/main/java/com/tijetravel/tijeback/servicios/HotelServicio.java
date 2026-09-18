@@ -83,8 +83,8 @@ public class HotelServicio {
         }
 
         List<Reserva> reservas = reservaRepositorio.findByHotelCodigo(codigo);
-        if (reservas.stream().anyMatch(reserva ->
-                !reserva.getVuelo().getDestino().equalsIgnoreCase(ciudadNormalizada))) {
+        if (reservas.stream()
+                .anyMatch(reserva -> !reserva.getVuelo().getDestino().equalsIgnoreCase(ciudadNormalizada))) {
             throw new OperacionNoPermitidaException("La ciudad dejaría reservas incompatibles con su vuelo");
         }
         int ocupacionMaxima = OcupacionHotel.maxima(reservas, null, null, null);

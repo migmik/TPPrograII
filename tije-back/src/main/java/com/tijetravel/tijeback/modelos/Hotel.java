@@ -9,11 +9,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(
-        name = "hoteles",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_hotel_nombre_ciudad",
-                columnNames = {"nombre", "ciudad"}))
+@Table(name = "hoteles", uniqueConstraints = @UniqueConstraint(name = "uk_hotel_nombre_ciudad", columnNames = {
+        "nombre", "ciudad" }))
 public class Hotel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

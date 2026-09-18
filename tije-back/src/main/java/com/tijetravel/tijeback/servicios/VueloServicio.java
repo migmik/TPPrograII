@@ -89,9 +89,9 @@ public class VueloServicio {
                     "Las plazas no pueden ser menores que las reservas ya registradas");
         }
 
-        if (reservaRepositorio.findByVueloNumero(numero).stream().anyMatch(reserva ->
-                fechaYHora == null || !reserva.getFechaLlegada().equals(fechaYHora.toLocalDate())
-                || destino == null || !reserva.getHotel().getCiudad().equalsIgnoreCase(destino.trim()))) {
+        if (reservaRepositorio.findByVueloNumero(numero).stream()
+                .anyMatch(reserva -> fechaYHora == null || !reserva.getFechaLlegada().equals(fechaYHora.toLocalDate())
+                        || destino == null || !reserva.getHotel().getCiudad().equalsIgnoreCase(destino.trim()))) {
             throw new OperacionNoPermitidaException("El cambio dejaría reservas incompatibles con su hotel o fecha");
         }
         vuelo.actualizarDatos(

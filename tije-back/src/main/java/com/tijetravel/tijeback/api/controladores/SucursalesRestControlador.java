@@ -42,6 +42,7 @@ public class SucursalesRestControlador {
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
+    @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
     public List<SucursalRespuesta> listar() {
         return sucursalServicio.listar().stream()

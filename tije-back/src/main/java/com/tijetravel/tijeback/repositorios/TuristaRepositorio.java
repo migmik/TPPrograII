@@ -11,11 +11,11 @@ import com.tijetravel.tijeback.modelos.Turista;
 public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     @Override
-    @EntityGraph(attributePaths = {"sucursalContratacion", "titular"})
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     List<Turista> findAll();
 
     @Override
-    @EntityGraph(attributePaths = {"sucursalContratacion", "titular"})
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     Optional<Turista> findById(Integer codigo);
 
     Optional<Turista> findByEmailIgnoreCase(String email);
@@ -24,10 +24,10 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     boolean existsByEmailIgnoreCaseAndCodigoNot(String email, Integer codigo);
 
-    @EntityGraph(attributePaths = {"sucursalContratacion", "titular"})
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     List<Turista> findByTitularCodigo(Integer codigoTitular);
 
-    @EntityGraph(attributePaths = {"sucursalContratacion", "titular"})
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     List<Turista> findByCodigoOrTitularCodigo(Integer codigo, Integer codigoTitular);
 
     boolean existsByTitularCodigo(Integer codigoTitular);

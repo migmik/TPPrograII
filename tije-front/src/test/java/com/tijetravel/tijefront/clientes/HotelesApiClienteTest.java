@@ -55,7 +55,8 @@ class HotelesApiClienteTest {
 
     @Test
     void enviaLasFechasYLeeLaDisponibilidadCalculada() {
-        servidor.expect(requestTo("http://backend/api/v1/hoteles/1/disponibilidad?fechaLlegada=2027-02-01&fechaPartida=2027-02-04"))
+        servidor.expect(requestTo(
+                "http://backend/api/v1/hoteles/1/disponibilidad?fechaLlegada=2027-02-01&fechaPartida=2027-02-04"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("""
                         {"codigoHotel":1,"fechaLlegada":"2027-02-01",

@@ -33,87 +33,88 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/hoteles")
 public class HotelesRestControlador {
-    private final HotelServicio hotelServicio;
-    private final DisponibilidadServicio disponibilidadServicio;
-    private final HotelMapeador hotelMapeador;
-    private final UsuarioActualServicio usuarioActualServicio;
+        private final HotelServicio hotelServicio;
+        private final DisponibilidadServicio disponibilidadServicio;
+        private final HotelMapeador hotelMapeador;
+        private final UsuarioActualServicio usuarioActualServicio;
 
-    public HotelesRestControlador(
-            HotelServicio hotelServicio,
-            DisponibilidadServicio disponibilidadServicio,
-            HotelMapeador hotelMapeador,
-            UsuarioActualServicio usuarioActualServicio) {
-        this.hotelServicio = hotelServicio;
-        this.disponibilidadServicio = disponibilidadServicio;
-        this.hotelMapeador = hotelMapeador;
-        this.usuarioActualServicio = usuarioActualServicio;
-    }
+        public HotelesRestControlador(
+                        HotelServicio hotelServicio,
+                        DisponibilidadServicio disponibilidadServicio,
+                        HotelMapeador hotelMapeador,
+                        UsuarioActualServicio usuarioActualServicio) {
+                this.hotelServicio = hotelServicio;
+                this.disponibilidadServicio = disponibilidadServicio;
+                this.hotelMapeador = hotelMapeador;
+                this.usuarioActualServicio = usuarioActualServicio;
+        }
 
-    @GetMapping
-    public List<HotelRespuesta> listar() {
-        return hotelServicio.listar().stream()
-                .map(hotelMapeador::aRespuesta)
-                .sorted(Comparator.comparing(HotelRespuesta::codigo))
-                .toList();
-    }
+        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
+        @GetMapping
+        public List<HotelRespuesta> listar() {
+                return hotelServicio.listar().stream()
+                                .map(hotelMapeador::aRespuesta)
+                                .sorted(Comparator.comparing(HotelRespuesta::codigo))
+                                .toList();
+        }
 
-    @GetMapping("/{codigo}")
-    public HotelRespuesta encontrarPorId(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo) {
-        return hotelMapeador.aRespuesta(hotelServicio.encontrarPorId(codigo));
-    }
+        @GetMapping("/{codigo}")
+        public HotelRespuesta encontrarPorId(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo) {
+                return hotelMapeador.aRespuesta(hotelServicio.encontrarPorId(codigo));
+        }
 
-    @GetMapping("/{codigo}/disponibilidad")
-    public DisponibilidadHotelRespuesta consultarDisponibilidad(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            @RequestParam LocalDate fechaLlegada,
-            @RequestParam LocalDate fechaPartida) {
-        int plazasDisponibles = disponibilidadServicio.plazasDisponiblesHotel(
-                codigo, fechaLlegada, fechaPartida);
-        return new DisponibilidadHotelRespuesta(
-                codigo, fechaLlegada, fechaPartida, plazasDisponibles);
-    }
+        @GetMapping("/{codigo}/disponibilidad")
+        public DisponibilidadHotelRespuesta consultarDisponibilidad(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        @RequestParam LocalDate fechaLlegada,
+                        @RequestParam LocalDate fechaPartida) {
+                int plazasDisponibles = disponibilidadServicio.plazasDisponiblesHotel(
+                                codigo, fechaLlegada, fechaPartida);
+                return new DisponibilidadHotelRespuesta(
+                                codigo, fechaLlegada, fechaPartida, plazasDisponibles);
+        }
 
-    @PostMapping
-    public ResponseEntity<HotelRespuesta> crear(
-            @Valid @RequestBody GuardarHotelSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Hotel hotel = hotelServicio.crear(
-                actor,
-                solicitud.nombre(),
-                solicitud.direccion(),
-                solicitud.ciudad(),
-                solicitud.telefono(),
-                solicitud.capacidadTotal());
-        HotelRespuesta respuesta = hotelMapeador.aRespuesta(hotel);
-        return ResponseEntity
-                .created(URI.create("/api/v1/hoteles/" + respuesta.codigo()))
-                .body(respuesta);
-    }
+        @PostMapping
+        public ResponseEntity<HotelRespuesta> crear(
+                        @Valid @RequestBody GuardarHotelSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                Hotel hotel = hotelServicio.crear(
+                                actor,
+                                solicitud.nombre(),
+                                solicitud.direccion(),
+                                solicitud.ciudad(),
+                                solicitud.telefono(),
+                                solicitud.capacidadTotal());
+                HotelRespuesta respuesta = hotelMapeador.aRespuesta(hotel);
+                return ResponseEntity
+                                .created(URI.create("/api/v1/hoteles/" + respuesta.codigo()))
+                                .body(respuesta);
+        }
 
-    @PutMapping("/{codigo}")
-    public HotelRespuesta modificar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            @Valid @RequestBody GuardarHotelSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return hotelMapeador.aRespuesta(hotelServicio.modificar(
-                actor,
-                codigo,
-                solicitud.nombre(),
-                solicitud.direccion(),
-                solicitud.ciudad(),
-                solicitud.telefono(),
-                solicitud.capacidadTotal()));
-    }
+        @PutMapping("/{codigo}")
+        public HotelRespuesta modificar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        @Valid @RequestBody GuardarHotelSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return hotelMapeador.aRespuesta(hotelServicio.modificar(
+                                actor,
+                                codigo,
+                                solicitud.nombre(),
+                                solicitud.direccion(),
+                                solicitud.ciudad(),
+                                solicitud.telefono(),
+                                solicitud.capacidadTotal()));
+        }
 
-    @DeleteMapping("/{codigo}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        hotelServicio.eliminar(actor, codigo);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{codigo}")
+        public ResponseEntity<Void> eliminar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                hotelServicio.eliminar(actor, codigo);
+                return ResponseEntity.noContent().build();
+        }
 }
