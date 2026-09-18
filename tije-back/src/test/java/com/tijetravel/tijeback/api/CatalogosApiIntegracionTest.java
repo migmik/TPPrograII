@@ -14,10 +14,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties =
-        "spring.datasource.url=${TEST_DB_URL_API:jdbc:h2:mem:tijetravel-api;MODE=MySQL;DB_CLOSE_DELAY=-1}")
+@SpringBootTest(properties = "spring.datasource.url=${TEST_DB_URL_API:jdbc:h2:mem:tijetravel-api;MODE=MySQL;DB_CLOSE_DELAY=-1}")
 @AutoConfigureMockMvc
-@ActiveProfiles({"test", "dev"})
+@ActiveProfiles({ "test", "dev" })
 class CatalogosApiIntegracionTest {
     @Autowired
     private MockMvc mockMvc;
@@ -58,7 +57,7 @@ class CatalogosApiIntegracionTest {
     @Test
     void consultaDisponibilidadDeVueloPorClase() throws Exception {
         mockMvc.perform(get("/api/v1/vuelos/{numero}/disponibilidad", 100)
-                        .queryParam("clase", "TURISTA"))
+                .queryParam("clase", "TURISTA"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.numeroVuelo").value(100))
                 .andExpect(jsonPath("$.claseVuelo").value("TURISTA"))
@@ -68,8 +67,8 @@ class CatalogosApiIntegracionTest {
     @Test
     void consultaDisponibilidadDeHotelPorRangoDeFechas() throws Exception {
         mockMvc.perform(get("/api/v1/hoteles/{codigo}/disponibilidad", 2)
-                        .queryParam("fechaLlegada", "2026-08-15")
-                        .queryParam("fechaPartida", "2026-08-20"))
+                .queryParam("fechaLlegada", "2026-08-15")
+                .queryParam("fechaPartida", "2026-08-20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.codigoHotel").value(2))
                 .andExpect(jsonPath("$.fechaLlegada").value("2026-08-15"))
@@ -80,8 +79,8 @@ class CatalogosApiIntegracionTest {
     @Test
     void rechazaRangoDeDisponibilidadInvalido() throws Exception {
         mockMvc.perform(get("/api/v1/hoteles/{codigo}/disponibilidad", 2)
-                        .queryParam("fechaLlegada", "2026-08-20")
-                        .queryParam("fechaPartida", "2026-08-15"))
+                .queryParam("fechaLlegada", "2026-08-20")
+                .queryParam("fechaPartida", "2026-08-15"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("ARGUMENTO_INVALIDO"));
     }
@@ -118,8 +117,8 @@ class CatalogosApiIntegracionTest {
     @Test
     void protegeOperacionesDeEscrituraConCsrf() throws Exception {
         mockMvc.perform(post("/api/v1/hoteles")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.estado").value(403))
                 .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));

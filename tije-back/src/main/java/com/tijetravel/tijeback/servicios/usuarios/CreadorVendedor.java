@@ -9,7 +9,9 @@ import com.tijetravel.tijeback.modelos.Usuario;
 @Component
 public class CreadorVendedor implements CreadorUsuario {
     @Override
-    public RolUsuario rol() { return RolUsuario.VENDEDOR; }
+    public RolUsuario rol() {
+        return RolUsuario.VENDEDOR;
+    }
 
     @Override
     public Usuario crear(String nombre, String hash, Turista turista) {

@@ -50,6 +50,7 @@ public class VuelosRestControlador {
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
+    @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
     public List<VueloRespuesta> listar() {
         return vueloServicio.listar().stream()

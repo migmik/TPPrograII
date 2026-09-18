@@ -30,76 +30,77 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/turistas")
 public class TuristasRestControlador {
-    private final TuristaServicio turistaServicio;
-    private final TuristaMapeador turistaMapeador;
-    private final UsuarioActualServicio usuarioActualServicio;
+        private final TuristaServicio turistaServicio;
+        private final TuristaMapeador turistaMapeador;
+        private final UsuarioActualServicio usuarioActualServicio;
 
-    public TuristasRestControlador(
-            TuristaServicio turistaServicio,
-            TuristaMapeador turistaMapeador,
-            UsuarioActualServicio usuarioActualServicio) {
-        this.turistaServicio = turistaServicio;
-        this.turistaMapeador = turistaMapeador;
-        this.usuarioActualServicio = usuarioActualServicio;
-    }
+        public TuristasRestControlador(
+                        TuristaServicio turistaServicio,
+                        TuristaMapeador turistaMapeador,
+                        UsuarioActualServicio usuarioActualServicio) {
+                this.turistaServicio = turistaServicio;
+                this.turistaMapeador = turistaMapeador;
+                this.usuarioActualServicio = usuarioActualServicio;
+        }
 
-    @GetMapping
-    public List<TuristaRespuesta> listar(Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return turistaServicio.listarPara(actor).stream()
-                .map(turistaMapeador::aRespuesta)
-                .sorted(Comparator.comparing(TuristaRespuesta::codigo))
-                .toList();
-    }
+        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
+        @GetMapping
+        public List<TuristaRespuesta> listar(Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return turistaServicio.listarPara(actor).stream()
+                                .map(turistaMapeador::aRespuesta)
+                                .sorted(Comparator.comparing(TuristaRespuesta::codigo))
+                                .toList();
+        }
 
-    @GetMapping("/{codigo}")
-    public TuristaRespuesta encontrarPorId(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return turistaMapeador.aRespuesta(
-                turistaServicio.encontrarVisiblePara(actor, codigo));
-    }
+        @GetMapping("/{codigo}")
+        public TuristaRespuesta encontrarPorId(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return turistaMapeador.aRespuesta(
+                                turistaServicio.encontrarVisiblePara(actor, codigo));
+        }
 
-    @PostMapping
-    public ResponseEntity<TuristaRespuesta> crear(
-            @Valid @RequestBody CrearTuristaSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Turista turista = turistaServicio.crear(actor, solicitud.nombre(), solicitud.apellido(),
-                solicitud.direccion(), solicitud.email(), solicitud.telefonoFijo(),
-                solicitud.telefonoCelular(), solicitud.codigoSucursal(), solicitud.codigoTitular());
-        TuristaRespuesta respuesta = turistaMapeador.aRespuesta(turista);
-        return ResponseEntity
-                .created(URI.create("/api/v1/turistas/" + respuesta.codigo()))
-                .body(respuesta);
-    }
+        @PostMapping
+        public ResponseEntity<TuristaRespuesta> crear(
+                        @Valid @RequestBody CrearTuristaSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                Turista turista = turistaServicio.crear(actor, solicitud.nombre(), solicitud.apellido(),
+                                solicitud.direccion(), solicitud.email(), solicitud.telefonoFijo(),
+                                solicitud.telefonoCelular(), solicitud.codigoSucursal(), solicitud.codigoTitular());
+                TuristaRespuesta respuesta = turistaMapeador.aRespuesta(turista);
+                return ResponseEntity
+                                .created(URI.create("/api/v1/turistas/" + respuesta.codigo()))
+                                .body(respuesta);
+        }
 
-    @PutMapping("/{codigo}")
-    public TuristaRespuesta modificar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            @Valid @RequestBody ModificarTuristaSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return turistaMapeador.aRespuesta(turistaServicio.modificar(
-                actor,
-                codigo,
-                solicitud.nombre(),
-                solicitud.apellido(),
-                solicitud.direccion(),
-                solicitud.email(),
-                solicitud.telefonoFijo(),
-                solicitud.telefonoCelular(),
-                solicitud.codigoSucursal()));
-    }
+        @PutMapping("/{codigo}")
+        public TuristaRespuesta modificar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        @Valid @RequestBody ModificarTuristaSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return turistaMapeador.aRespuesta(turistaServicio.modificar(
+                                actor,
+                                codigo,
+                                solicitud.nombre(),
+                                solicitud.apellido(),
+                                solicitud.direccion(),
+                                solicitud.email(),
+                                solicitud.telefonoFijo(),
+                                solicitud.telefonoCelular(),
+                                solicitud.codigoSucursal()));
+        }
 
-    @DeleteMapping("/{codigo}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        turistaServicio.eliminar(actor, codigo);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{codigo}")
+        public ResponseEntity<Void> eliminar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                turistaServicio.eliminar(actor, codigo);
+                return ResponseEntity.noContent().build();
+        }
 
 }

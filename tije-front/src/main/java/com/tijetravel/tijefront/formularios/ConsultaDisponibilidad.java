@@ -15,9 +15,19 @@ public class ConsultaDisponibilidad {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaPartida;
 
-    public LocalDate getFechaLlegada() { return fechaLlegada; }
-    public void setFechaLlegada(LocalDate fechaLlegada) { this.fechaLlegada = fechaLlegada; }
+    public LocalDate getFechaLlegada() {
+        return fechaLlegada;
+    }
 
-    public LocalDate getFechaPartida() { return fechaPartida; }
-    public void setFechaPartida(LocalDate fechaPartida) { this.fechaPartida = fechaPartida; }
+    public void setFechaLlegada(LocalDate fechaLlegada) {
+        this.fechaLlegada = fechaLlegada;
+    }
+
+    public LocalDate getFechaPartida() {
+        return fechaPartida;
+    }
+
+    public void setFechaPartida(LocalDate fechaPartida) {
+        this.fechaPartida = fechaPartida;
+    }
 }

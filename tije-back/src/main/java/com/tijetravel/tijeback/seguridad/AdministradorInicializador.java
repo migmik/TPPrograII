@@ -19,10 +19,7 @@ import com.tijetravel.tijeback.modelos.Administrador;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @Component
-@ConditionalOnProperty(
-        prefix = "app.seguridad.administrador-inicial",
-        name = "habilitado",
-        havingValue = "true")
+@ConditionalOnProperty(prefix = "app.seguridad.administrador-inicial", name = "habilitado", havingValue = "true")
 public class AdministradorInicializador implements ApplicationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdministradorInicializador.class);
 

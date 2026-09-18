@@ -25,7 +25,8 @@ public class ConfiguracionSeguridad {
                 .requestCache(cache -> cache.disable())
                 .exceptionHandling(errores -> errores.accessDeniedHandler((solicitud, respuesta, error) -> {
                     respuesta.setStatus(403);
-                    solicitud.setAttribute("mensaje", "El formulario venció o no es válido. Volvé a abrir la página e intentá nuevamente.");
+                    solicitud.setAttribute("mensaje",
+                            "El formulario venció o no es válido. Volvé a abrir la página e intentá nuevamente.");
                     solicitud.getRequestDispatcher("/WEB-INF/vistas/error.jsp").forward(solicitud, respuesta);
                 }));
         return http.build();
