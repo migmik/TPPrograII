@@ -3,7 +3,9 @@
 Trabajo práctico de Programación II para administrar una cadena de agencias de
 viajes. Permite gestionar sucursales, hoteles, vuelos, turistas, reservas y usuarios.
 
-El backend está implementado y probado con MySQL. El frontend web está pendiente.
+El backend está implementado y probado con MySQL. El frontend tiene una primera
+versión con inicio, listados y detalles de hoteles y vuelos, consulta de disponibilidad,
+inicio y cierre de sesión y una pantalla de cuenta.
 
 ## Funcionalidades
 
@@ -27,11 +29,14 @@ Java 21, Spring Boot, Spring Data JPA con Hibernate, Spring Security y MySQL.
 Maven compila el proyecto y ejecuta las pruebas. Flyway crea y actualiza las tablas
 a partir de los scripts SQL del proyecto.
 
+El frontend es otra aplicación Java con Spring MVC, JSP/JSTL y CSS básico, sin
+JavaScript. Consume la API REST y se empaqueta como WAR ejecutable.
+
 ## Organización
 
 ```text
 tije-back/     Backend Java y pruebas
-tije-front/    Carpeta destinada al frontend
+tije-front/    Frontend web independiente con JSP y pruebas
 database/      Script para crear la base y guía de configuración
 docs/         Documentación de la API y diagramas UML
 ```
@@ -64,6 +69,20 @@ El perfil `dev` carga datos de demostración. El backend atiende por defecto en
 La [guía de base de datos](database/README.md) explica la configuración y cómo
 crear el primer administrador. Las credenciales locales no deben subirse a Git.
 
+## Ejecutar el frontend
+
+Con el backend funcionando en `http://localhost:8080`, abrir otra terminal desde
+la raíz del proyecto:
+
+```powershell
+cd tije-front
+.\mvnw.cmd spring-boot:run
+```
+
+La página está en **http://localhost:8081**. La [guía del frontend](tije-front/README.md)
+explica los archivos, el recorrido de las consultas, cómo cambiar la URL de la API
+y cómo generar y ejecutar el WAR.
+
 ## Pruebas
 
 Desde `tije-back`:
@@ -91,5 +110,6 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 - [API REST](docs/api.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
 
-Falta implementar el frontend y preparar la presentación con MySQL en una PC,
+Falta ampliar el frontend con gestión de datos según el rol y los demás recursos,
+trabajar el diseño visual y preparar la presentación con MySQL en una PC,
 el backend y frontend en otra, y el acceso desde la computadora del profesor.
