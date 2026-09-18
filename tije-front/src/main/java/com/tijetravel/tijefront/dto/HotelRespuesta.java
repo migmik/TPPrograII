@@ -8,21 +8,51 @@ public class HotelRespuesta {
     private String telefono;
     private int capacidadTotal;
 
-    public Integer getCodigo() { return codigo; }
-    public void setCodigo(Integer codigo) { this.codigo = codigo; }
+    public Integer getCodigo() {
+        return codigo;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setCodigo(Integer codigo) {
+        this.codigo = codigo;
+    }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public String getCiudad() { return ciudad; }
-    public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getDireccion() {
+        return direccion;
+    }
 
-    public int getCapacidadTotal() { return capacidadTotal; }
-    public void setCapacidadTotal(int capacidadTotal) { this.capacidadTotal = capacidadTotal; }
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public String getCiudad() {
+        return ciudad;
+    }
+
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public int getCapacidadTotal() {
+        return capacidadTotal;
+    }
+
+    public void setCapacidadTotal(int capacidadTotal) {
+        this.capacidadTotal = capacidadTotal;
+    }
 }

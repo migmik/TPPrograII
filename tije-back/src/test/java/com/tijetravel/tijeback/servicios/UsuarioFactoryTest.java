@@ -13,7 +13,10 @@ class UsuarioFactoryTest {
     void aceptaImplementacionesPorContratoSinConocerSusClases() {
         List<CreadorUsuario> creadores = Arrays.stream(RolUsuario.values())
                 .map(rol -> new CreadorUsuario() {
-                    public RolUsuario rol() { return rol; }
+                    public RolUsuario rol() {
+                        return rol;
+                    }
+
                     public Usuario crear(String nombre, String hash, Turista turista) {
                         return new Administrador(nombre + "-delegado", hash);
                     }

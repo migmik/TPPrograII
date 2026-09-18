@@ -59,7 +59,7 @@ class HotelesControladorTest {
         when(hotelesApi.consultarDisponibilidad(1, LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4)))
                 .thenReturn(new DisponibilidadHotelRespuesta());
         mvc.perform(get("/hoteles/1/disponibilidad")
-                        .param("fechaLlegada", "2027-02-01").param("fechaPartida", "2027-02-04"))
+                .param("fechaLlegada", "2027-02-01").param("fechaPartida", "2027-02-04"))
                 .andExpect(status().isOk()).andExpect(view().name("hoteles/detalle"))
                 .andExpect(model().hasNoErrors()).andExpect(model().attributeExists("disponibilidad"));
     }
@@ -77,7 +77,7 @@ class HotelesControladorTest {
     void rechazaFechasInvertidasSinConsultarDisponibilidad() throws Exception {
         when(hotelesApi.buscar(1)).thenReturn(hotel());
         mvc.perform(get("/hoteles/1/disponibilidad")
-                        .param("fechaLlegada", "2027-02-04").param("fechaPartida", "2027-02-01"))
+                .param("fechaLlegada", "2027-02-04").param("fechaPartida", "2027-02-01"))
                 .andExpect(model().attributeHasFieldErrors("consulta", "fechaPartida"))
                 .andExpect(model().attributeDoesNotExist("disponibilidad"));
         verify(hotelesApi, never()).consultarDisponibilidad(any(), any(), any());
@@ -87,7 +87,7 @@ class HotelesControladorTest {
     void rechazaFechasMalEscritasSinConsultarDisponibilidad() throws Exception {
         when(hotelesApi.buscar(1)).thenReturn(hotel());
         mvc.perform(get("/hoteles/1/disponibilidad")
-                        .param("fechaLlegada", "no-es-fecha").param("fechaPartida", "2027-02-04"))
+                .param("fechaLlegada", "no-es-fecha").param("fechaPartida", "2027-02-04"))
                 .andExpect(view().name("hoteles/detalle"))
                 .andExpect(model().attributeHasFieldErrors("consulta", "fechaLlegada"));
         verify(hotelesApi, never()).consultarDisponibilidad(any(), any(), any());

@@ -29,73 +29,74 @@ import jakarta.validation.constraints.Positive;
 @RestController
 @RequestMapping("/api/v1/usuarios")
 public class UsuariosRestControlador {
-    private final UsuarioServicio usuarioServicio;
-    private final UsuarioMapeador usuarioMapeador;
-    private final UsuarioActualServicio usuarioActualServicio;
+        private final UsuarioServicio usuarioServicio;
+        private final UsuarioMapeador usuarioMapeador;
+        private final UsuarioActualServicio usuarioActualServicio;
 
-    public UsuariosRestControlador(
-            UsuarioServicio usuarioServicio,
-            UsuarioMapeador usuarioMapeador,
-            UsuarioActualServicio usuarioActualServicio) {
-        this.usuarioServicio = usuarioServicio;
-        this.usuarioMapeador = usuarioMapeador;
-        this.usuarioActualServicio = usuarioActualServicio;
-    }
+        public UsuariosRestControlador(
+                        UsuarioServicio usuarioServicio,
+                        UsuarioMapeador usuarioMapeador,
+                        UsuarioActualServicio usuarioActualServicio) {
+                this.usuarioServicio = usuarioServicio;
+                this.usuarioMapeador = usuarioMapeador;
+                this.usuarioActualServicio = usuarioActualServicio;
+        }
 
-    @GetMapping
-    public List<UsuarioRespuesta> listar(Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return usuarioServicio.listarPara(actor).stream()
-                .map(usuarioMapeador::aRespuesta)
-                .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
-                .toList();
-    }
+        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
+        @GetMapping
+        public List<UsuarioRespuesta> listar(Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return usuarioServicio.listarPara(actor).stream()
+                                .map(usuarioMapeador::aRespuesta)
+                                .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
+                                .toList();
+        }
 
-    @GetMapping("/{codigo}")
-    public UsuarioRespuesta encontrarPorId(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return usuarioMapeador.aRespuesta(
-                usuarioServicio.encontrarVisiblePara(actor, codigo));
-    }
+        @GetMapping("/{codigo}")
+        public UsuarioRespuesta encontrarPorId(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return usuarioMapeador.aRespuesta(
+                                usuarioServicio.encontrarVisiblePara(actor, codigo));
+        }
 
-    @PostMapping
-    public ResponseEntity<UsuarioRespuesta> crear(
-            @Valid @RequestBody CrearUsuarioSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        Usuario usuario = usuarioServicio.crear(
-                actor,
-                solicitud.nombreUsuario(),
-                solicitud.contrasenia(),
-                solicitud.rol(),
-                solicitud.codigoTurista());
-        UsuarioRespuesta respuesta = usuarioMapeador.aRespuesta(usuario);
-        return ResponseEntity
-                .created(URI.create("/api/v1/usuarios/" + respuesta.codigo()))
-                .body(respuesta);
-    }
+        @PostMapping
+        public ResponseEntity<UsuarioRespuesta> crear(
+                        @Valid @RequestBody CrearUsuarioSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                Usuario usuario = usuarioServicio.crear(
+                                actor,
+                                solicitud.nombreUsuario(),
+                                solicitud.contrasenia(),
+                                solicitud.rol(),
+                                solicitud.codigoTurista());
+                UsuarioRespuesta respuesta = usuarioMapeador.aRespuesta(usuario);
+                return ResponseEntity
+                                .created(URI.create("/api/v1/usuarios/" + respuesta.codigo()))
+                                .body(respuesta);
+        }
 
-    @PutMapping("/{codigo}")
-    public UsuarioRespuesta modificar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            @Valid @RequestBody ModificarUsuarioSolicitud solicitud,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return usuarioMapeador.aRespuesta(usuarioServicio.modificarCredenciales(
-                actor,
-                codigo,
-                solicitud.nombreUsuario(),
-                solicitud.contrasenia()));
-    }
+        @PutMapping("/{codigo}")
+        public UsuarioRespuesta modificar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        @Valid @RequestBody ModificarUsuarioSolicitud solicitud,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return usuarioMapeador.aRespuesta(usuarioServicio.modificarCredenciales(
+                                actor,
+                                codigo,
+                                solicitud.nombreUsuario(),
+                                solicitud.contrasenia()));
+        }
 
-    @DeleteMapping("/{codigo}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
-            Authentication autenticacion) {
-        Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        usuarioServicio.eliminar(actor, codigo);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{codigo}")
+        public ResponseEntity<Void> eliminar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                usuarioServicio.eliminar(actor, codigo);
+                return ResponseEntity.noContent().build();
+        }
 }

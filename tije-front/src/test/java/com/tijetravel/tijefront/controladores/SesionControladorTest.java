@@ -33,8 +33,10 @@ import com.tijetravel.tijefront.dto.SesionRespuesta;
 @SpringBootTest
 @AutoConfigureMockMvc
 class SesionControladorTest {
-    @Autowired private MockMvc mvc;
-    @MockitoBean private AutenticacionApiCliente autenticacionApi;
+    @Autowired
+    private MockMvc mvc;
+    @MockitoBean
+    private AutenticacionApiCliente autenticacionApi;
 
     @Test
     void elFormularioEsPublicoYLaCuentaRequiereSesion() throws Exception {
@@ -63,7 +65,7 @@ class SesionControladorTest {
         when(autenticacionApi.iniciarSesion("ana", "incorrecta")).thenThrow(noAutorizado());
         MockHttpSession sesion = new MockHttpSession();
         mvc.perform(post("/login").session(sesion).with(csrf())
-                        .param("nombreUsuario", "ana").param("contrasenia", "incorrecta"))
+                .param("nombreUsuario", "ana").param("contrasenia", "incorrecta"))
                 .andExpect(status().isUnauthorized()).andExpect(view().name("sesion/login"))
                 .andExpect(model().attribute("errorIngreso", "El usuario o la contraseña son incorrectos."));
         assertTrue(sesion.getAttribute("usuarioActual") == null);
@@ -75,7 +77,7 @@ class SesionControladorTest {
         MockHttpSession sesion = new MockHttpSession();
         String idAnterior = sesion.getId();
         mvc.perform(post("/login").session(sesion).with(csrf())
-                        .param("nombreUsuario", " ana ").param("contrasenia", "clave"))
+                .param("nombreUsuario", " ana ").param("contrasenia", "clave"))
                 .andExpect(redirectedUrl("/cuenta"));
         assertNotEquals(idAnterior, sesion.getId());
         assertTrue(sesion.getAttribute("usuarioActual") instanceof SesionRespuesta);
@@ -128,7 +130,8 @@ class SesionControladorTest {
         when(autenticacionApi.iniciarSesion("ana", "clave")).thenThrow(new ResourceAccessException("No disponible"));
         mvc.perform(post("/login").with(csrf()).param("nombreUsuario", "ana").param("contrasenia", "clave"))
                 .andExpect(status().isServiceUnavailable()).andExpect(view().name("sesion/login"))
-                .andExpect(model().attribute("errorIngreso", "No pudimos iniciar sesión en este momento. Intentá nuevamente."));
+                .andExpect(model().attribute("errorIngreso",
+                        "No pudimos iniciar sesión en este momento. Intentá nuevamente."));
     }
 
     private MockHttpSession sesionIngresada() {
@@ -146,6 +149,7 @@ class SesionControladorTest {
     }
 
     private HttpClientErrorException noAutorizado() {
-        return HttpClientErrorException.create(HttpStatus.UNAUTHORIZED, "No autorizado", HttpHeaders.EMPTY, new byte[0], null);
+        return HttpClientErrorException.create(HttpStatus.UNAUTHORIZED, "No autorizado", HttpHeaders.EMPTY, new byte[0],
+                null);
     }
 }

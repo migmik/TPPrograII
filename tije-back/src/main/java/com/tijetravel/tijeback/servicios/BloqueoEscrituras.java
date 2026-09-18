@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Coordina escrituras del TP entre transacciones, incluso desde procesos distintos. */
+/**
+ * Coordina escrituras del TP entre transacciones, incluso desde procesos
+ * distintos.
+ */
 @Service
 public class BloqueoEscrituras {
     private final EntityManager entityManager;

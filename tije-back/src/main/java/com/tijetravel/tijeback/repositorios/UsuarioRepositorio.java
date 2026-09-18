@@ -12,31 +12,31 @@ import com.tijetravel.tijeback.modelos.Usuario;
 
 public interface UsuarioRepositorio extends JpaRepository<Usuario, Integer> {
 
-    @Override
-    @Query("select u from Usuario u left join fetch treat(u as Cliente).turista")
-    List<Usuario> findAll();
+        @Override
+        @Query("select u from Usuario u left join fetch treat(u as Cliente).turista")
+        List<Usuario> findAll();
 
-    @Override
-    @Query("""
-            select u from Usuario u
-            left join fetch treat(u as Cliente).turista
-            where u.codigo = :codigo
-            """)
-    Optional<Usuario> findById(@Param("codigo") Integer codigo);
+        @Override
+        @Query("""
+                        select u from Usuario u
+                        left join fetch treat(u as Cliente).turista
+                        where u.codigo = :codigo
+                        """)
+        Optional<Usuario> findById(@Param("codigo") Integer codigo);
 
-    @Query("""
-            select u from Usuario u
-            left join fetch treat(u as Cliente).turista
-            where upper(u.nombreUsuario) = upper(:nombreUsuario)
-            """)
-    Optional<Usuario> findByNombreUsuarioIgnoreCase(@Param("nombreUsuario") String nombreUsuario);
+        @Query("""
+                        select u from Usuario u
+                        left join fetch treat(u as Cliente).turista
+                        where upper(u.nombreUsuario) = upper(:nombreUsuario)
+                        """)
+        Optional<Usuario> findByNombreUsuarioIgnoreCase(@Param("nombreUsuario") String nombreUsuario);
 
-    boolean existsByNombreUsuarioIgnoreCase(String nombreUsuario);
+        boolean existsByNombreUsuarioIgnoreCase(String nombreUsuario);
 
-    boolean existsByNombreUsuarioIgnoreCaseAndCodigoNot(String nombreUsuario, Integer codigo);
+        boolean existsByNombreUsuarioIgnoreCaseAndCodigoNot(String nombreUsuario, Integer codigo);
 
-    long countByRol(RolUsuario rol);
+        long countByRol(RolUsuario rol);
 
-    @Query("select count(c) from Cliente c where c.turista.codigo = :codigoTurista")
-    long contarClientesPorTurista(@Param("codigoTurista") Integer codigoTurista);
+        @Query("select count(c) from Cliente c where c.turista.codigo = :codigoTurista")
+        long contarClientesPorTurista(@Param("codigoTurista") Integer codigoTurista);
 }
