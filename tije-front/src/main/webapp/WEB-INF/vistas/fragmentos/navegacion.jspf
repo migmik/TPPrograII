@@ -6,6 +6,10 @@
     <c:choose>
         <c:when test="${not empty usuarioActual}">
             | <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
+            | <a href="<c:url value='/turistas'/>">Turistas</a>
+            <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                | <a href="<c:url value='/usuarios'/>">Usuarios</a>
+            </c:if>
             <span>Usuario: <c:out value="${usuarioActual.nombreUsuario}"/></span>
             <form method="post" action="<c:url value='/logout'/>">
                 <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">

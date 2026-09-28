@@ -14,11 +14,14 @@ No usa JavaScript ni se conecta directamente a MySQL.
 - Capacidad y plazas libres por clase: turista y primera.
 - Inicio y cierre de sesión con los usuarios existentes del backend.
 - Pantalla «Mi cuenta» con el nombre de usuario y el rol informado por la API.
+- Listado, creación, edición de credenciales y eliminación de usuarios para administradores.
+- Listado, detalle, creación, edición y eliminación de turistas para administradores y vendedores.
+- Consulta del propio grupo familiar para clientes.
 - Mensajes para fechas inválidas, recursos inexistentes y problemas de conexión.
 
-Los catálogos son públicos. Las altas, modificaciones, eliminaciones y las
-pantallas de los otros recursos quedan para las siguientes etapas. El CSS actual
-solo facilita la lectura.
+Los catálogos son públicos. La creación de cuentas requiere ingresar como
+administrador. La gestión de los otros recursos queda para las siguientes etapas.
+El CSS actual solo facilita la lectura.
 
 ## Cómo ejecutarlo
 
@@ -58,6 +61,19 @@ $env:BACKEND_URL = "http://localhost:18081"
 `BACKEND_URL` es la dirección base del servidor, sin `/api/v1` al final.
 `FRONT_PORT` permite cambiar el puerto del frontend. También se pueden pasar
 `--app.backend.url=...` y `--server.port=...` al comando `java -jar`.
+
+Si ya tenés un Tomcat externo usando el puerto 8080, podés iniciar el proyecto
+con el backend en otro puerto. Desde la raíz, con las instancias anteriores de
+Tije detenidas:
+
+```powershell
+$env:BACK_PORT = "8083"
+$env:BACKEND_URL = "http://localhost:8083"
+.\arrancar-tije-travel.bat
+```
+
+El frontend sigue en `http://localhost:8081`. Las variables se definen en esa
+terminal; no hace falta cambiar el código ni detener el Tomcat externo.
 
 La página de inicio funciona aunque el backend esté apagado. Para listar hoteles,
 vuelos y consultar disponibilidad tiene que estar funcionando la API.
@@ -162,15 +178,18 @@ El ingreso funciona así:
 Hay dos cookies con funciones distintas: el navegador usa `TIJEFRONTSESSION`
 para identificarse ante el frontend; el cliente HTTP Java conserva `TIJESESSION`
 para identificarse ante el backend. No se envía la cookie del backend al navegador.
-`@SessionScope` crea un `AutenticacionApiCliente` por sesión del navegador, cada
-uno con su propio `CookieManager`. Por eso las cookies de dos usuarios no se mezclan.
+`@SessionScope` crea una `ConexionApiSesion` por sesión del navegador, cada
+una con su propio `CookieManager`. Por eso las cookies de dos usuarios no se mezclan.
+El cliente de autenticación y los clientes de usuarios y turistas usan esa conexión
+para conservar la sesión del login en las operaciones privadas.
 Los clientes de hoteles y vuelos conservan su conexión pública compartida.
 
 `DatosNavegacion` agrega el usuario guardado al modelo de las páginas para mostrar
 «Mi cuenta» y «Cerrar sesión», e indica al navegador que no guarde esas páginas
 en caché. Ese dato del usuario sirve para la presentación; no reemplaza
-las comprobaciones de sesión y permisos que hace la API. Esta etapa muestra el rol;
-las pantallas para realizar operaciones según ese rol se incorporarán después.
+las comprobaciones de sesión y permisos que hace la API. Los administradores ven
+además el enlace «Usuarios». Escribir esa dirección manualmente no evita la
+comprobación de acceso en el controlador ni los permisos de la API.
 
 El botón de salida envía un POST con CSRF. El cliente pide un token actualizado al
 backend, llama a su logout y el controlador invalida la sesión local. Si la API
@@ -187,7 +206,8 @@ CSRF protege el envío del formulario: no es un segundo ingreso ni una contrase�
 | Archivo nuevo | Responsabilidad |
 |---|---|
 | `configuracion/ConfiguracionSeguridad.java` | Protección de formularios y almacenamiento del token CSRF local. |
-| `clientes/AutenticacionApiCliente.java` | Cookies por sesión y llamadas de autenticación a la API. |
+| `clientes/ConexionApiSesion.java` | Conexión, cookies por sesión y obtención del token CSRF de la API. |
+| `clientes/AutenticacionApiCliente.java` | Llamadas de ingreso, consulta de sesión y salida. |
 | `controladores/SesionControlador.java` | Ingreso, consulta de cuenta y salida. |
 | `controladores/DatosNavegacion.java` | Datos del usuario para la navegación compartida. |
 | `formularios/IniciarSesionFormulario.java` | Campos y validaciones del ingreso. |
@@ -196,6 +216,45 @@ CSRF protege el envío del formulario: no es un segundo ingreso ni una contrase�
 
 Referencias: [CSRF y formularios con Spring Security](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html)
 y [cliente HTTP de Spring para Java](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/http/client/JdkClientHttpRequestFactory.html).
+
+## Crear usuarios desde la página
+
+1. Ingresá con una cuenta administradora. Si todavía no existe, seguí el apartado
+   «Primer administrador» de [la guía de base de datos](../database/README.md).
+2. Abrí **Usuarios** en el menú y elegí **Crear usuario**.
+3. Escribí el nombre, la contraseña y el rol.
+4. Para un cliente, elegí un turista titular existente que todavía no tenga cuenta.
+   Para un administrador o vendedor dejá el turista sin seleccionar.
+5. Al confirmar, se crea la cuenta en el backend y se vuelve al listado.
+
+La pantalla no crea el primer administrador anónimamente: necesita una sesión
+administradora previa. Tampoco crea turistas; si no hay turistas disponibles,
+se informa en el formulario y todavía se pueden crear vendedores o administradores.
+
+`UsuariosControlador` atiende `GET /usuarios`, `GET /usuarios/nuevo` y
+`POST /usuarios`. Primero confirma la sesión y el rol con el backend. Para preparar
+el selector, reúne en un `HashSet` los códigos de turistas que ya tienen cuenta y
+recorre el listado de turistas con un `for`, agregando solamente los titulares restantes.
+La API vuelve a validar la asociación al guardar, incluso si otro administrador
+creó una cuenta entre la carga y el envío del formulario.
+
+`CrearUsuarioFormulario` valida los campos. El controlador también comprueba que
+el turista corresponda al rol y que la contraseña no supere los 72 bytes que admite
+el backend. Si hay un error, conserva nombre, rol y selección disponible, pero la
+contraseña se vuelve a escribir. Un nombre o turista duplicado se informa en la
+misma página. Si se pierde la conexión durante el alta, no se reintenta el POST
+automáticamente: se pide consultar el listado antes de volver a enviarlo.
+
+`UsuariosApiCliente` envía las consultas y el alta usando `ConexionApiSesion`.
+Esta clase se extrajo del cliente de autenticación para compartir la conexión
+existente con las operaciones privadas. No se abre una segunda sesión de login.
+`TuristasApiCliente` obtiene los datos del selector; `TuristaResumen` conserva solo
+código, nombre, apellido y condición de titular de la respuesta. Las vistas están en
+`webapp/WEB-INF/vistas/usuarios/lista.jsp` y `nuevo.jsp`.
+
+El backend sigue comprobando permisos, nombres duplicados y relaciones entre
+entidades, y guarda las contraseñas como hash. El frontend no tiene repositorios,
+conexión a MySQL ni contraseñas fijas para las cuentas.
 
 ## Pruebas y WAR
 
@@ -237,12 +296,23 @@ Verificá que el valor de `$carpetaFront` tampoco contenga espacios. Esa copia s
 sirve para ejecutar: el código se sigue editando en el repositorio. Al recompilar,
 detené la aplicación antes de reemplazar la copia del WAR.
 
-La suite contiene 37 pruebas automatizadas para hoteles, vuelos y sesiones. Comprueba,
+La suite contiene 84 pruebas automatizadas para hoteles, vuelos, sesiones, usuarios y turistas. Comprueba,
 entre otras cosas, que se lean correctamente las fechas del JSON y que se muestren
 las plazas libres recibidas aunque sean menores a la capacidad del vuelo.
 También verifica el aislamiento de cookies, los tokens CSRF, el cambio de
 identificador al ingresar, las credenciales incorrectas, las sesiones vencidas y
 la salida cuando la API no responde.
+Las pruebas de usuarios cubren los tres roles, CSRF, asociación del cliente con
+un turista, rechazo de permisos, nombres duplicados, sesiones vencidas y reutilización
+de las cookies del login. El código nuevo utiliza bucles y pasos explícitos.
+
+El 28/09/2026 se probó además el WAR contra la base MySQL de pruebas: altas desde
+las JSP para los tres roles, ingreso con las cuentas creadas, rechazo de accesos
+sin permisos, nombres duplicados, selección de titulares sin cuenta, edición de
+credenciales y eliminación con confirmación. También se verificó el nuevo ingreso
+después de editar la propia cuenta y que borrar una cuenta conserva al turista. Las cuentas
+temporales se eliminaron al finalizar; no se crearon usuarios de prueba en la base
+principal.
 
 La etapa de sesiones también se verificó ejecutando el WAR contra el backend y
 una base MySQL de pruebas existente: formulario JSP con CSRF, ingreso correcto e
@@ -270,3 +340,65 @@ controladores.
 
 Referencias: [JSP y JSTL con Spring MVC](https://docs.spring.io/spring-framework/reference/web/webmvc-view/mvc-jsp.html)
 y [empaquetado de JSP en Spring Boot](https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.embedded-container.jsp-limitations).
+
+## Editar y eliminar usuarios
+
+Desde el listado, un administrador puede elegir **Editar credenciales**. El
+formulario pide nombre y una nueva contraseña: ambos son obligatorios porque
+así funciona la API. No cambia el rol ni el turista asociado. Al editar la propia
+cuenta se cierra la sesión actual y se pide ingresar nuevamente. Esto no revoca
+otras sesiones que esa cuenta pudiera tener abiertas en otros navegadores.
+
+**Eliminar** abre una confirmación con los datos de la cuenta. Solo el botón
+**Confirmar eliminación** envía la operación. No se permite borrar la propia
+cuenta; el backend también protege al último administrador. Borrar la cuenta no
+borra al turista asociado ni sus reservas.
+
+El recorrido es: JSP envía un formulario POST a `UsuariosControlador`, que
+comprueba la sesión y valida los datos. `UsuariosApiCliente` llama al backend
+con PUT para modificar o DELETE para eliminar, usando su cookie y token CSRF.
+Al terminar se vuelve al listado para evitar repetir la operación al recargar.
+Las nuevas vistas son `usuarios/editar.jsp` y `usuarios/eliminar.jsp`; los campos
+de edición están en `ModificarUsuarioFormulario`. No se agregó JavaScript ni CSS.
+
+Para compilar, probar y generar el WAR se ejecutó desde la raíz:
+
+```powershell
+mvn.cmd -f tije-front/pom.xml package
+```
+
+## Gestionar turistas
+
+Ingresá y abrí **Turistas**. Administradores y vendedores pueden crear, editar
+y eliminar; los clientes solamente consultan su grupo familiar, tal como lo
+filtra el backend.
+
+- Para crear un titular, completá los datos y elegí una sucursal. Dejá el titular
+  sin seleccionar.
+- Para crear un familiar, elegí un titular existente y dejá la sucursal sin
+  seleccionar. El backend le asigna la del titular.
+- Al editar se conservan el tipo de turista y su titular. La sucursal del familiar
+  se obtiene del backend. Cambiar la sucursal de un titular actualiza también a
+  sus familiares.
+- Eliminar abre primero una confirmación. El backend impide borrar turistas con
+  reservas, familiares o una cuenta de usuario asociada.
+
+El turista es la persona registrada; no es una cuenta de acceso. Después de crear
+un titular, un administrador puede ir a **Usuarios** y asociarle una cuenta Cliente.
+
+`TuristasControlador` recibe las consultas y formularios de las cuatro JSP de
+`vistas/turistas`. `GuardarTuristaFormulario` valida los campos obligatorios y
+el email. `TuristasApiCliente` envía GET, POST, PUT o DELETE a la API usando la
+sesión existente y CSRF para las escrituras. `SucursalesApiCliente` obtiene las
+opciones del selector. Los DTO contienen los datos que muestran las pantallas.
+No se modificó el backend ni se agregaron JavaScript o estilos.
+
+Se ejecutó `mvn.cmd -f tije-front/pom.xml package` desde la raíz para compilar,
+correr las pruebas y generar el WAR. Las pruebas nuevas comprueban permisos,
+validaciones, relación familiar, CSRF y errores de la API.
+
+También se ejecutó el WAR contra MySQL de pruebas: alta de titular y familiar,
+edición, rechazo de email duplicado, acceso limitado del cliente a su grupo,
+eliminación como vendedor y protección de titulares con familiares o cuentas.
+Las cuentas y turistas temporales se eliminaron al finalizar. La base principal
+no se modificó en esta verificación.
