@@ -15,6 +15,10 @@
                 <%@ include file="../fragmentos/navegacion.jspf" %>
                     <main>
                         <h1>Iniciar sesión</h1>
+                        <c:if test="${param.credencialesActualizadas != null}">
+                            <p>Credenciales actualizadas. Ingresá nuevamente con el nombre y la contraseña que
+                                guardaste.</p>
+                        </c:if>
                         <c:if test="${param.salida != null}">
                             <p>Sesión cerrada.</p>
                         </c:if>

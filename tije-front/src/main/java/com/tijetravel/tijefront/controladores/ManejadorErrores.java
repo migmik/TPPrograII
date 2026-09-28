@@ -7,12 +7,24 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.ModelAndView;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @ControllerAdvice
 public class ManejadorErrores {
     @ExceptionHandler(RestClientException.class)
-    public ModelAndView errorApi(RestClientException excepcion) {
+    public ModelAndView errorApi(RestClientException excepcion, HttpServletRequest solicitud) {
         if (excepcion instanceof RestClientResponseException respuesta) {
+            if (respuesta.getStatusCode().value() == 401) {
+                HttpSession sesion = solicitud.getSession(false);
+                if (sesion != null) {
+                    sesion.invalidate();
+                }
+                return new ModelAndView("redirect:/login?sesionVencida");
+            }
+            if (respuesta.getStatusCode().value() == 403) {
+                return pagina(HttpStatus.FORBIDDEN, "No tenés permiso para realizar esta operación.");
+            }
             if (respuesta.getStatusCode().value() == 404) {
                 return pagina(HttpStatus.NOT_FOUND, "No encontramos el recurso solicitado.");
             }
