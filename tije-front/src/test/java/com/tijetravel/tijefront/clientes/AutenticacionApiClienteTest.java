@@ -22,6 +22,8 @@ class AutenticacionApiClienteTest {
     private HttpServer servidor;
     private AutenticacionApiCliente ana;
     private AutenticacionApiCliente beto;
+    private ConexionApiSesion conexionAna;
+    private ConexionApiSesion conexionBeto;
     private final Map<String, String> usuarios = new HashMap<>();
     private final AtomicInteger ids = new AtomicInteger();
     private int salidas;
@@ -30,16 +32,19 @@ class AutenticacionApiClienteTest {
     void preparar() throws IOException {
         servidor = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         servidor.createContext("/api/v1/autenticacion", this::responder);
+        servidor.createContext("/api/v1/usuarios", this::responder);
         servidor.start();
         String url = "http://127.0.0.1:" + servidor.getAddress().getPort();
-        ana = new AutenticacionApiCliente(url);
-        beto = new AutenticacionApiCliente(url);
+        conexionAna = new ConexionApiSesion(url);
+        conexionBeto = new ConexionApiSesion(url);
+        ana = new AutenticacionApiCliente(conexionAna);
+        beto = new AutenticacionApiCliente(conexionBeto);
     }
 
     @AfterEach
     void detener() {
-        ana.liberarConexion();
-        beto.liberarConexion();
+        conexionAna.liberarConexion();
+        conexionBeto.liberarConexion();
         servidor.stop(0);
     }
 
@@ -67,6 +72,14 @@ class AutenticacionApiClienteTest {
         ana.cerrarSesion();
         assertEquals(1, salidas);
         assertEquals(0, usuarios.size());
+    }
+
+    @Test
+    void elClienteDeUsuariosReutilizaLaSesionDelLogin() {
+        ana.iniciarSesion("ana", "clave");
+        assertEquals("ana", new UsuariosApiCliente(conexionAna).listar().get(0).getNombreUsuario());
+        assertThrows(HttpClientErrorException.Unauthorized.class,
+                () -> new UsuariosApiCliente(conexionBeto).listar());
     }
 
     @Test
@@ -106,7 +119,8 @@ class AutenticacionApiClienteTest {
                 enviar(intercambio, 204, "");
             }
         } else if (usuarios.containsKey(id)) {
-            enviar(intercambio, 200, sesion(usuarios.get(id)));
+            String datos = sesion(usuarios.get(id));
+            enviar(intercambio, 200, ruta.endsWith("/usuarios") ? "[" + datos + "]" : datos);
         } else {
             enviar(intercambio, 401, "{}");
         }

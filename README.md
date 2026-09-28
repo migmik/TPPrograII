@@ -5,7 +5,9 @@ viajes. Permite gestionar sucursales, hoteles, vuelos, turistas, reservas y usua
 
 El backend está implementado y probado con MySQL. El frontend tiene una primera
 versión con inicio, listados y detalles de hoteles y vuelos, consulta de disponibilidad,
-inicio y cierre de sesión y una pantalla de cuenta.
+inicio y cierre de sesión, una pantalla de cuenta y listado, creación, edición y eliminación de usuarios
+para administradores. También permite gestionar turistas como administrador o
+vendedor, y consultar el grupo familiar como cliente.
 
 ## Funcionalidades
 
@@ -110,6 +112,6 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 - [API REST](docs/api.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
 
-Falta ampliar el frontend con gestión de datos según el rol y los demás recursos,
+Falta ampliar el frontend con gestión de reservas y administración de los demás recursos,
 trabajar el diseño visual y preparar la presentación con MySQL en una PC,
 el backend y frontend en otra, y el acceso desde la computadora del profesor.
