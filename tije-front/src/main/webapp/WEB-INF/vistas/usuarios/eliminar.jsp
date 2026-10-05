@@ -14,6 +14,7 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Eliminar usuario</h1>
+                        <p>DNI: <c:out value="${cuenta.dni}" default="DNI pendiente"/>.</p>
                     <p>Usuario: <strong>
                             <c:out value="${cuenta.nombreUsuario}" />
                         </strong>.

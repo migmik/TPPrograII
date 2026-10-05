@@ -36,6 +36,7 @@
                                     <thead>
                                         <tr>
                                             <th>Código</th>
+                                            <th>DNI</th>
                                             <th>Nombre</th>
                                             <th>Apellido</th>
                                             <th>Tipo</th>
@@ -48,6 +49,7 @@
                                                 <td>
                                                     <c:out value="${turista.codigo}" />
                                                 </td>
+                                                <td><c:out value="${turista.dni}" default="DNI pendiente" /></td>
                                                 <td>
                                                     <c:out value="${turista.nombre}" />
                                                 </td>

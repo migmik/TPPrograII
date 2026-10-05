@@ -20,6 +20,10 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     Optional<Turista> findByEmailIgnoreCase(String email);
 
+    boolean existsByDni(String dni);
+
+    boolean existsByDniAndCodigoNot(String dni, Integer codigo);
+
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCaseAndCodigoNot(String email, Integer codigo);

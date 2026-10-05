@@ -27,6 +27,7 @@ app:
   seguridad:
     origen-frontend: ${FRONTEND_ORIGIN:http://localhost:5173}
     administrador-inicial:
+      dni: ${APP_ADMIN_DNI:}
       habilitado: ${APP_ADMIN_ENABLED:false}
       nombre-usuario: ${APP_ADMIN_USERNAME:}
       contrasenia: ${APP_ADMIN_PASSWORD:}

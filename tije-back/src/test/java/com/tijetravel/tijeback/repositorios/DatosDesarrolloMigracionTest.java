@@ -34,7 +34,7 @@ class DatosDesarrolloMigracionTest {
 
     @Test
     void cargaLosDatosDeDemostracionSinContraseniasEnTextoPlano() {
-        assertEquals("5", flyway.info().current().getVersion().getVersion());
+        assertEquals("7", flyway.info().current().getVersion().getVersion());
         assertEquals(2, sucursalRepositorio.count());
         assertEquals(4, hotelRepositorio.count());
         assertEquals(4, vueloRepositorio.count());

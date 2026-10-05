@@ -17,13 +17,13 @@ class UsuarioFactoryTest {
                         return rol;
                     }
 
-                    public Usuario crear(String nombre, String hash, Turista turista) {
-                        return new Administrador(nombre + "-delegado", hash);
+                    public Usuario crear(String nombre, String hash, Turista turista, String dni) {
+                        return new Administrador(nombre + "-delegado", hash, com.tijetravel.tijeback.DnisPrueba.siguiente());
                     }
                 }).map(CreadorUsuario.class::cast).toList();
         UsuarioFactory factory = new UsuarioFactory(creadores);
         for (RolUsuario rol : RolUsuario.values()) {
-            assertEquals("usuario-delegado", factory.crear("usuario", "hash", rol, null).getNombreUsuario());
+            assertEquals("usuario-delegado", factory.crear("usuario", "hash", rol, null, "12345678").getNombreUsuario());
         }
     }
 

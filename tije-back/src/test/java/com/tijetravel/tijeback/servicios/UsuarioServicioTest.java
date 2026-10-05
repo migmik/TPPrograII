@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -61,11 +63,11 @@ class UsuarioServicioTest {
                 assertThrows(
                                 OperacionNoPermitidaException.class,
                                 () -> servicio.crear(
-                                                new Vendedor("vendedor", "clave"),
+                                                new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                                 "nuevo",
                                                 "clave",
                                                 RolUsuario.VENDEDOR,
-                                                null));
+                                                null, null));
 
                 verify(usuarioRepositorio, never()).save(any());
         }
@@ -75,11 +77,11 @@ class UsuarioServicioTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> servicio.crear(
-                                                new Administrador("admin", "clave"),
+                                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                                 "nuevo",
                                                 "  ",
                                                 RolUsuario.VENDEDOR,
-                                                null));
+                                                null, null));
 
                 verify(codificadorContrasenias, never()).encode(any());
                 verify(usuarioRepositorio, never()).save(any());
@@ -88,21 +90,19 @@ class UsuarioServicioTest {
         @Test
         void clienteSoloPuedeAsociarseAUnTuristaTitular() {
                 Sucursal sucursal = new Sucursal("Av. Colon 100", "351-1000");
-                Turista titular = new Turista(
-                                "Ana", "Perez", "Calle 1", "ana@example.com", "100", "200", sucursal);
-                Turista familiar = new Turista(
-                                "Luis", "Perez", "Calle 1", "luis@example.com", "100", "300", sucursal, titular);
+                Turista titular = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Calle 1", "ana@example.com", "100", "200", sucursal);
+                Turista familiar = new Turista(DnisPrueba.siguiente(), "Luis", "Perez", "Calle 1", "luis@example.com", "100", "300", sucursal, titular);
                 when(turistaRepositorio.findById(2)).thenReturn(Optional.of(familiar));
                 when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> servicio.crear(
-                                                new Administrador("admin", "clave"),
+                                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                                 "cliente",
                                                 "clave",
                                                 RolUsuario.CLIENTE,
-                                                2));
+                                                2, null));
 
                 verify(usuarioRepositorio, never()).save(any());
         }
@@ -110,19 +110,18 @@ class UsuarioServicioTest {
         @Test
         void creaClienteVinculadoAlTitular() {
                 Sucursal sucursal = new Sucursal("Av. Colon 100", "351-1000");
-                Turista titular = new Turista(
-                                "Ana", "Perez", "Calle 1", "ana@example.com", "100", "200", sucursal);
+                Turista titular = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Calle 1", "ana@example.com", "100", "200", sucursal);
                 when(turistaRepositorio.findById(1)).thenReturn(Optional.of(titular));
                 when(usuarioRepositorio.save(any(Usuario.class)))
                                 .thenAnswer(invocacion -> invocacion.getArgument(0));
                 when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
                 Usuario usuario = servicio.crear(
-                                new Administrador("admin", "clave"),
+                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                 "cliente",
                                 "clave",
                                 RolUsuario.CLIENTE,
-                                1);
+                                1, null);
 
                 Cliente cliente = assertInstanceOf(Cliente.class, usuario);
                 assertSame(titular, cliente.getTurista());
@@ -131,7 +130,7 @@ class UsuarioServicioTest {
 
         @Test
         void usuarioNoPuedeEliminarseASiMismo() {
-                Administrador administrador = new Administrador("admin", "clave");
+                Administrador administrador = new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
                 when(usuarioRepositorio.findById(1)).thenReturn(Optional.of(administrador));
 
                 assertThrows(
@@ -143,8 +142,8 @@ class UsuarioServicioTest {
 
         @Test
         void noEliminaElUltimoAdministrador() {
-                Administrador actor = new Administrador("admin-principal", "clave");
-                Administrador objetivo = new Administrador("admin-secundario", "clave");
+                Administrador actor = new Administrador("admin-principal", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+                Administrador objetivo = new Administrador("admin-secundario", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
                 when(usuarioRepositorio.findById(2)).thenReturn(Optional.of(objetivo));
                 when(usuarioRepositorio.countByRol(RolUsuario.ADMINISTRADOR)).thenReturn(1L);
 

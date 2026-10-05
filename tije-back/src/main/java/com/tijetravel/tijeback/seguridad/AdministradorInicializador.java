@@ -28,18 +28,21 @@ public class AdministradorInicializador implements ApplicationRunner {
     private final PasswordEncoder codificadorContrasenias;
     private final String nombreUsuario;
     private final String contrasenia;
+    private final String dni;
 
     public AdministradorInicializador(
             BloqueoEscrituras bloqueoEscrituras,
             UsuarioRepositorio usuarioRepositorio,
             PasswordEncoder codificadorContrasenias,
             @Value("${app.seguridad.administrador-inicial.nombre-usuario:}") String nombreUsuario,
-            @Value("${app.seguridad.administrador-inicial.contrasenia:}") String contrasenia) {
+            @Value("${app.seguridad.administrador-inicial.contrasenia:}") String contrasenia,
+            @Value("${app.seguridad.administrador-inicial.dni:}") String dni) {
         this.bloqueoEscrituras = bloqueoEscrituras;
         this.usuarioRepositorio = usuarioRepositorio;
         this.codificadorContrasenias = codificadorContrasenias;
         this.nombreUsuario = nombreUsuario;
         this.contrasenia = contrasenia;
+        this.dni = dni;
     }
 
     @Override
@@ -51,6 +54,12 @@ public class AdministradorInicializador implements ApplicationRunner {
         }
 
         String nombreNormalizado = validarConfiguracion();
+        if (dni == null || !dni.matches("[0-9]{7,8}")) {
+            throw new IllegalStateException("APP_ADMIN_DNI es obligatorio y debe tener 7 u 8 digitos");
+        }
+        if (usuarioRepositorio.existsByDni(dni)) {
+            throw new IllegalStateException("El DNI del administrador inicial ya esta en uso");
+        }
         if (usuarioRepositorio.existsByNombreUsuarioIgnoreCase(nombreNormalizado)) {
             throw new IllegalStateException(
                     "El nombre configurado para el administrador inicial ya esta en uso");
@@ -58,7 +67,7 @@ public class AdministradorInicializador implements ApplicationRunner {
 
         usuarioRepositorio.save(new Administrador(
                 nombreNormalizado,
-                codificadorContrasenias.encode(contrasenia)));
+                codificadorContrasenias.encode(contrasenia), dni));
         LOGGER.info("Se creo el administrador inicial {}", nombreNormalizado);
     }
 

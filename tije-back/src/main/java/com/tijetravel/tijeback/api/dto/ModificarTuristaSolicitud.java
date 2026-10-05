@@ -1,12 +1,15 @@
 package com.tijetravel.tijeback.api.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record ModificarTuristaSolicitud(
+                @NotBlank(message = "El DNI es obligatorio")
+                @Pattern(regexp = "[0-9]{7,8}", message = "El DNI debe tener 7 u 8 digitos, sin puntos ni espacios") String dni,
                 @NotBlank(message = "El nombre es obligatorio") @Size(max = 255, message = "El nombre no puede superar 255 caracteres") String nombre,
 
                 @NotBlank(message = "El apellido es obligatorio") @Size(max = 255, message = "El apellido no puede superar 255 caracteres") String apellido,

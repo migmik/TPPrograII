@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.modelos;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,8 +43,7 @@ class ModelosTest {
         @Test
         void reservaExigeUnIntervaloDeFechasValido() {
                 Sucursal sucursal = new Sucursal("Direccion", "1234");
-                Turista turista = new Turista(
-                                "Ana", "Perez", "Direccion", "ana@example.com", "123", "456", sucursal);
+                Turista turista = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "ana@example.com", "123", "456", sucursal);
                 Hotel hotel = new Hotel("Hotel", "Direccion", "Cordoba", "1234", 5);
                 Vuelo vuelo = new Vuelo(
                                 100,
@@ -67,8 +68,8 @@ class ModelosTest {
 
         @Test
         void mantieneElPolimorfismoDePermisos() {
-                Administrador administrador = new Administrador("admin", "clave");
-                Vendedor vendedor = new Vendedor("vendedor", "clave");
+                Administrador administrador = new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+                Vendedor vendedor = new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
 
                 assertTrue(administrador.tienePermiso(Permiso.ADMINISTRAR_USUARIOS));
                 assertTrue(vendedor.tienePermiso(Permiso.ADMINISTRAR_RESERVAS));
@@ -79,8 +80,7 @@ class ModelosTest {
         @Test
         void normalizaLosTextosDelModelo() {
                 Sucursal sucursal = new Sucursal("  Av. Colon 100  ", "  351-1000  ");
-                Turista turista = new Turista(
-                                "  Ana  ",
+                Turista turista = new Turista(DnisPrueba.siguiente(), "  Ana  ",
                                 "  Perez  ",
                                 "  Calle 1  ",
                                 "  ana@example.com  ",
@@ -99,17 +99,14 @@ class ModelosTest {
 
                 assertThrows(
                                 IllegalArgumentException.class,
-                                () -> new Turista(
-                                                "Ana", "Perez", "Direccion", "email-invalido", "123", "456", sucursal));
+                                () -> new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "email-invalido", "123", "456", sucursal));
         }
 
         @Test
         void clienteNoPuedeAsociarseAUnFamiliar() {
                 Sucursal sucursal = new Sucursal("Direccion", "1234");
-                Turista titular = new Turista(
-                                "Ana", "Perez", "Direccion", "ana@example.com", "123", "456", sucursal);
-                Turista familiar = new Turista(
-                                "Luis",
+                Turista titular = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "ana@example.com", "123", "456", sucursal);
+                Turista familiar = new Turista(DnisPrueba.siguiente(), "Luis",
                                 "Perez",
                                 "Direccion",
                                 "luis@example.com",

@@ -14,7 +14,7 @@ public class CreadorCliente implements CreadorUsuario {
     }
 
     @Override
-    public Usuario crear(String nombre, String hash, Turista turista) {
+    public Usuario crear(String nombre, String hash, Turista turista, String dni) {
         return new Cliente(nombre, hash, turista);
     }
 }
