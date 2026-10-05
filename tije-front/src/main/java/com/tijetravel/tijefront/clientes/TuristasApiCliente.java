@@ -47,6 +47,7 @@ public class TuristasApiCliente {
     public void modificar(Integer codigo, GuardarTuristaFormulario formulario) {
         // La API de modificación no permite cambiar el titular.
         java.util.Map<String, Object> datos = new java.util.LinkedHashMap<>();
+        datos.put("dni", formulario.getDni());
         datos.put("nombre", formulario.getNombre());
         datos.put("apellido", formulario.getApellido());
         datos.put("direccion", formulario.getDireccion());

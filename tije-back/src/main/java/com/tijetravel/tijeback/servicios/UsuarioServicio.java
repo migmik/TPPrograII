@@ -50,7 +50,7 @@ public class UsuarioServicio {
             String nombreUsuario,
             String contrasenia,
             RolUsuario rol,
-            Integer codigoTurista) {
+            Integer codigoTurista, String dni) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         bloqueoEscrituras.adquirir();
         if (rol == null) {
@@ -77,11 +77,22 @@ public class UsuarioServicio {
             }
         }
 
+        if (rol == RolUsuario.CLIENTE) {
+            if (dni != null && !dni.isBlank()) {
+                throw new IllegalArgumentException("El DNI del cliente se toma del turista asociado");
+            }
+            ValidacionModelo.dni(turista.getDni());
+        } else {
+            ValidacionModelo.dni(dni);
+            if (usuarioRepositorio.existsByDni(dni)) {
+                throw new EntidadDuplicadaException("Ya existe un empleado con ese DNI");
+            }
+        }
         Usuario usuario = usuarioFactory.crear(
                 nombreNormalizado,
                 codificarContrasenia(contrasenia),
                 rol,
-                turista);
+                turista, dni);
         return usuarioRepositorio.save(usuario);
     }
 
@@ -109,7 +120,7 @@ public class UsuarioServicio {
             Usuario actor,
             Integer codigo,
             String nombreUsuario,
-            String contrasenia) {
+            String contrasenia, String dni) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         bloqueoEscrituras.adquirir();
         String nombreNormalizado = ValidacionModelo.textoObligatorio(nombreUsuario, "nombreUsuario");
@@ -118,6 +129,17 @@ public class UsuarioServicio {
         }
 
         Usuario usuario = encontrarPorId(codigo);
+        if (usuario.getRol() == RolUsuario.CLIENTE) {
+            if (dni != null && !dni.isBlank()) {
+                throw new IllegalArgumentException("El DNI del cliente se modifica en su turista asociado");
+            }
+        } else {
+            ValidacionModelo.dni(dni);
+            if (usuarioRepositorio.existsByDniAndCodigoNot(dni, codigo)) {
+                throw new EntidadDuplicadaException("Ya existe un empleado con ese DNI");
+            }
+            usuario.actualizarDni(dni);
+        }
         usuario.actualizarCredenciales(
                 nombreNormalizado,
                 codificarContrasenia(contrasenia));

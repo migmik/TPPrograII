@@ -296,7 +296,7 @@ Verificá que el valor de `$carpetaFront` tampoco contenga espacios. Esa copia s
 sirve para ejecutar: el código se sigue editando en el repositorio. Al recompilar,
 detené la aplicación antes de reemplazar la copia del WAR.
 
-La suite contiene 84 pruebas automatizadas para hoteles, vuelos, sesiones, usuarios y turistas. Comprueba,
+La suite contiene pruebas automatizadas para hoteles, vuelos, sesiones, usuarios y turistas. Comprueba,
 entre otras cosas, que se lean correctamente las fechas del JSON y que se muestren
 las plazas libres recibidas aunque sean menores a la capacidad del vuelo.
 También verifica el aislamiento de cookies, los tokens CSRF, el cambio de
@@ -402,3 +402,18 @@ edición, rechazo de email duplicado, acceso limitado del cliente a su grupo,
 eliminación como vendedor y protección de titulares con familiares o cuentas.
 Las cuentas y turistas temporales se eliminaron al finalizar. La base principal
 no se modificó en esta verificación.
+
+## DNI
+
+El alta y la edición de turistas piden DNI obligatorio de 7 u 8 dígitos, sin
+puntos ni espacios. Se muestra en listado, detalle, confirmación de eliminación
+y selectores de titulares y de turistas para crear cuentas. Los duplicados se
+informan al guardar. Los registros anteriores muestran «DNI pendiente» y
+requieren completar el dato real al editarlos. No se cambia el usuario de login.
+
+Los administradores y vendedores también requieren DNI en Usuarios > Crear/Editar.
+En el formulario de alta, dejá el DNI vacío para un cliente y elegí un turista
+con documento completo. El DNI del cliente se consulta desde ese turista y se
+modifica desde Turistas. El documento se muestra en Usuarios, Mi cuenta y la
+confirmación de eliminación. Las cuentas anteriores muestran DNI pendiente.
+La edición de usuario sigue requiriendo una nueva contraseña, como antes.

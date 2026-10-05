@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -70,7 +72,7 @@ class HotelServicioTest {
                 assertThrows(
                                 CapacidadExcedidaException.class,
                                 () -> servicio.modificar(
-                                                new Administrador("admin", "clave"),
+                                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                                 1,
                                                 "Hotel Centro",
                                                 "Calle 1",
@@ -88,7 +90,7 @@ class HotelServicioTest {
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 
                 Hotel modificado = servicio.modificar(
-                                new Administrador("admin", "clave"),
+                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                 1,
                                 "Hotel Centro",
                                 "Calle 1",
@@ -100,8 +102,7 @@ class HotelServicioTest {
         }
 
         private Reserva reserva(String email, LocalDate llegada, LocalDate partida) {
-                Turista turista = new Turista(
-                                "Nombre", "Apellido", "Direccion", email, "100", "200", sucursal);
+                Turista turista = new Turista(DnisPrueba.siguiente(), "Nombre", "Apellido", "Direccion", email, "100", "200", sucursal);
                 return new Reserva(
                                 turista,
                                 vuelo,

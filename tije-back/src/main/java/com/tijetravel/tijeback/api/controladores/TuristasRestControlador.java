@@ -67,7 +67,7 @@ public class TuristasRestControlador {
                         @Valid @RequestBody CrearTuristaSolicitud solicitud,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                Turista turista = turistaServicio.crear(actor, solicitud.nombre(), solicitud.apellido(),
+                Turista turista = turistaServicio.crear(actor, solicitud.dni(), solicitud.nombre(), solicitud.apellido(),
                                 solicitud.direccion(), solicitud.email(), solicitud.telefonoFijo(),
                                 solicitud.telefonoCelular(), solicitud.codigoSucursal(), solicitud.codigoTitular());
                 TuristaRespuesta respuesta = turistaMapeador.aRespuesta(turista);
@@ -85,6 +85,7 @@ public class TuristasRestControlador {
                 return turistaMapeador.aRespuesta(turistaServicio.modificar(
                                 actor,
                                 codigo,
+                                solicitud.dni(),
                                 solicitud.nombre(),
                                 solicitud.apellido(),
                                 solicitud.direccion(),

@@ -14,10 +14,10 @@ public class CreadorAdministrador implements CreadorUsuario {
     }
 
     @Override
-    public Usuario crear(String nombre, String hash, Turista turista) {
+    public Usuario crear(String nombre, String hash, Turista turista, String dni) {
         if (turista != null) {
             throw new IllegalArgumentException("Este rol no admite un turista asociado");
         }
-        return new Administrador(nombre, hash);
+        return new Administrador(nombre, hash, dni);
     }
 }

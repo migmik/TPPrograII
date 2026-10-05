@@ -115,3 +115,8 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 Falta ampliar el frontend con gestión de reservas y administración de los demás recursos,
 trabajar el diseño visual y preparar la presentación con MySQL en una PC,
 el backend y frontend en otra, y el acceso desde la computadora del profesor.
+
+El DNI se registra para turistas, administradores y vendedores. Los clientes
+usan el del turista asociado, sin duplicarlo. Es obligatorio en las altas y
+modificaciones de personas. Los registros previos quedan con DNI pendiente hasta completar
+el dato real. Ver [actualización de la base](database/README.md#incorporación-del-dni).

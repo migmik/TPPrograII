@@ -20,7 +20,7 @@ public class Cliente extends Usuario {
     }
 
     public Cliente(String nombreUsuario, String contrasenia, Turista turista) {
-        super(nombreUsuario, contrasenia, RolUsuario.CLIENTE);
+        super(nombreUsuario, contrasenia, RolUsuario.CLIENTE, null);
         if (!ValidacionModelo.obligatorio(turista, "turista").isTitular()) {
             throw new IllegalArgumentException("Un cliente solo puede asociarse a un turista titular");
         }

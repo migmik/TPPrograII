@@ -25,9 +25,9 @@ public class UsuarioFactory {
         }
     }
 
-    public Usuario crear(String nombre, String hash, RolUsuario rol, Turista turista) {
+    public Usuario crear(String nombre, String hash, RolUsuario rol, Turista turista, String dni) {
         if (rol == null)
             throw new IllegalArgumentException("El rol es obligatorio");
-        return creadores.get(rol).crear(nombre, hash, turista);
+        return creadores.get(rol).crear(nombre, hash, turista, dni);
     }
 }

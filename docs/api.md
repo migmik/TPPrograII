@@ -107,3 +107,28 @@ la migracion V5 renombra la columna anterior conservando los datos existentes.
 El permiso para gestionar turistas se llama `ADMINISTRAR_TURISTAS`; los
 consumidores del listado de permisos de sesion deben usar este nombre.
 
+## DNI del turista
+
+POST y PUT de `/api/v1/turistas` requieren `dni` como texto: por ejemplo
+`"dni": "12345678"`. La regla de la aplicación admite 7 u 8 dígitos, sin puntos
+ni espacios. Es único entre titulares y familiares. Omitirlo o enviar un formato
+inválido devuelve 400; repetir el de otra persona devuelve 409. Al editar se
+permite conservar el propio DNI o corregirlo por otro disponible. Las respuestas
+de listado, detalle, alta y modificación incluyen `dni`.
+
+Las cuentas Cliente y las reservas acceden al DNI por su relación con Turista;
+no se duplica el documento en esas tablas. El código interno sigue siendo la clave
+de las relaciones. Los turistas anteriores pueden devolver `dni: null` hasta
+completar su documento real desde la edición.
+
+## DNI de usuarios
+
+POST y PUT de `/api/v1/usuarios` requieren `dni` para administradores y vendedores.
+Un documento repetido entre empleados devuelve 409. Para un cliente se omite
+`dni` (o se envía null): se utiliza el documento del turista asociado. El alta de
+un cliente requiere que ese turista ya tenga DNI. Su documento se corrige en
+`/api/v1/turistas`, no en la cuenta de acceso.
+
+Las respuestas de usuarios y de autenticación incluyen el DNI correspondiente;
+la consulta de sesión lo lee actualizado, sin guardarlo en el principal de seguridad.
+El DNI identifica a la persona; el nombre de usuario sigue siendo el dato de login.

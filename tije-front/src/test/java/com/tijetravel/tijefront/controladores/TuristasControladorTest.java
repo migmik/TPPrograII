@@ -102,6 +102,7 @@ class TuristasControladorTest {
         when(turistasApi.buscar(2)).thenReturn(turista(false));
         doAnswer(inv -> {
             GuardarTuristaFormulario datos = inv.getArgument(1);
+            assertEquals("76543210", datos.getDni());
             assertEquals(1, datos.getCodigoTitular());
             assertEquals(3, datos.getCodigoSucursal());
             return null;
@@ -178,6 +179,16 @@ class TuristasControladorTest {
         assertTrue(actual.isInvalid());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"", "123456", "123456789", "12.345.678", "abcdefg", " 12345678"})
+    void noEnviaDniInvalidoALaApi(String dni) throws Exception {
+        preparar("ADMINISTRADOR");
+        mvc.perform(formulario("/turistas").param("codigoSucursal", "1")
+                .with(request -> { request.setParameter("dni", dni); return request; }))
+                .andExpect(model().attributeHasFieldErrors("turista", "dni"));
+        verify(turistasApi, never()).crear(any());
+    }
+
     private void preparar(String rol) {
         SesionRespuesta usuario = new SesionRespuesta();
         usuario.setCodigo(1);
@@ -194,7 +205,7 @@ class TuristasControladorTest {
     }
 
     private MockHttpServletRequestBuilder formulario(String ruta) {
-        return post(ruta).session(sesion()).with(csrf()).param("nombre", "Ana").param("apellido", "Perez")
+        return post(ruta).session(sesion()).with(csrf()).param("dni", "76543210").param("nombre", "Ana").param("apellido", "Perez")
                 .param("direccion", "Calle 1").param("email", "ana@example.test")
                 .param("telefonoFijo", "111").param("telefonoCelular", "222");
     }
@@ -202,6 +213,7 @@ class TuristasControladorTest {
     private TuristaRespuesta turista(boolean titular) {
         TuristaRespuesta turista = new TuristaRespuesta();
         turista.setCodigo(2);
+        turista.setDni("76543210");
         turista.setTitular(titular);
         turista.setCodigoTitular(titular ? null : 1);
         turista.setCodigoSucursal(3);

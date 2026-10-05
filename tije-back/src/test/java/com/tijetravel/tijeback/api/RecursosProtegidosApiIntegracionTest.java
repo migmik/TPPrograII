@@ -85,7 +85,7 @@ class RecursosProtegidosApiIntegracionTest {
                 usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_VENDEDOR)
                                 .orElseGet(() -> usuarioRepositorio.save(new Vendedor(
                                                 USUARIO_VENDEDOR,
-                                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR))));
+                                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), com.tijetravel.tijeback.DnisPrueba.siguiente())));
 
                 Reserva reservaExterna = reservaRepositorio.findByTuristaCodigo(3).stream()
                                 .findFirst()

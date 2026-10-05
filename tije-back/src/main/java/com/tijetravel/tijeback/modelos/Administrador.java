@@ -13,8 +13,8 @@ public class Administrador extends Usuario {
     protected Administrador() {
     }
 
-    public Administrador(String nombreUsuario, String contrasenia) {
-        super(nombreUsuario, contrasenia, RolUsuario.ADMINISTRADOR);
+    public Administrador(String nombreUsuario, String contrasenia, String dni) {
+        super(nombreUsuario, contrasenia, RolUsuario.ADMINISTRADOR, dni);
     }
 
     @Override
