@@ -43,6 +43,7 @@
                             </p>
                         </c:if>
                         <form:form method="post" action="${urlGuardar}" modelAttribute="reserva" htmlEscape="true">
+                            <form:hidden path="seleccionBuscador" />
                             <p>
                                 <form:label path="codigoTurista">Turista</form:label>
                                 <form:select path="codigoTurista" required="required">
