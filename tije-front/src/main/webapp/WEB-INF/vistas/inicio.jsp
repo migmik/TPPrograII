@@ -84,29 +84,31 @@
                                     <c:out value="${busqueda.personas}" /> persona(s).
                                 </p>
                                 <div class="search-results__columns">
-                                    <div>
+                                    <div class="search-results__panel">
                                         <h3>Vuelos de ida</h3>
                                         <c:choose>
                                             <c:when test="${empty vuelosEncontrados}">
                                                 <p>No hay vuelos con plazas suficientes para esa fecha.</p>
                                                 <c:if test="${not empty vuelosSugeridos}">
-                                                    <h4>Otras fechas para este destino</h4>
-                                                    <p>Estos vuelos salen en otros d&iacute;as. Si eleg&iacute;s uno,
-                                                        volv&eacute; a buscar con esa fecha para consultar el
-                                                        alojamiento.</p>
-                                                    <ul class="search-results__list">
-                                                        <c:forEach items="${vuelosSugeridos}" var="vuelo">
-                                                            <li><strong>Vuelo
-                                                                    <c:out value="${vuelo.numero}" />
-                                                                </strong>
-                                                                <span>
-                                                                    <c:out value="${vuelo.fechaYHoraFormateada}" />
-                                                                </span>
-                                                                <a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver
-                                                                    vuelo</a>
-                                                            </li>
-                                                        </c:forEach>
-                                                    </ul>
+                                                    <div class="search-results__suggestions">
+                                                        <h4>Otras fechas para este destino</h4>
+                                                        <p>Estos vuelos salen en otros d&iacute;as. Si eleg&iacute;s uno,
+                                                            volv&eacute; a buscar con esa fecha para consultar el
+                                                            alojamiento.</p>
+                                                        <ul class="search-results__list">
+                                                            <c:forEach items="${vuelosSugeridos}" var="vuelo">
+                                                                <li><strong>Vuelo
+                                                                        <c:out value="${vuelo.numero}" />
+                                                                    </strong>
+                                                                    <span>
+                                                                        <c:out value="${vuelo.fechaYHoraFormateada}" />
+                                                                    </span>
+                                                                    <a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver
+                                                                        vuelo</a>
+                                                                </li>
+                                                            </c:forEach>
+                                                        </ul>
+                                                    </div>
                                                 </c:if>
                                             </c:when>
                                             <c:otherwise>
@@ -126,7 +128,7 @@
                                             </c:otherwise>
                                         </c:choose>
                                     </div>
-                                    <div>
+                                    <div class="search-results__panel">
                                         <h3>Alojamientos</h3>
                                         <c:choose>
                                             <c:when test="${empty hotelesEncontrados}">
@@ -151,9 +153,10 @@
                                     </div>
                                 </div>
                                 <c:if test="${not empty vuelosEncontrados and not empty hotelesEncontrados}">
-                                    <h3>Reservar vuelo y hotel</h3>
-                                    <p>Eleg&iacute; una combinaci&oacute;n. Cada reserva corresponde a una persona; las plazas se confirman al guardarla.</p>
-                                    <c:choose>
+                                    <div class="search-results__booking">
+                                        <h3>Reservar vuelo y hotel</h3>
+                                        <p>Eleg&iacute; una combinaci&oacute;n. Cada reserva corresponde a una persona; las plazas se confirman al guardarla.</p>
+                                        <c:choose>
                                         <c:when test="${empty usuarioActual}">
                                             <p><a href="<c:url value='/login'/>">Inici&aacute; sesi&oacute;n para reservar</a></p>
                                         </c:when>
@@ -168,12 +171,13 @@
                                                             <c:param name="fechaPartida" value="${busqueda.fechaPartida}"/>
                                                         </c:url>
                                                         <li><strong>Vuelo <c:out value="${vuelo.numero}"/> + <c:out value="${hotel.nombre}"/></strong>
-                                                            <a href="${urlReserva}">Reservar</a></li>
+                                                            <a class="search-results__reserve-link" href="${urlReserva}">Reservar</a></li>
                                                     </c:forEach>
                                                 </c:forEach>
                                             </ul>
                                         </c:otherwise>
-                                    </c:choose>
+                                        </c:choose>
+                                    </div>
                                 </c:if>
                             </section>
                         </c:if>
