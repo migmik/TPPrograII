@@ -46,6 +46,14 @@ class SesionControladorTest {
     }
 
     @Test
+    void usuarioConSesionQueAbreLoginVuelveAMiCuenta() throws Exception {
+        mvc.perform(get("/login").session(sesionIngresada()))
+                .andExpect(redirectedUrl("/cuenta"))
+                .andExpect(header().string("Cache-Control", "no-store"));
+        verifyNoInteractions(autenticacionApi);
+    }
+
+    @Test
     void rechazaLoginSinCsrfAntesDeEnviarLaContrasenia() throws Exception {
         mvc.perform(post("/login").param("nombreUsuario", "ana").param("contrasenia", "clave"))
                 .andExpect(status().isForbidden());
