@@ -110,9 +110,10 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 
 - [API REST](docs/api.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
+- [Despliegue en Railway](docs/despliegue-railway.md)
 
-Falta trabajar el diseño visual y preparar la presentación con MySQL en una PC,
-el backend y frontend en otra, y el acceso desde la computadora del profesor.
+Para la presentación se prevé ejecutar MySQL, el backend y el frontend como tres
+servicios separados en Railway. La guía indica cómo conectarlos y comprobarlos.
 
 El DNI se registra para turistas, administradores y vendedores. Los clientes
 usan el del turista asociado, sin duplicarlo. Es obligatorio en las altas y
