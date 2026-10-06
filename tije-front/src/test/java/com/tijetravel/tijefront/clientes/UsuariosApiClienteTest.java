@@ -50,6 +50,17 @@ class UsuariosApiClienteTest {
     }
 
     @Test
+    void filtraUsuariosPorRol() {
+        servidor.expect(requestTo("http://backend/api/v1/usuarios?rol=VENDEDOR"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("[{\"codigo\":2,\"nombreUsuario\":\"ventas\",\"rol\":\"VENDEDOR\"}]",
+                        MediaType.APPLICATION_JSON));
+
+        assertEquals("VENDEDOR", usuarios.listar("VENDEDOR").get(0).getRol());
+        servidor.verify();
+    }
+
+    @Test
     void enviaElFormularioYElTokenCsrf() {
         CsrfRespuesta csrf = new CsrfRespuesta();
         csrf.setNombreEncabezado("X-CSRF-TOKEN");

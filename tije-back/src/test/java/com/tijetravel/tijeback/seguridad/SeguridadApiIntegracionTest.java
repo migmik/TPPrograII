@@ -2,6 +2,8 @@ package com.tijetravel.tijeback.seguridad;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -27,8 +29,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.modelos.Cliente;
+import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @SpringBootTest(properties = {
@@ -48,6 +53,9 @@ class SeguridadApiIntegracionTest {
 
         @Autowired
         private UsuarioRepositorio usuarioRepositorio;
+
+        @Autowired
+        private SucursalRepositorio sucursalRepositorio;
 
         @Autowired
         private PasswordEncoder codificadorContrasenias;
@@ -128,6 +136,34 @@ class SeguridadApiIntegracionTest {
         }
 
         @Test
+        void registraPublicamenteUnClienteConTuristaTitular() throws Exception {
+                String dni = com.tijetravel.tijeback.DnisPrueba.siguiente();
+                Sucursal sucursal = sucursalRepositorio.save(
+                                new Sucursal("Sucursal registro " + dni, "351-1000"));
+                String nombreUsuario = "cliente-" + dni;
+
+                mockMvc.perform(post("/api/v1/autenticacion/registro")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(registro(nombreUsuario, dni, sucursal.getCodigo())))
+                                .andExpect(status().isCreated());
+
+                Usuario guardado = usuarioRepositorio.findByNombreUsuarioIgnoreCase(nombreUsuario).orElseThrow();
+                Cliente cliente = assertInstanceOf(Cliente.class, guardado);
+                assertEquals("CLIENTE", cliente.getRol().name());
+                assertTrue(cliente.getTurista().isTitular());
+                assertEquals(dni, cliente.getTurista().getDni());
+        }
+
+        @Test
+        void exigeCsrfParaElRegistroPublico() throws Exception {
+                mockMvc.perform(post("/api/v1/autenticacion/registro")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
         void rechazaCredencialesIncorrectasSinRevelarElMotivo() throws Exception {
                 mockMvc.perform(post("/api/v1/autenticacion/login")
                                 .with(csrf())
@@ -204,5 +240,22 @@ class SeguridadApiIntegracionTest {
                                   "contrasenia": "%s"
                                 }
                                 """.formatted(usuario, contrasenia);
+        }
+
+        private String registro(String nombreUsuario, String dni, Integer codigoSucursal) {
+                return """
+                                {
+                                  "nombreUsuario": "%s",
+                                  "contrasenia": "ClaveRegistro123!",
+                                  "dni": "%s",
+                                  "nombre": "Ana",
+                                  "apellido": "Perez",
+                                  "direccion": "Calle 1",
+                                  "email": "registro-%s@example.com",
+                                  "telefonoFijo": "351-1000",
+                                  "telefonoCelular": "351-2000",
+                                  "codigoSucursal": %d
+                                }
+                                """.formatted(nombreUsuario, dni, dni, codigoSucursal);
         }
 }

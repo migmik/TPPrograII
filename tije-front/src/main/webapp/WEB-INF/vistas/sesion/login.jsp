@@ -15,6 +15,9 @@
                 <%@ include file="../fragmentos/navegacion.jspf" %>
                     <main class="compact-page">
                         <h1>Iniciar sesión</h1>
+                        <c:if test="${not empty registroExitoso}">
+                            <p role="status">Cuenta creada. Ya podés iniciar sesión.</p>
+                        </c:if>
                         <c:if test="${param.credencialesActualizadas != null}">
                             <p>Credenciales actualizadas. Ingresá nuevamente con el nombre y la contraseña que
                                 guardaste.</p>
