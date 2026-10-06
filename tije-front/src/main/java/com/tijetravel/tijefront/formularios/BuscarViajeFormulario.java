@@ -28,14 +28,43 @@ public class BuscarViajeFormulario {
     @Max(value = 20, message = "Buscá para un máximo de 20 personas.")
     private int personas = 2;
 
-    public String getOrigen() { return origen; }
-    public void setOrigen(String origen) { this.origen = origen; }
-    public String getDestino() { return destino; }
-    public void setDestino(String destino) { this.destino = destino; }
-    public LocalDate getFechaLlegada() { return fechaLlegada; }
-    public void setFechaLlegada(LocalDate fechaLlegada) { this.fechaLlegada = fechaLlegada; }
-    public LocalDate getFechaPartida() { return fechaPartida; }
-    public void setFechaPartida(LocalDate fechaPartida) { this.fechaPartida = fechaPartida; }
-    public int getPersonas() { return personas; }
-    public void setPersonas(int personas) { this.personas = personas; }
+    public String getOrigen() {
+        return origen;
+    }
+
+    public void setOrigen(String origen) {
+        this.origen = origen;
+    }
+
+    public String getDestino() {
+        return destino;
+    }
+
+    public void setDestino(String destino) {
+        this.destino = destino;
+    }
+
+    public LocalDate getFechaLlegada() {
+        return fechaLlegada;
+    }
+
+    public void setFechaLlegada(LocalDate fechaLlegada) {
+        this.fechaLlegada = fechaLlegada;
+    }
+
+    public LocalDate getFechaPartida() {
+        return fechaPartida;
+    }
+
+    public void setFechaPartida(LocalDate fechaPartida) {
+        this.fechaPartida = fechaPartida;
+    }
+
+    public int getPersonas() {
+        return personas;
+    }
+
+    public void setPersonas(int personas) {
+        this.personas = personas;
+    }
 }

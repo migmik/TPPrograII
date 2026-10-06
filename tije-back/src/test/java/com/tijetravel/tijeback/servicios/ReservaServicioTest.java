@@ -165,10 +165,24 @@ class ReservaServicioTest {
         }
 
         @Test
-        void clienteNoPuedeCrearReservas() {
+        void clientePuedeCrearReservaParaSiMismo() {
+                prepararBusquedas();
+                when(reservaRepositorio.save(any(Reserva.class)))
+                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                Reserva reserva = ingresarReservaValida(new Cliente("cliente", "clave", turista));
+                assertSame(turista, reserva.getTurista());
+        }
+
+        @Test
+        void clienteNoPuedeCrearReservaParaOtroGrupo() {
+                Turista ajeno = conCodigo(new Turista(DnisPrueba.siguiente(), "Juan", "Lopez",
+                                "Direccion", "juan@example.com", "123", "456", sucursal), "codigo", 2);
+                when(turistaRepositorio.findById(2)).thenReturn(Optional.of(ajeno));
                 assertThrows(
                                 OperacionNoPermitidaException.class,
-                                () -> ingresarReservaValida(new Cliente("cliente", "clave", turista)));
+                                () -> servicio.crear(new Cliente("cliente", "clave", turista), 2, 100, 1,
+                                                ClaseVuelo.TURISTA, TipoHospedaje.MEDIA_PENSION,
+                                                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3)));
         }
 
         private void prepararBusquedas() {

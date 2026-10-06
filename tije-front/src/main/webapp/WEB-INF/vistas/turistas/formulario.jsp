@@ -31,10 +31,12 @@
                         <form:form method="post" action="${urlGuardar}" modelAttribute="turista" htmlEscape="true">
                             <p>
                                 <form:label path="dni">DNI</form:label>
-                                <form:input path="dni" required="required" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" aria-describedby="ayudaDni" />
+                                <form:input path="dni" required="required" inputmode="numeric" pattern="[0-9]{7,8}"
+                                    minlength="7" maxlength="8" aria-describedby="ayudaDni" />
                                 <form:errors path="dni" cssClass="error" />
                             </p>
-                            <p id="ayudaDni">Ingresá 7 u 8 dígitos, sin puntos ni espacios. Cada turista tiene su propio DNI.</p>
+                            <p id="ayudaDni">Ingresá 7 u 8 dígitos, sin puntos ni espacios. Cada turista tiene su propio
+                                DNI.</p>
                             <c:if test="${not empty actual && empty actual.dni}">
                                 <p>Este turista se registró sin DNI. Completá el dato real para guardar.</p>
                             </c:if>
@@ -82,7 +84,8 @@
                                                     <c:out value="${titular.codigo}" /> -
                                                     <c:out value="${titular.nombre}" />
                                                     <c:out value="${titular.apellido}" />
-                                                    - DNI: <c:out value="${titular.dni}" default="pendiente" />
+                                                    - DNI:
+                                                    <c:out value="${titular.dni}" default="pendiente" />
                                                 </form:option>
                                             </c:forEach>
                                         </form:select>

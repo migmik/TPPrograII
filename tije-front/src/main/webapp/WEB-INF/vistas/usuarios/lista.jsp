@@ -31,7 +31,8 @@
                                     <tr>
                                         <th scope="col">Código</th>
                                         <th scope="col">Usuario</th>
-                                        <th scope="col">DNI</th><th scope="col">Rol</th>
+                                        <th scope="col">DNI</th>
+                                        <th scope="col">Rol</th>
                                         <th scope="col">Código de turista</th>
                                         <th scope="col">Acciones</th>
                                     </tr>
@@ -45,7 +46,10 @@
                                             <td>
                                                 <c:out value="${usuario.nombreUsuario}" />
                                             </td>
-                                            <td><c:out value="${usuario.dni}" default="DNI pendiente"/></td><td>
+                                            <td>
+                                                <c:out value="${usuario.dni}" default="DNI pendiente" />
+                                            </td>
+                                            <td>
                                                 <c:out value="${usuario.rol}" />
                                             </td>
                                             <td>

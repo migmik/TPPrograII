@@ -16,7 +16,10 @@
                     <main>
                         <h1>Detalle del turista</h1>
                         <dl>
-            <dt>DNI</dt><dd><c:out value="${turista.dni}" default="DNI pendiente"/></dd>
+                            <dt>DNI</dt>
+                            <dd>
+                                <c:out value="${turista.dni}" default="DNI pendiente" />
+                            </dd>
                             <dt>Código</dt>
                             <dd>
                                 <c:out value="${turista.codigo}" default="No corresponde" />
