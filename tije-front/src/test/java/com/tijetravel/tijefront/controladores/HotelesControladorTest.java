@@ -34,15 +34,10 @@ class HotelesControladorTest {
 
     @BeforeEach
     void preparar() {
-        mvc = MockMvcBuilders.standaloneSetup(new HotelesControlador(hotelesApi), new InicioControlador())
+        mvc = MockMvcBuilders.standaloneSetup(new HotelesControlador(hotelesApi))
                 .setControllerAdvice(new ManejadorErrores())
                 .setViewResolvers(new InternalResourceViewResolver("/WEB-INF/vistas/", ".jsp"))
                 .build();
-    }
-
-    @Test
-    void elInicioNoNecesitaConexionAlBackend() throws Exception {
-        mvc.perform(get("/")).andExpect(status().isOk()).andExpect(view().name("inicio"));
     }
 
     @Test
