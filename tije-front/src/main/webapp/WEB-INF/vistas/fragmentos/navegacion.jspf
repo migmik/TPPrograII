@@ -2,11 +2,13 @@
 <nav aria-label="Navegación principal">
     <a href="<c:url value='/'/>">Inicio</a> |
     <a href="<c:url value='/hoteles'/>">Hoteles</a> |
-    <a href="<c:url value='/vuelos'/>">Vuelos</a>
+    <a href="<c:url value='/vuelos'/>">Vuelos</a> |
+    <a href="<c:url value='/sucursales'/>">Sucursales</a>
     <c:choose>
         <c:when test="${not empty usuarioActual}">
             | <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
             | <a href="<c:url value='/turistas'/>">Turistas</a>
+            | <a href="<c:url value='/reservas'/>">Reservas</a>
             <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                 | <a href="<c:url value='/usuarios'/>">Usuarios</a>
             </c:if>
