@@ -35,10 +35,12 @@
                                 <c:out value="${hotel.capacidadTotal}" /> plazas
                             </dd>
                         </dl>
-                        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}"><p>
-                            <a href="<c:url value='/hoteles/${hotel.codigo}/editar'/>">Editar hotel</a>
-                            <a href="<c:url value='/hoteles/${hotel.codigo}/eliminar'/>">Eliminar hotel</a>
-                        </p></c:if>
+                        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                            <p>
+                                <a href="<c:url value='/hoteles/${hotel.codigo}/editar'/>">Editar hotel</a>
+                                <a href="<c:url value='/hoteles/${hotel.codigo}/eliminar'/>">Eliminar hotel</a>
+                            </p>
+                        </c:if>
                         <h2>Consultar disponibilidad</h2>
                         <c:url var="urlConsulta" value="/hoteles/${hotel.codigo}/disponibilidad" />
                         <form:form method="get" action="${urlConsulta}" modelAttribute="consulta" htmlEscape="true">

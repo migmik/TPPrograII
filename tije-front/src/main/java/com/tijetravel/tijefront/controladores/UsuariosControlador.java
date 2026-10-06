@@ -119,7 +119,8 @@ public class UsuariosControlador {
         UsuarioRespuesta usuario = usuariosApi.buscar(codigo);
         ModificarUsuarioFormulario formulario = new ModificarUsuarioFormulario();
         formulario.setNombreUsuario(usuario.getNombreUsuario());
-        if (!"CLIENTE".equals(usuario.getRol())) formulario.setDni(usuario.getDni());
+        if (!"CLIENTE".equals(usuario.getRol()))
+            formulario.setDni(usuario.getDni());
         modelo.addAttribute("cuenta", usuario);
         modelo.addAttribute("usuario", formulario);
         return "usuarios/editar";
@@ -292,9 +293,11 @@ public class UsuariosControlador {
     }
 
     private void validarDni(String rol, String dni, BindingResult errores) {
-        if (errores.hasFieldErrors("dni")) return;
+        if (errores.hasFieldErrors("dni"))
+            return;
         if ("CLIENTE".equals(rol)) {
-            if (dni != null) errores.rejectValue("dni", "dni.delTurista", "Para un cliente dejá el DNI vacío: se toma del turista.");
+            if (dni != null)
+                errores.rejectValue("dni", "dni.delTurista", "Para un cliente dejá el DNI vacío: se toma del turista.");
         } else if (dni == null) {
             errores.rejectValue("dni", "dni.obligatorio", "Ingresá el DNI del administrador o vendedor.");
         }

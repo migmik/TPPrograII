@@ -58,6 +58,20 @@ public class HotelesRestControlador {
                                 .toList();
         }
 
+        @GetMapping("/buscar")
+        public List<HotelRespuesta> buscar(@RequestParam String ciudad,
+                        @RequestParam LocalDate fechaLlegada, @RequestParam LocalDate fechaPartida,
+                        @RequestParam int personas) {
+                disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
+                if (personas < 1 || personas > 20) {
+                        throw new IllegalArgumentException("La cantidad de personas debe estar entre 1 y 20");
+                }
+                return hotelServicio.buscarPorCiudad(ciudad).stream()
+                                .filter(hotel -> disponibilidadServicio.plazasDisponiblesHotel(
+                                                hotel.getCodigo(), fechaLlegada, fechaPartida) >= personas)
+                                .map(hotelMapeador::aRespuesta).toList();
+        }
+
         @GetMapping("/{codigo}")
         public HotelRespuesta encontrarPorId(
                         @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo) {

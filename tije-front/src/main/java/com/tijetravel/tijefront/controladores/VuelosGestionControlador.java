@@ -41,7 +41,8 @@ public class VuelosGestionControlador {
     @GetMapping("/nuevo")
     public String nuevo(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         modelo.addAttribute("vuelo", new GuardarVueloFormulario());
         modelo.addAttribute("titulo", "Nuevo vuelo");
         return "vuelos/formulario";
@@ -51,10 +52,12 @@ public class VuelosGestionControlador {
     public String crear(@Valid @ModelAttribute("vuelo") GuardarVueloFormulario formulario, BindingResult errores,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo, RedirectAttributes redireccion) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         modelo.addAttribute("titulo", "Nuevo vuelo");
         validarPlazas(formulario, errores);
-        if (errores.hasErrors()) return "vuelos/formulario";
+        if (errores.hasErrors())
+            return "vuelos/formulario";
         try {
             gestionApi.crear(formulario);
         } catch (RestClientResponseException error) {
@@ -71,7 +74,8 @@ public class VuelosGestionControlador {
     public String editar(@PathVariable Integer numero, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         VueloRespuesta actual = vuelosApi.buscar(numero);
         GuardarVueloFormulario formulario = new GuardarVueloFormulario();
         formulario.setNumero(actual.getNumero());
@@ -92,13 +96,15 @@ public class VuelosGestionControlador {
             @Valid @ModelAttribute("vuelo") GuardarVueloFormulario formulario, BindingResult errores,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo, RedirectAttributes redireccion) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         modelo.addAttribute("numero", numero);
         modelo.addAttribute("titulo", "Editar vuelo");
         // El número es parte de la URL: no es editable y no viene del formulario.
         formulario.setNumero(numero);
         validarPlazas(formulario, errores);
-        if (errores.hasErrors()) return "vuelos/formulario";
+        if (errores.hasErrors())
+            return "vuelos/formulario";
         try {
             gestionApi.modificar(numero, formulario);
         } catch (RestClientResponseException error) {
@@ -115,7 +121,8 @@ public class VuelosGestionControlador {
     public String confirmarEliminacion(@PathVariable Integer numero, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         modelo.addAttribute("vuelo", vuelosApi.buscar(numero));
         return "vuelos/eliminar";
     }
@@ -124,7 +131,8 @@ public class VuelosGestionControlador {
     public String eliminar(@PathVariable Integer numero, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo, RedirectAttributes redireccion) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         modelo.addAttribute("vuelo", vuelosApi.buscar(numero));
         try {
             gestionApi.eliminar(numero);
@@ -149,7 +157,8 @@ public class VuelosGestionControlador {
 
     private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null) return "redirect:/login";
+        if (sesion == null || sesion.getAttribute("usuarioActual") == null)
+            return "redirect:/login";
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();
         sesion.setAttribute("usuarioActual", usuario);
         modelo.addAttribute("usuarioActual", usuario);
@@ -164,17 +173,19 @@ public class VuelosGestionControlador {
     private String mostrarError(RestClientResponseException error, HttpServletResponse respuesta, Model modelo,
             String vista, String mensajeConflicto) {
         int estado = error.getStatusCode().value();
-        if (estado != 400 && estado != 403 && estado != 409) throw error;
+        if (estado != 400 && estado != 403 && estado != 409)
+            throw error;
         respuesta.setStatus(estado);
         modelo.addAttribute("errorGestion", estado == 400 ? "La API rechazó los datos. Revisá los campos."
                 : estado == 403 ? "La API no permite esta operación. Revisá tus permisos y las reservas relacionadas."
-                : mensajeConflicto);
+                        : mensajeConflicto);
         return vista;
     }
 
     private String mostrarConexionIncierta(HttpServletResponse respuesta, Model modelo, String vista) {
         respuesta.setStatus(503);
-        modelo.addAttribute("errorGestion", "No pudimos confirmar la operación. Consultá el listado antes de intentarlo nuevamente.");
+        modelo.addAttribute("errorGestion",
+                "No pudimos confirmar la operación. Consultá el listado antes de intentarlo nuevamente.");
         return vista;
     }
 }

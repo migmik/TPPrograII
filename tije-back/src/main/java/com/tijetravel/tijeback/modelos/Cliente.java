@@ -34,6 +34,6 @@ public class Cliente extends Usuario {
 
     @Override
     public boolean tienePermiso(Permiso permiso) {
-        return permiso == Permiso.CONSULTAR;
+        return permiso == Permiso.CONSULTAR || permiso == Permiso.CREAR_RESERVAS;
     }
 }

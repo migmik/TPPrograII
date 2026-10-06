@@ -65,6 +65,49 @@ class CatalogosApiIntegracionTest {
     }
 
     @Test
+    void buscaVuelosPorTrayectoFechaYPlazasSinListarTodo() throws Exception {
+        mockMvc.perform(get("/api/v1/vuelos/buscar")
+                .queryParam("origen", "Buenos Aires").queryParam("destino", "Córdoba")
+                .queryParam("fecha", "2026-08-15").queryParam("personas", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].numero").value(100));
+
+        mockMvc.perform(get("/api/v1/vuelos/buscar")
+                .queryParam("origen", "Buenos Aires").queryParam("destino", "Cordoba")
+                .queryParam("fecha", "2026-08-16").queryParam("personas", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/v1/vuelos/buscar")
+                .queryParam("origen", "Buenos Aires").queryParam("destino", "Cordoba")
+                .queryParam("fecha", "2099-01-01").queryParam("personas", "2")
+                .queryParam("sugerencias", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void buscaHotelesDeLaCiudadConCapacidadParaLasFechas() throws Exception {
+        mockMvc.perform(get("/api/v1/hoteles/buscar")
+                .queryParam("ciudad", "Córdoba")
+                .queryParam("fechaLlegada", "2026-08-15")
+                .queryParam("fechaPartida", "2026-08-20")
+                .queryParam("personas", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].codigo").value(2));
+
+        mockMvc.perform(get("/api/v1/hoteles/buscar")
+                .queryParam("ciudad", "Salta")
+                .queryParam("fechaLlegada", "2026-08-15")
+                .queryParam("fechaPartida", "2026-08-20")
+                .queryParam("personas", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void consultaDisponibilidadDeHotelPorRangoDeFechas() throws Exception {
         mockMvc.perform(get("/api/v1/hoteles/{codigo}/disponibilidad", 2)
                 .queryParam("fechaLlegada", "2026-08-15")

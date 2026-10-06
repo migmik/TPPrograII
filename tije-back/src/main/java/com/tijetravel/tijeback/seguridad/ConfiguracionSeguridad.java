@@ -147,6 +147,8 @@ public class ConfiguracionSeguridad {
                                                 .hasAuthority(Permiso.ADMINISTRAR_HOTELES.name())
                                                 .requestMatchers("/api/v1/vuelos/**")
                                                 .hasAuthority(Permiso.ADMINISTRAR_VUELOS.name())
+                                                .requestMatchers(HttpMethod.POST, "/api/v1/reservas")
+                                                .hasAuthority(Permiso.CREAR_RESERVAS.name())
                                                 .requestMatchers("/api/v1/turistas/**")
                                                 .hasAuthority(Permiso.ADMINISTRAR_TURISTAS.name())
                                                 .requestMatchers("/api/v1/reservas/**")
