@@ -7,6 +7,7 @@ GET /api/v1/sucursales
 GET /api/v1/sucursales/{codigo}
 GET /api/v1/hoteles
 GET /api/v1/hoteles/{codigo}
+GET /api/v1/ciudades
 GET /api/v1/hoteles/{codigo}/disponibilidad?fechaLlegada=AAAA-MM-DD&fechaPartida=AAAA-MM-DD
 GET /api/v1/vuelos
 GET /api/v1/vuelos/{numero}
@@ -15,6 +16,10 @@ GET /api/v1/vuelos/{numero}/disponibilidad?clase=TURISTA
 
 La consulta de estos catalogos es publica, pero su escritura requiere un
 administrador:
+
+`GET /api/v1/ciudades` devuelve las ciudades distintas registradas en hoteles,
+orígenes y destinos de vuelos. El inicio usa esta lista para sus selectores de
+origen y destino.
 
 ```text
 POST   /api/v1/sucursales
