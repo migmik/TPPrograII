@@ -74,6 +74,34 @@ class TuristasControladorTest {
     }
 
     @Test
+    void buscaTuristasPorDni() throws Exception {
+        preparar("ADMINISTRADOR");
+        List<TuristaRespuesta> resultado = List.of(turista(true));
+        when(turistasApi.listarDetalles("12345678", null)).thenReturn(resultado);
+
+        mvc.perform(get("/turistas").param("dni", "12345678").session(sesion()))
+                .andExpect(view().name("turistas/lista"))
+                .andExpect(model().attribute("turistas", resultado))
+                .andExpect(model().attribute("dniBusqueda", "12345678"));
+
+        verify(turistasApi).listarDetalles("12345678", null);
+    }
+
+    @Test
+    void filtraTuristasFamiliares() throws Exception {
+        preparar("ADMINISTRADOR");
+        List<TuristaRespuesta> resultado = List.of(turista(false));
+        when(turistasApi.listarDetalles(null, false)).thenReturn(resultado);
+
+        mvc.perform(get("/turistas").param("titular", "false").session(sesion()))
+                .andExpect(view().name("turistas/lista"))
+                .andExpect(model().attribute("turistas", resultado))
+                .andExpect(model().attribute("titularBusqueda", "false"));
+
+        verify(turistasApi).listarDetalles(null, false);
+    }
+
+    @Test
     void titularRequiereSucursalYFamiliarLaHereda() throws Exception {
         preparar("VENDEDOR");
         mvc.perform(formulario("/turistas")).andExpect(model().attributeHasFieldErrors("turista", "codigoSucursal"));
@@ -91,9 +119,10 @@ class TuristasControladorTest {
         TuristaResumen titular = new TuristaResumen();
         titular.setTitular(true);
         TuristaResumen familiar = new TuristaResumen();
-        when(turistasApi.listar()).thenReturn(List.of(titular, familiar));
+        when(turistasApi.listar(true)).thenReturn(List.of(titular));
         mvc.perform(get("/turistas/nuevo").session(sesion()))
                 .andExpect(model().attribute("titulares", List.of(titular)));
+        verify(turistasApi).listar(true);
     }
 
     @Test

@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,7 @@ import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
+import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +41,8 @@ class UsuarioServicioTest {
 
         @Mock
         private TuristaRepositorio turistaRepositorio;
+        @Mock
+        private SucursalRepositorio sucursalRepositorio;
 
         @Mock
         private PasswordEncoder codificadorContrasenias;
@@ -49,6 +54,7 @@ class UsuarioServicioTest {
                 servicio = new UsuarioServicio(
                                 usuarioRepositorio,
                                 turistaRepositorio,
+                                sucursalRepositorio,
                                 new AutorizacionServicio(),
                                 codificadorContrasenias,
                                 org.mockito.Mockito.mock(BloqueoEscrituras.class),
@@ -70,6 +76,42 @@ class UsuarioServicioTest {
                                                 null, null));
 
                 verify(usuarioRepositorio, never()).save(any());
+        }
+
+        @Test
+        void filtraUsuariosPorRolSinListarTodaLaTabla() {
+                Administrador administrador = new Administrador(
+                                "admin", "clave", DnisPrueba.siguiente());
+                Vendedor vendedor = new Vendedor(
+                                "vendedor", "clave", DnisPrueba.siguiente());
+                when(usuarioRepositorio.findByRol(RolUsuario.VENDEDOR)).thenReturn(List.of(vendedor));
+
+                assertEquals(List.of(vendedor), servicio.listarPara(administrador, RolUsuario.VENDEDOR));
+
+                verify(usuarioRepositorio).findByRol(RolUsuario.VENDEDOR);
+                verify(usuarioRepositorio, never()).findAll();
+        }
+
+        @Test
+        void registraClienteYTuristaTitularEnLaMismaOperacion() {
+                Sucursal sucursal = new Sucursal("Av. Colon 100", "351-1000");
+                when(sucursalRepositorio.findById(1)).thenReturn(Optional.of(sucursal));
+                when(codificadorContrasenias.encode("clave-segura")).thenReturn("{bcrypt}hash");
+                when(turistaRepositorio.save(any(Turista.class)))
+                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                when(usuarioRepositorio.save(any(Usuario.class)))
+                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+
+                Usuario usuario = servicio.registrarCliente(
+                                "ana", "clave-segura", DnisPrueba.siguiente(), "Ana", "Perez",
+                                "Calle 1", "ana@example.com", "100", "200", 1);
+
+                Cliente cliente = assertInstanceOf(Cliente.class, usuario);
+                assertEquals(RolUsuario.CLIENTE, cliente.getRol());
+                assertTrue(cliente.getTurista().isTitular());
+                assertEquals("{bcrypt}hash", cliente.getContrasenia());
+                verify(turistaRepositorio).save(any(Turista.class));
+                verify(usuarioRepositorio).save(cliente);
         }
 
         @Test

@@ -20,6 +20,18 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     Optional<Turista> findByEmailIgnoreCase(String email);
 
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    List<Turista> findByDni(String dni);
+
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    List<Turista> findByTitularIsNull();
+
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    List<Turista> findByTitularIsNotNull();
+
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    List<Turista> findByCodigoIn(List<Integer> codigos);
+
     boolean existsByDni(String dni);
 
     boolean existsByDniAndCodigoNot(String dni, Integer codigo);

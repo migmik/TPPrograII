@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +19,10 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
         @Override
         @EntityGraph("Reserva.completa")
         List<Reserva> findAll();
+
+        @Override
+        @EntityGraph("Reserva.completa")
+        Page<Reserva> findAll(Pageable pageable);
 
         @Override
         @EntityGraph("Reserva.completa")
@@ -47,11 +53,23 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
         @EntityGraph("Reserva.completa")
         List<Reserva> findByTuristaCodigo(Integer codigoTurista);
 
+        @EntityGraph("Reserva.completa")
+        Page<Reserva> findByTuristaCodigo(Integer codigoTurista, Pageable pageable);
+
         @EntityGraph(attributePaths = "hotel")
         List<Reserva> findByVueloNumero(Integer numeroVuelo);
 
+        @EntityGraph("Reserva.completa")
+        Page<Reserva> findByVueloNumero(Integer numeroVuelo, Pageable pageable);
+
         @EntityGraph(attributePaths = "vuelo")
         List<Reserva> findByHotelCodigo(Integer codigoHotel);
+
+        @EntityGraph("Reserva.completa")
+        Page<Reserva> findByHotelCodigo(Integer codigoHotel, Pageable pageable);
+
+        @EntityGraph("Reserva.completa")
+        Page<Reserva> findByFechaLlegadaBetween(LocalDate desde, LocalDate hasta, Pageable pageable);
 
         @Query("""
                         select r from Reserva r

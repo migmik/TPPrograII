@@ -20,7 +20,24 @@ public class TuristasApiCliente {
     }
 
     public List<TuristaRespuesta> listarDetalles() {
-        TuristaRespuesta[] turistas = conexion.getCliente().get().uri("/api/v1/turistas")
+        return listarDetalles(null);
+    }
+
+    public List<TuristaRespuesta> listarDetalles(String dni) {
+        return listarDetalles(dni, null);
+    }
+
+    public List<TuristaRespuesta> listarDetalles(String dni, Boolean titular) {
+        TuristaRespuesta[] turistas = conexion.getCliente().get().uri(uriBuilder -> {
+            var ruta = uriBuilder.path("/api/v1/turistas");
+            if (dni != null && !dni.isBlank()) {
+                ruta.queryParam("dni", dni.trim());
+            }
+            if (titular != null) {
+                ruta.queryParam("titular", titular);
+            }
+            return ruta.build();
+        })
                 .retrieve().body(TuristaRespuesta[].class);
         if (turistas == null) {
             throw new RestClientException("La API no devolvió turistas.");
@@ -69,10 +86,33 @@ public class TuristasApiCliente {
     }
 
     public List<TuristaResumen> listar() {
-        TuristaResumen[] turistas = conexion.getCliente().get().uri("/api/v1/turistas")
+        return listar(null);
+    }
+
+    public List<TuristaResumen> listar(Boolean titular) {
+        TuristaResumen[] turistas = conexion.getCliente().get().uri(uriBuilder -> {
+            var ruta = uriBuilder.path("/api/v1/turistas");
+            if (titular != null) {
+                ruta.queryParam("titular", titular);
+            }
+            return ruta.build();
+        })
                 .retrieve().body(TuristaResumen[].class);
         if (turistas == null) {
             throw new RestClientException("La API no devolvió el listado de turistas.");
+        }
+        return Arrays.asList(turistas);
+    }
+
+    public List<TuristaResumen> listarPorCodigos(List<Integer> codigos) {
+        if (codigos == null || codigos.isEmpty()) return List.of();
+        TuristaResumen[] turistas = conexion.getCliente().get().uri(uriBuilder -> uriBuilder
+                .path("/api/v1/turistas")
+                .queryParam("codigos", codigos.toArray())
+                .build())
+                .retrieve().body(TuristaResumen[].class);
+        if (turistas == null) {
+            throw new RestClientException("La API no devolvio los turistas solicitados.");
         }
         return Arrays.asList(turistas);
     }
