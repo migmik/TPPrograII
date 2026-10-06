@@ -10,6 +10,7 @@ No usa JavaScript ni se conecta directamente a MySQL.
 - Listado de hoteles obtenido de la API.
 - Detalle de cada hotel.
 - Formulario para consultar plazas disponibles entre dos fechas.
+- Ciudades del buscador cargadas desde los hoteles y vuelos registrados.
 - Listado y detalle de vuelos, con fechas en formato día/mes/año y hora.
 - Capacidad y plazas libres por clase: turista y primera.
 - Alta, edición y eliminación de hoteles y vuelos para administradores.
