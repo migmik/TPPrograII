@@ -20,6 +20,17 @@
                         </p>
                     </c:if>
                     <p><a href="<c:url value='/usuarios/nuevo'/>">Crear usuario</a></p>
+                    <form method="get" action="<c:url value='/usuarios'/>">
+                        <label for="rol">Tipo de usuario</label>
+                        <select id="rol" name="rol">
+                            <option value="" <c:if test="${empty rolBusqueda}">selected</c:if>>Todos</option>
+                            <option value="ADMINISTRADOR" <c:if test="${rolBusqueda == 'ADMINISTRADOR'}">selected</c:if>>Administradores</option>
+                            <option value="VENDEDOR" <c:if test="${rolBusqueda == 'VENDEDOR'}">selected</c:if>>Vendedores</option>
+                            <option value="CLIENTE" <c:if test="${rolBusqueda == 'CLIENTE'}">selected</c:if>>Clientes</option>
+                        </select>
+                        <button type="submit">Filtrar</button>
+                        <a href="<c:url value='/usuarios'/>">Ver todos</a>
+                    </form>
                     <c:choose>
                         <c:when test="${empty usuarios}">
                             <p>No hay usuarios registrados.</p>

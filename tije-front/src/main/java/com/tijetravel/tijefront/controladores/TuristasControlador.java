@@ -1,6 +1,5 @@
 package com.tijetravel.tijefront.controladores;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,7 +13,6 @@ import com.tijetravel.tijefront.clientes.SucursalesApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.TuristaRespuesta;
-import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.formularios.GuardarTuristaFormulario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,11 +33,18 @@ public class TuristasControlador {
     }
 
     @GetMapping
-    public String listar(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+        public String listar(@RequestParam(required = false) String dni,
+            @RequestParam(required = false) Boolean titular,
+            HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null)
             return salida;
-        modelo.addAttribute("turistas", turistasApi.listarDetalles());
+        List<TuristaRespuesta> turistas = (dni == null || dni.isBlank()) && titular == null
+            ? turistasApi.listarDetalles()
+            : turistasApi.listarDetalles(dni, titular);
+        modelo.addAttribute("turistas", turistas);
+        modelo.addAttribute("dniBusqueda", dni == null ? "" : dni.trim());
+        modelo.addAttribute("titularBusqueda", titular == null ? "" : titular.toString());
         return "turistas/lista";
     }
 
@@ -178,12 +183,7 @@ public class TuristasControlador {
         modelo.addAttribute("actual", actual);
         modelo.addAttribute("sucursales", sucursalesApi.listar());
         if (actual == null) {
-            List<TuristaResumen> titulares = new ArrayList<>();
-            for (TuristaResumen turista : turistasApi.listar()) {
-                if (turista.isTitular())
-                    titulares.add(turista);
-            }
-            modelo.addAttribute("titulares", titulares);
+            modelo.addAttribute("titulares", turistasApi.listar(true));
         }
     }
 

@@ -125,6 +125,7 @@ public class ConfiguracionSeguridad {
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                                 .requestMatchers(
                                                                 "/api/v1/autenticacion/login",
+                                                                "/api/v1/autenticacion/registro",
                                                                 "/api/v1/autenticacion/csrf",
                                                                 "/error")
                                                 .permitAll()
