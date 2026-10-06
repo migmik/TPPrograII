@@ -116,6 +116,43 @@ select:focus-visible {
     background: #c8e4f1;
 }
 
+.site-auth-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.site-auth-actions a {
+    padding: .45rem .75rem;
+    border: 1px solid #d6e7f1;
+    border-radius: 5px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.site-auth-actions__login {
+    color: #fff;
+    background: #316d91;
+}
+
+.site-auth-actions__login:hover {
+    color: #fff;
+    background: #285c7c;
+}
+
+.site-auth-actions__register {
+    color: #193044;
+    background: #d9edf4;
+}
+
+.site-auth-actions__register:hover {
+    color: #193044;
+    background: #c5e3ee;
+}
+
 .site-user {
     font-size: .9rem;
     color: #e9f5fa;
@@ -668,6 +705,10 @@ section[aria-label="Resultado de disponibilidad"] {
 
     .site-nav {
         flex-basis: 100%;
+        order: 3;
+    }
+
+    .site-auth-actions {
         order: 2;
     }
 

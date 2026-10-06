@@ -10,6 +10,12 @@ import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.modelos.Vuelo;
 
 public interface VueloRepositorio extends JpaRepository<Vuelo, Integer> {
+        @Query("select distinct v.origen from Vuelo v where v.origen is not null order by v.origen")
+        List<String> listarOrigenes();
+
+        @Query("select distinct v.destino from Vuelo v where v.destino is not null order by v.destino")
+        List<String> listarDestinos();
+
     @Query("""
             select v from Vuelo v
             where lower(v.origen) in :origenes and lower(v.destino) in :destinos
