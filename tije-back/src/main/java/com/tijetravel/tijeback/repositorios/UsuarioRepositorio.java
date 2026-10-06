@@ -11,6 +11,10 @@ import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Usuario;
 
 public interface UsuarioRepositorio extends JpaRepository<Usuario, Integer> {
+    boolean existsByDni(String dni);
+
+    boolean existsByDniAndCodigoNot(String dni, Integer codigo);
+
 
         @Override
         @Query("select u from Usuario u left join fetch treat(u as Cliente).turista")

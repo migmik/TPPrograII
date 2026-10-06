@@ -17,6 +17,10 @@ public class Turista {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
 
+    // Nullable solo para registros anteriores a la incorporacion del DNI.
+    @Column(length = 8, unique = true)
+    private String dni;
+
     @Column(nullable = false)
     private String nombre;
 
@@ -47,6 +51,7 @@ public class Turista {
     }
 
     public Turista(
+            String dni,
             String nombre,
             String apellido,
             String direccion,
@@ -54,10 +59,11 @@ public class Turista {
             String telefonoFijo,
             String telefonoCelular,
             Sucursal sucursalContratacion) {
-        this(nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursalContratacion, null);
+        this(dni, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursalContratacion, null);
     }
 
     public Turista(
+            String dni,
             String nombre,
             String apellido,
             String direccion,
@@ -70,10 +76,11 @@ public class Turista {
             throw new IllegalArgumentException("El turista asociado debe ser titular");
         }
         this.titular = titular;
-        actualizarDatos(nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursalContratacion);
+        actualizarDatos(dni, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursalContratacion);
     }
 
     public void actualizarDatos(
+            String dni,
             String nombre,
             String apellido,
             String direccion,
@@ -81,6 +88,7 @@ public class Turista {
             String telefonoFijo,
             String telefonoCelular,
             Sucursal sucursalContratacion) {
+        this.dni = ValidacionModelo.dni(dni);
         this.nombre = ValidacionModelo.textoObligatorio(nombre, "nombre");
         this.apellido = ValidacionModelo.textoObligatorio(apellido, "apellido");
         this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
@@ -102,6 +110,10 @@ public class Turista {
 
     public Integer getCodigo() {
         return codigo;
+    }
+
+    public String getDni() {
+        return dni;
     }
 
     public String getNombre() {

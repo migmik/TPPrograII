@@ -7,5 +7,5 @@ import com.tijetravel.tijeback.modelos.Usuario;
 public interface CreadorUsuario {
     RolUsuario rol();
 
-    Usuario crear(String nombre, String hash, Turista turista);
+    Usuario crear(String nombre, String hash, Turista turista, String dni);
 }

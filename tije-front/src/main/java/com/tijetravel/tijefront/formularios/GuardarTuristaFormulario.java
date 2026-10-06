@@ -3,6 +3,13 @@ package com.tijetravel.tijefront.formularios;
 import jakarta.validation.constraints.*;
 
 public class GuardarTuristaFormulario {
+    @NotBlank(message = "Ingresá el DNI.")
+    @Pattern(regexp = "[0-9]{7,8}", message = "El DNI debe tener 7 u 8 dígitos, sin puntos ni espacios.")
+    private String dni;
+
+    public String getDni() { return dni; }
+    public void setDni(String dni) { this.dni = dni; }
+
     @NotBlank(message = "Este dato es obligatorio.")
     @Size(max = 255, message = "Usá como máximo 255 caracteres.")
     private String nombre;

@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
@@ -23,7 +25,7 @@ import com.tijetravel.tijeback.repositorios.*;
 class ReglasNegocioIntegracionTest {
     private static final AtomicInteger SECUENCIA = new AtomicInteger(5000);
     private static final LocalDate DIA = LocalDate.of(2027, 2, 1);
-    private final Usuario admin = new Administrador("operador", "hash");
+    private final Usuario admin = new Administrador("operador", "hash", com.tijetravel.tijeback.DnisPrueba.siguiente());
 
     @Autowired
     ReservaServicio reservas;
@@ -60,9 +62,9 @@ class ReglasNegocioIntegracionTest {
         return new TransactionTemplate(transacciones).execute(tx -> {
             Sucursal sucursal = sucursalRepo.save(new Sucursal("Sucursal " + n, "123"));
             Turista titular = turistaRepo
-                    .save(new Turista("Ana", "Perez", "Calle", n + "a@ejemplo.com", "1", "2", sucursal));
+                    .save(new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Calle", n + "a@ejemplo.com", "1", "2", sucursal));
             Turista familiar = turistaRepo
-                    .save(new Turista("Luis", "Perez", "Calle", n + "b@ejemplo.com", "1", "2", sucursal, titular));
+                    .save(new Turista(DnisPrueba.siguiente(), "Luis", "Perez", "Calle", n + "b@ejemplo.com", "1", "2", sucursal, titular));
             Hotel hotel = hotelRepo.save(new Hotel("Hotel " + n, "Calle", "Cordoba", "1", capacidadHotel));
             Vuelo vuelo = vueloRepo.save(
                     new Vuelo(n, DIA.atTime(10, 0), "Buenos Aires", "Cordoba", capacidadVuelo, capacidadVuelo, 0));
@@ -151,11 +153,10 @@ class ReglasNegocioIntegracionTest {
         Datos d = preparar(5, 10);
         String email = turistaRepo.findById(d.titular()).orElseThrow().getEmail();
         assertThrows(EntidadDuplicadaException.class, () -> turistas.crearTitular(
-                admin, "Otra", "Persona", "Calle", " " + email.toUpperCase(java.util.Locale.ROOT) + " ",
+                admin, DnisPrueba.siguiente(), "Otra", "Persona", "Calle", " " + email.toUpperCase(java.util.Locale.ROOT) + " ",
                 "1", "2", d.sucursal()));
         String emailFamiliar = turistaRepo.findById(d.familiar()).orElseThrow().getEmail();
-        assertThrows(EntidadDuplicadaException.class, () -> turistas.modificar(
-                admin, d.familiar(), "Luis", "Perez", "Calle", " " + email + " ", "1", "2", d.sucursal()));
+        assertThrows(EntidadDuplicadaException.class, () -> turistas.modificar(admin, d.familiar(), DnisPrueba.siguiente(), "Luis", "Perez", "Calle", " " + email + " ", "1", "2", d.sucursal()));
         assertEquals(emailFamiliar, turistaRepo.findById(d.familiar()).orElseThrow().getEmail());
     }
 
@@ -165,9 +166,9 @@ class ReglasNegocioIntegracionTest {
         Reserva anterior = reservar(d, d.familiar());
         Integer nueva = new TransactionTemplate(transacciones)
                 .execute(tx -> sucursalRepo.save(new Sucursal("Nueva " + d.hotel(), "1")).getCodigo());
-        assertThrows(IllegalArgumentException.class, () -> turistas.modificar(admin, d.familiar(), "Luis", "Perez",
+        assertThrows(IllegalArgumentException.class, () -> turistas.modificar(admin, d.familiar(), DnisPrueba.siguiente(), "Luis", "Perez",
                 "Calle", d.hotel() + "f@ejemplo.com", "1", "2", nueva));
-        turistas.modificar(admin, d.titular(), "Ana", "Perez", "Calle", d.hotel() + "t@ejemplo.com", "1", "2", nueva);
+        turistas.modificar(admin, d.titular(), DnisPrueba.siguiente(), "Ana", "Perez", "Calle", d.hotel() + "t@ejemplo.com", "1", "2", nueva);
         assertEquals(nueva, turistaRepo.findById(d.familiar()).orElseThrow().getSucursalContratacion().getCodigo());
         reservas.modificar(admin, anterior.getCodigo(), d.familiar(), d.vuelo(), d.hotel(),
                 ClaseVuelo.TURISTA, TipoHospedaje.PENSION_COMPLETA, DIA, DIA.plusDays(3));
@@ -175,7 +176,7 @@ class ReglasNegocioIntegracionTest {
                 reservaRepo.findById(anterior.getCodigo()).orElseThrow().getSucursalContratacion().getCodigo());
         assertEquals(nueva, reservar(d, d.titular()).getSucursalContratacion().getCodigo());
         assertThrows(IllegalArgumentException.class,
-                () -> usuarios.crear(admin, "invalido", "clave", RolUsuario.VENDEDOR, d.titular()));
+                () -> usuarios.crear(admin, "invalido", "clave", RolUsuario.VENDEDOR, d.titular(), null));
     }
 
     @Test

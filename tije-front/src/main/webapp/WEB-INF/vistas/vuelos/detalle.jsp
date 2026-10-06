@@ -18,6 +18,10 @@
             <dt>Fecha y hora</dt><dd><c:out value="${vuelo.fechaYHoraFormateada}"/></dd>
             <dt>Capacidad total</dt><dd><c:out value="${vuelo.totalPlazas}"/> plazas</dd>
         </dl>
+        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}"><p>
+            <a href="<c:url value='/vuelos/${vuelo.numero}/editar'/>">Editar vuelo</a>
+            <a href="<c:url value='/vuelos/${vuelo.numero}/eliminar'/>">Eliminar vuelo</a>
+        </p></c:if>
         <h2>Disponibilidad por clase</h2>
         <table>
             <caption>Plazas del vuelo</caption>

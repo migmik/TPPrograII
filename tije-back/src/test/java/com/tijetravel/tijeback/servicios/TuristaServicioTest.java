@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -50,9 +52,8 @@ class TuristaServicioTest {
                 usuarioRepositorio,
                 new AutorizacionServicio(),
                 org.mockito.Mockito.mock(BloqueoEscrituras.class));
-        administrador = new Administrador("admin", "clave");
-        turista = new Turista(
-                "Ana",
+        administrador = new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+        turista = new Turista(DnisPrueba.siguiente(), "Ana",
                 "Perez",
                 "Direccion",
                 "ana@example.com",

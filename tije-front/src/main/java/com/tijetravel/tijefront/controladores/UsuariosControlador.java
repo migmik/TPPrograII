@@ -93,7 +93,7 @@ public class UsuariosControlador {
                 }
                 respuesta.setStatus(estado);
                 modelo.addAttribute("errorCreacion", estado == 409
-                        ? "El nombre de usuario o el turista elegido ya tiene una cuenta. Revisá los datos."
+                        ? "El nombre de usuario, el DNI o el turista elegido ya tiene una cuenta. Revisá los datos."
                         : "La API rechazó los datos. Revisá el usuario, la contraseña, el rol y el turista elegido.");
                 return "usuarios/nuevo";
             } catch (ResourceAccessException error) {
@@ -119,6 +119,7 @@ public class UsuariosControlador {
         UsuarioRespuesta usuario = usuariosApi.buscar(codigo);
         ModificarUsuarioFormulario formulario = new ModificarUsuarioFormulario();
         formulario.setNombreUsuario(usuario.getNombreUsuario());
+        if (!"CLIENTE".equals(usuario.getRol())) formulario.setDni(usuario.getDni());
         modelo.addAttribute("cuenta", usuario);
         modelo.addAttribute("usuario", formulario);
         return "usuarios/editar";
@@ -134,7 +135,9 @@ public class UsuariosControlador {
             if (salida != null) {
                 return salida;
             }
-            modelo.addAttribute("cuenta", usuariosApi.buscar(codigo));
+            UsuarioRespuesta cuenta = usuariosApi.buscar(codigo);
+            modelo.addAttribute("cuenta", cuenta);
+            validarDni(cuenta.getRol(), formulario.getDni(), errores);
             validarLongitudContrasenia(formulario.getContrasenia(), errores);
             if (errores.hasErrors()) {
                 return "usuarios/editar";
@@ -149,7 +152,7 @@ public class UsuariosControlador {
                 }
                 respuesta.setStatus(estado);
                 modelo.addAttribute("errorEdicion", estado == 409
-                        ? "Ya existe un usuario con ese nombre. Elegí otro."
+                        ? "Ya existe un usuario con ese nombre o DNI. Revisá los datos."
                         : "La API rechazó los datos. Revisá el nombre y la nueva contraseña.");
                 return "usuarios/editar";
             } catch (ResourceAccessException error) {
@@ -256,7 +259,7 @@ public class UsuariosControlador {
         }
         List<TuristaResumen> disponibles = new ArrayList<>();
         for (TuristaResumen turista : turistasApi.listar()) {
-            if (turista.isTitular() && !ocupados.contains(turista.getCodigo())) {
+            if (turista.isTitular() && turista.getDni() != null && !ocupados.contains(turista.getCodigo())) {
                 disponibles.add(turista);
             }
         }
@@ -265,6 +268,7 @@ public class UsuariosControlador {
 
     private void validarFormulario(CrearUsuarioFormulario formulario, BindingResult errores,
             List<TuristaResumen> disponibles) {
+        validarDni(formulario.getRol(), formulario.getDni(), errores);
         validarLongitudContrasenia(formulario.getContrasenia(), errores);
         if (errores.hasFieldErrors("rol") || errores.hasFieldErrors("codigoTurista")) {
             return;
@@ -284,6 +288,15 @@ public class UsuariosControlador {
         } else if (formulario.getCodigoTurista() != null) {
             errores.rejectValue("codigoTurista", "turista.noCorresponde",
                     "Para un administrador o vendedor dejá el turista sin seleccionar.");
+        }
+    }
+
+    private void validarDni(String rol, String dni, BindingResult errores) {
+        if (errores.hasFieldErrors("dni")) return;
+        if ("CLIENTE".equals(rol)) {
+            if (dni != null) errores.rejectValue("dni", "dni.delTurista", "Para un cliente dejá el DNI vacío: se toma del turista.");
+        } else if (dni == null) {
+            errores.rejectValue("dni", "dni.obligatorio", "Ingresá el DNI del administrador o vendedor.");
         }
     }
 

@@ -2,6 +2,7 @@ package com.tijetravel.tijeback.api.dto;
 
 public record TuristaRespuesta(
                 Integer codigo,
+                String dni,
                 String nombre,
                 String apellido,
                 String direccion,
