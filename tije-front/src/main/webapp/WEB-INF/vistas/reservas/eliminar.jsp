@@ -11,7 +11,7 @@
 </head>
 <body>
     <%@ include file="../fragmentos/navegacion.jspf" %>
-    <main>
+    <main class="compact-page">
         <h1>Eliminar reserva</h1>
         <%@ include file="resumen.jspf" %>
         <p>Esta acción elimina la reserva y libera sus plazas. No elimina al turista, el vuelo ni el hotel. No se puede deshacer.</p>

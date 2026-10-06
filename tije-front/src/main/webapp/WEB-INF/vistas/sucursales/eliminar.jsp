@@ -10,7 +10,7 @@
 </head>
 <body>
     <%@ include file="../fragmentos/navegacion.jspf" %>
-    <main>
+    <main class="compact-page">
         <h1>Eliminar sucursal</h1>
         <p>Sucursal <c:out value="${sucursal.codigo}"/>: <strong><c:out value="${sucursal.direccion}"/></strong>.</p>
         <p>Esta acción no se puede deshacer. Una sucursal vinculada a turistas o reservas no puede eliminarse.</p>

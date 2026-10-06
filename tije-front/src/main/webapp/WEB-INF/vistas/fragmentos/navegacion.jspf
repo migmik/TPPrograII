@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <header class="site-header">
     <div class="site-header__inner">
-        <a class="brand" href="<c:url value='/'/>">Tije Travel</a>
+        <a class="brand" href="<c:url value='/'/>"><span class="brand-mark" aria-hidden="true">✦</span>Tije Travel</a>
         <nav class="site-nav" aria-label="Navegación principal">
             <a href="<c:url value='/'/>">Inicio</a>
             <a href="<c:url value='/hoteles'/>">Hoteles</a>

@@ -10,7 +10,7 @@
 </head>
 <body>
     <%@ include file="../fragmentos/navegacion.jspf" %>
-    <main>
+    <main class="compact-page">
         <h1>Eliminar hotel</h1>
         <p>Hotel: <strong><c:out value="${hotel.nombre}"/></strong>, <c:out value="${hotel.ciudad}"/>.</p>
         <p>Esta acción no se puede deshacer. Si el hotel tiene reservas, no se podrá eliminar.</p>

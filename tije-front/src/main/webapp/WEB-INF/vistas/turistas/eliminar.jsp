@@ -13,7 +13,7 @@
 
             <body>
                 <%@ include file="../fragmentos/navegacion.jspf" %>
-                    <main>
+                    <main class="compact-page">
                         <h1>Eliminar turista</h1>
         <p>DNI: <c:out value="${turista.dni}" default="DNI pendiente"/>.</p>
                         <p>Vas a eliminar a <strong>
