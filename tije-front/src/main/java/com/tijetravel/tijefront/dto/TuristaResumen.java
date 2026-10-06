@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TuristaResumen {
+    private String dni;
+
+    public String getDni() { return dni; }
+    public void setDni(String dni) { this.dni = dni; }
+
     private Integer codigo;
     private String nombre;
     private String apellido;

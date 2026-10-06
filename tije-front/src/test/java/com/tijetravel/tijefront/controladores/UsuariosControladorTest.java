@@ -305,6 +305,27 @@ class UsuariosControladorTest {
         verifyNoInteractions(usuariosApi);
     }
 
+    @Test
+    void empleadoRequiereDniYClienteNoLoCargaDosVeces() throws Exception {
+        prepararFormulario();
+        mvc.perform(alta("VENDEDOR").with(request -> { request.setParameter("dni", ""); return request; }))
+                .andExpect(model().attributeHasFieldErrors("usuario", "dni"));
+        mvc.perform(alta("CLIENTE").param("codigoTurista", "1")
+                .with(request -> { request.setParameter("dni", "12345678"); return request; }))
+                .andExpect(model().attributeHasFieldErrors("usuario", "dni"));
+        verify(usuariosApi, never()).crear(any());
+    }
+
+    @Test
+    void noOfreceTitularesSinDocumentoParaCrearCuenta() throws Exception {
+        prepararFormulario();
+        TuristaResumen pendiente = turista(1);
+        pendiente.setDni(null);
+        when(turistasApi.listar()).thenReturn(List.of(pendiente));
+        mvc.perform(get("/usuarios/nuevo").session(sesion()))
+                .andExpect(model().attribute("turistasDisponibles", List.of()));
+    }
+
     private void prepararEdicion() {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         UsuarioRespuesta cuenta = new UsuarioRespuesta();
@@ -316,7 +337,7 @@ class UsuariosControladorTest {
 
     private MockHttpServletRequestBuilder edicion(int codigo, String clave) {
         return post("/usuarios/" + codigo + "/editar").session(sesion()).with(csrf())
-                .param("nombreUsuario", " nuevo ").param("contrasenia", clave);
+                .param("nombreUsuario", " nuevo ").param("contrasenia", clave).param("dni", "74567890");
     }
 
     private void prepararFormulario() {
@@ -327,7 +348,7 @@ class UsuariosControladorTest {
 
     private MockHttpServletRequestBuilder alta(String rol) {
         return post("/usuarios").session(sesion()).with(csrf()).param("nombreUsuario", " nuevo ")
-                .param("contrasenia", "clave-elegida").param("rol", rol);
+                .param("contrasenia", "clave-elegida").param("rol", rol).param("dni", "CLIENTE".equals(rol) ? "" : "74567890");
     }
 
     private SesionRespuesta usuarioActual(String rol) {
@@ -348,6 +369,7 @@ class UsuariosControladorTest {
         TuristaResumen turista = new TuristaResumen();
         turista.setCodigo(codigo);
         turista.setTitular(true);
+        turista.setDni("76543210");
         turista.setNombre("Ana");
         turista.setApellido("Pérez");
         return turista;

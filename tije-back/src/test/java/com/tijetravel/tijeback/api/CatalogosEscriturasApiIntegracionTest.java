@@ -68,7 +68,7 @@ class CatalogosEscriturasApiIntegracionTest {
         void prepararVendedor() {
                 usuarioRepositorio.save(new Vendedor(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR)));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), com.tijetravel.tijeback.DnisPrueba.siguiente()));
         }
 
         @Test

@@ -13,7 +13,7 @@
 
             <body>
                 <%@ include file="../fragmentos/navegacion.jspf" %>
-                    <main>
+                    <main class="compact-page">
                         <h1>Iniciar sesión</h1>
                         <c:if test="${param.credencialesActualizadas != null}">
                             <p>Credenciales actualizadas. Ingresá nuevamente con el nombre y la contraseña que

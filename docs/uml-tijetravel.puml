@@ -15,6 +15,8 @@ package "com.tijetravel.tijeback.enums" {
 
 package "com.tijetravel.tijeback.modelos" {
     abstract class Usuario {
+        - dni: String
+        + getDni(): String
         - codigo: Integer
         - nombreUsuario: String
         - contrasenia: String
@@ -26,6 +28,7 @@ package "com.tijetravel.tijeback.modelos" {
     class Vendedor
     class Cliente
     class Turista {
+        - dni: String
         - codigo: Integer
         - nombre: String
         - apellido: String

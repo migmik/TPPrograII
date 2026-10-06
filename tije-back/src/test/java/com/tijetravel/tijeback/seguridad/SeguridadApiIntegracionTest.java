@@ -173,7 +173,7 @@ class SeguridadApiIntegracionTest {
                 usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor)
                                 .orElseGet(() -> usuarioRepositorio.save(new Vendedor(
                                                 usuarioVendedor,
-                                                codificadorContrasenias.encode(contraseniaVendedor))));
+                                                codificadorContrasenias.encode(contraseniaVendedor), com.tijetravel.tijeback.DnisPrueba.siguiente())));
 
                 MvcResult login = iniciarSesion(usuarioVendedor, contraseniaVendedor);
                 MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);

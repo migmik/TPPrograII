@@ -72,7 +72,7 @@ class EscriturasApiIntegracionTest {
                                 titular));
                 usuarioRepositorio.save(new Vendedor(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR)));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), com.tijetravel.tijeback.DnisPrueba.siguiente()));
         }
 
         @Test
@@ -89,6 +89,7 @@ class EscriturasApiIntegracionTest {
                                                   "apellido": "Diaz",
                                                   "direccion": "Mitre 500",
                                                   "email": "lucia.escrituras@example.com",
+                                                  "dni": "76543210",
                                                   "telefonoFijo": "1111-2222",
                                                   "telefonoCelular": "1133334444",
                                                   "codigoSucursal": 2
@@ -114,6 +115,7 @@ class EscriturasApiIntegracionTest {
                                                   "apellido": "Diaz",
                                                   "direccion": "Mitre 550",
                                                   "email": "lucia.actualizada@example.com",
+                                                  "dni": "76543210",
                                                   "telefonoFijo": "1111-5555",
                                                   "telefonoCelular": "1166667777",
                                                   "codigoSucursal": 2
@@ -195,7 +197,7 @@ class EscriturasApiIntegracionTest {
                                                 {
                                                   "nombreUsuario": "operador-nuevo",
                                                   "contrasenia": "ClaveOperador123!",
-                                                  "rol": "VENDEDOR"
+                                                  "dni": "74567890", "rol": "VENDEDOR"
                                                 }
                                                 """))
                                 .andExpect(status().isCreated())
@@ -217,6 +219,7 @@ class EscriturasApiIntegracionTest {
                                 .content("""
                                                 {
                                                   "nombreUsuario": "operador-actualizado",
+                                                  "dni": "74567890",
                                                   "contrasenia": "NuevaClaveOperador123!"
                                                 }
                                                 """))
@@ -284,6 +287,7 @@ class EscriturasApiIntegracionTest {
                                                   "apellido": "Diaz",
                                                   "direccion": "Mitre 500",
                                                   "email": "email-invalido",
+                                                  "dni": "76543210",
                                                   "telefonoFijo": "1111",
                                                   "telefonoCelular": "2222",
                                                   "codigoSucursal": 1
@@ -326,6 +330,7 @@ class EscriturasApiIntegracionTest {
                                                   "apellido": "Perez",
                                                   "direccion": "Otra direccion",
                                                   "email": "juan.perez@mail.com",
+                                                  "dni": "76543210",
                                                   "telefonoFijo": "1111",
                                                   "telefonoCelular": "2222",
                                                   "codigoSucursal": 1
@@ -333,6 +338,28 @@ class EscriturasApiIntegracionTest {
                                                 """))
                                 .andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.error").value("ENTIDAD_DUPLICADA"));
+        }
+
+        @Test
+        void dniEsObligatorioYSeInformaEnLaRespuesta() throws Exception {
+                MockHttpSession sesion = iniciarSesion(USUARIO_VENDEDOR, CONTRASENIA_VENDEDOR);
+                String datos = """
+                    {"nombre":"Ana","apellido":"Perez","direccion":"Calle","email":"dni@example.test",
+                     "telefonoFijo":"1","telefonoCelular":"2","codigoSucursal":1%s}
+                    """;
+                for (String campo : java.util.List.of("", ",\"dni\":null", ",\"dni\":\"\"",
+                        ",\"dni\":\"12.345.678\"", ",\"dni\":\"123456789\"", ",\"dni\":\"abcdefg\"")) {
+                    mockMvc.perform(post("/api/v1/turistas").session(sesion).with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON).content(datos.formatted(campo)))
+                            .andExpect(status().isBadRequest());
+                }
+                mockMvc.perform(post("/api/v1/turistas").session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(datos.formatted(",\"dni\":\"1234567\"")))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.dni").value("1234567"));
+                mockMvc.perform(post("/api/v1/turistas").session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(datos.replace("dni@example.test", "otro@example.test")
+                                .formatted(",\"dni\":\"1234567\"")))
+                        .andExpect(status().isConflict());
         }
 
         private MockHttpSession iniciarSesion(String usuario, String contrasenia) throws Exception {

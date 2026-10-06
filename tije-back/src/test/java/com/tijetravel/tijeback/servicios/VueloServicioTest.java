@@ -74,7 +74,7 @@ class VueloServicioTest {
 
         private Vuelo modificarVuelo(int plazasTurista, int plazasPrimera) {
                 return servicio.modificar(
-                                new Administrador("admin", "clave"),
+                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                 100,
                                 LocalDateTime.of(2026, 10, 1, 12, 0),
                                 "Buenos Aires",

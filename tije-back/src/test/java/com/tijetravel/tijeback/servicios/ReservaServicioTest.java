@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -65,8 +67,7 @@ class ReservaServicioTest {
 
                 sucursal = conCodigo(new Sucursal("Av. Siempre Viva 100", "1234"), "codigo", 1);
                 turista = conCodigo(
-                                new Turista(
-                                                "Ana",
+                                new Turista(DnisPrueba.siguiente(), "Ana",
                                                 "Perez",
                                                 "Direccion",
                                                 "ana@example.com",
@@ -93,7 +94,7 @@ class ReservaServicioTest {
                                 .thenAnswer(invocacion -> invocacion.getArgument(0));
 
                 Reserva reserva = servicio.crear(
-                                new Vendedor("vendedor", "clave"),
+                                new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                 1,
                                 100,
                                 1,
@@ -116,7 +117,7 @@ class ReservaServicioTest {
                 assertThrows(
                                 CapacidadExcedidaException.class,
                                 () -> servicio.crear(
-                                                new Vendedor("vendedor", "clave"),
+                                                new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
                                                 1,
                                                 100,
                                                 1,
@@ -136,7 +137,7 @@ class ReservaServicioTest {
 
                 assertThrows(
                                 EntidadDuplicadaException.class,
-                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave")));
+                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente())));
         }
 
         @Test
@@ -146,7 +147,7 @@ class ReservaServicioTest {
 
                 assertThrows(
                                 OperacionNoPermitidaException.class,
-                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave")));
+                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente())));
         }
 
         @Test
@@ -160,7 +161,7 @@ class ReservaServicioTest {
 
                 assertThrows(
                                 CapacidadExcedidaException.class,
-                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave")));
+                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente())));
         }
 
         @Test

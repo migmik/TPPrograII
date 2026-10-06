@@ -71,7 +71,7 @@ public class UsuariosRestControlador {
                                 solicitud.nombreUsuario(),
                                 solicitud.contrasenia(),
                                 solicitud.rol(),
-                                solicitud.codigoTurista());
+                                solicitud.codigoTurista(), solicitud.dni());
                 UsuarioRespuesta respuesta = usuarioMapeador.aRespuesta(usuario);
                 return ResponseEntity
                                 .created(URI.create("/api/v1/usuarios/" + respuesta.codigo()))
@@ -88,7 +88,7 @@ public class UsuariosRestControlador {
                                 actor,
                                 codigo,
                                 solicitud.nombreUsuario(),
-                                solicitud.contrasenia()));
+                                solicitud.contrasenia(), solicitud.dni()));
         }
 
         @DeleteMapping("/{codigo}")
