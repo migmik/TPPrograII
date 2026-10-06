@@ -1,26 +1,32 @@
 <%@ page pageEncoding="UTF-8" %>
-<nav aria-label="Navegación principal">
-    <a href="<c:url value='/'/>">Inicio</a> |
-    <a href="<c:url value='/hoteles'/>">Hoteles</a> |
-    <a href="<c:url value='/vuelos'/>">Vuelos</a> |
-    <a href="<c:url value='/sucursales'/>">Sucursales</a>
-    <c:choose>
-        <c:when test="${not empty usuarioActual}">
-            | <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
-            | <a href="<c:url value='/turistas'/>">Turistas</a>
-            | <a href="<c:url value='/reservas'/>">Reservas</a>
-            <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
-                | <a href="<c:url value='/usuarios'/>">Usuarios</a>
-            </c:if>
-            <span>Usuario: <c:out value="${usuarioActual.nombreUsuario}"/></span>
-            <form method="post" action="<c:url value='/logout'/>">
+<header class="site-header">
+    <div class="site-header__inner">
+        <a class="brand" href="<c:url value='/'/>">Tije Travel</a>
+        <nav class="site-nav" aria-label="Navegación principal">
+            <a href="<c:url value='/'/>">Inicio</a>
+            <a href="<c:url value='/hoteles'/>">Hoteles</a>
+            <a href="<c:url value='/vuelos'/>">Vuelos</a>
+            <a href="<c:url value='/sucursales'/>">Sucursales</a>
+            <c:choose>
+                <c:when test="${not empty usuarioActual}">
+                    <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
+                    <a href="<c:url value='/turistas'/>">Turistas</a>
+                    <a href="<c:url value='/reservas'/>">Reservas</a>
+                    <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                        <a href="<c:url value='/usuarios'/>">Usuarios</a>
+                    </c:if>
+                </c:when>
+                <c:otherwise>
+                    <a href="<c:url value='/login'/>">Iniciar sesión</a>
+                </c:otherwise>
+            </c:choose>
+        </nav>
+        <c:if test="${not empty usuarioActual}">
+            <span class="site-user"><c:out value="${usuarioActual.nombreUsuario}"/></span>
+            <form class="logout-form" method="post" action="<c:url value='/logout'/>">
                 <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">
                 <button type="submit">Cerrar sesión</button>
             </form>
-        </c:when>
-        <c:otherwise>
-            | <a href="<c:url value='/login'/>">Iniciar sesión</a>
-        </c:otherwise>
-    </c:choose>
-</nav>
-<hr>
+        </c:if>
+    </div>
+</header>
