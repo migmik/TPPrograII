@@ -16,12 +16,14 @@
                         <a href="<c:url value='/usuarios'/>">Usuarios</a>
                     </c:if>
                 </c:when>
-                <c:otherwise>
-                    <a href="<c:url value='/login'/>">Iniciar sesión</a>
-                    <a href="<c:url value='/registro'/>">Crear cuenta</a>
-                </c:otherwise>
             </c:choose>
         </nav>
+        <c:if test="${empty usuarioActual}">
+            <div class="site-auth-actions">
+                <a class="site-auth-actions__login" href="<c:url value='/login'/>">Iniciar sesión</a>
+                <a class="site-auth-actions__register" href="<c:url value='/registro'/>">Crear cuenta</a>
+            </div>
+        </c:if>
         <c:if test="${not empty usuarioActual}">
             <span class="site-user"><c:out value="${usuarioActual.nombreUsuario}"/></span>
             <form class="logout-form" method="post" action="<c:url value='/logout'/>">

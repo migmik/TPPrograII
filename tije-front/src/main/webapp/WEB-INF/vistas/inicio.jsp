@@ -30,10 +30,7 @@
                                         <form:label path="origen">Salgo de</form:label>
                                         <form:select path="origen" required="required">
                                             <form:option value="" label="Elegí una ciudad" />
-                                            <form:option value="Buenos Aires" label="Buenos Aires" />
-                                            <form:option value="Córdoba" label="Córdoba" />
-                                            <form:option value="Bariloche" label="Bariloche" />
-                                            <form:option value="Salta" label="Salta" />
+                                            <form:options items="${ciudades}" />
                                         </form:select>
                                         <form:errors path="origen" cssClass="error" />
                                     </div>
@@ -41,10 +38,7 @@
                                         <form:label path="destino">Voy a</form:label>
                                         <form:select path="destino" required="required">
                                             <form:option value="" label="Elegí una ciudad" />
-                                            <form:option value="Buenos Aires" label="Buenos Aires" />
-                                            <form:option value="Córdoba" label="Córdoba" />
-                                            <form:option value="Bariloche" label="Bariloche" />
-                                            <form:option value="Salta" label="Salta" />
+                                            <form:options items="${ciudades}" />
                                         </form:select>
                                         <form:errors path="destino" cssClass="error" />
                                     </div>
@@ -199,9 +193,6 @@
                                 <a href="<c:url value='/sucursales'/>">Ver sucursales</a>
                             </section>
                         </div>
-                        <c:if test="${empty usuarioActual}">
-                            <p><a href="<c:url value='/registro'/>">Crear una cuenta de cliente</a></p>
-                        </c:if>
                     </main>
             </body>
 

@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasItems;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,14 @@ class CatalogosApiIntegracionTest {
                 .andExpect(jsonPath("$[0].direccion").value("Av Corrientes 1234"))
                 .andExpect(jsonPath("$[0].telefono").value("011-4321-1000"));
     }
+
+        @Test
+        void listaCiudadesDistintasDeHotelesYVuelos() throws Exception {
+                mockMvc.perform(get("/api/v1/ciudades"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                                .andExpect(jsonPath("$").value(hasItems("Goya", "Buenos Aires")));
+        }
 
     @Test
     void encuentraHotelPorCodigo() throws Exception {

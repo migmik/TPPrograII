@@ -131,6 +131,7 @@ public class ConfiguracionSeguridad {
                                                 .permitAll()
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
+                                                                "/api/v1/ciudades",
                                                                 "/api/v1/sucursales/**",
                                                                 "/api/v1/hoteles/**",
                                                                 "/api/v1/vuelos/**")

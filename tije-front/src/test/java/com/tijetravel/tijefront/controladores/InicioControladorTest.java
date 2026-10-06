@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
+import com.tijetravel.tijefront.clientes.CiudadesApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;
@@ -29,11 +30,13 @@ import com.tijetravel.tijefront.dto.VueloRespuesta;
 class InicioControladorTest {
     @Mock private VuelosApiCliente vuelosApi;
     @Mock private HotelesApiCliente hotelesApi;
+        @Mock private CiudadesApiCliente ciudadesApi;
     private MockMvc mvc;
 
     @BeforeEach
     void preparar() {
-        mvc = MockMvcBuilders.standaloneSetup(new InicioControlador(vuelosApi, hotelesApi))
+                when(ciudadesApi.listar()).thenReturn(List.of("Buenos Aires", "Córdoba", "Goya"));
+                mvc = MockMvcBuilders.standaloneSetup(new InicioControlador(vuelosApi, hotelesApi, ciudadesApi))
                 .setViewResolvers(new InternalResourceViewResolver("/WEB-INF/vistas/", ".jsp"))
                 .build();
     }
@@ -43,9 +46,19 @@ class InicioControladorTest {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("inicio"))
-                .andExpect(model().attributeExists("busqueda"));
+                                .andExpect(model().attributeExists("busqueda"))
+                                .andExpect(model().attribute("ciudades", List.of("Buenos Aires", "Córdoba", "Goya")));
         verifyNoInteractions(vuelosApi, hotelesApi);
     }
+
+        @Test
+        void conservaElInicioSiNoSePuedenConsultarCiudades() throws Exception {
+                when(ciudadesApi.listar()).thenThrow(new org.springframework.web.client.ResourceAccessException("Sin conexión"));
+
+                mvc.perform(get("/"))
+                                .andExpect(status().isOk())
+                                .andExpect(model().attribute("ciudades", List.of()));
+        }
 
     @Test
     void muestraLasOpcionesFiltradasQueDevuelveElBackend() throws Exception {
