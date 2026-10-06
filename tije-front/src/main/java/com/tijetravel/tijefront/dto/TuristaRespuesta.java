@@ -1,6 +1,11 @@
 package com.tijetravel.tijefront.dto;
 
 public class TuristaRespuesta {
+    private String dni;
+
+    public String getDni() { return dni; }
+    public void setDni(String dni) { this.dni = dni; }
+
     private Integer codigo;
     private String nombre;
     private String apellido;

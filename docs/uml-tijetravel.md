@@ -38,6 +38,8 @@ flowchart TB
 ```mermaid
 classDiagram
     class Usuario {
+        -String dni
+        +getDni() String
         <<abstract>>
         -Integer codigo
         -String nombreUsuario
@@ -50,6 +52,7 @@ classDiagram
     class Vendedor
     class Cliente
     class Turista {
+        -String dni
         -Integer codigo
         -String nombre
         -String apellido

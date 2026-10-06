@@ -32,6 +32,7 @@ administrador, iniciar una vez el backend con estas variables definidas:
 ```powershell
 $env:APP_ADMIN_ENABLED = "true"
 $env:APP_ADMIN_USERNAME = "administrador"
+$env:APP_ADMIN_DNI = "12345678" # Reemplazar por el DNI real del administrador
 $env:APP_ADMIN_PASSWORD = "una-clave-segura-de-12-o-mas"
 ```
 
@@ -52,3 +53,45 @@ deben publicarse mediante HTTPS.
 Las migraciones se deben ejecutar sobre una base vacia o sobre una base que ya
 tenga historial de Flyway. No se habilita `baseline-on-migrate` para evitar
 aceptar por error un esquema heredado incompatible.
+
+## Incorporación del DNI
+
+La migración `V6__agregar_dni_turistas.sql` agrega `turistas.dni` como
+`VARCHAR(8)`, una restricción UNIQUE y un CHECK de 7 u 8 dígitos. Flyway la
+aplica al iniciar el backend; no hay que borrar la base ni volver a ejecutar V1.
+
+La columna permite NULL exclusivamente para conservar registros anteriores sin
+inventar documentos (incluidos los datos demo antiguos). La API y el modelo
+exigen DNI para todas las altas y modificaciones. No hay valores de relleno.
+Los registros pendientes se pueden consultar con:
+
+```sql
+SELECT codigo, nombre, apellido FROM turistas WHERE dni IS NULL;
+```
+
+Completalos con el DNI real desde Turistas > Editar. La migración no modifica
+códigos, titulares, cuentas ni reservas. Una vez completados todos, se podrá
+agregar otra migración que establezca NOT NULL; no debe hacerse mientras falten datos.
+
+El 05/10/2026 se verificó V6 con H2 y MySQL, incluidos formatos inválidos,
+duplicados y conservación de los registros existentes. Antes de actualizar la
+base local se generó un respaldo en
+`tije-back/config/mysql-pruebas/respaldo-antes-dni.sql`, ignorado por Git.
+
+## DNI de administradores y vendedores
+
+V7 agrega `usuarios.dni`, con formato de 7 u 8 dígitos y unicidad entre
+administradores y vendedores. Los clientes tienen NULL en esa columna: el
+sistema consulta el DNI de su turista asociado, sin otra copia. Un CHECK impide
+guardar una segunda copia del documento en la fila de un cliente.
+
+Los empleados anteriores quedan pendientes y se completan desde Usuarios > Editar.
+El primer administrador de una base nueva requiere `APP_ADMIN_DNI`; esa variable
+no reemplaza el documento ni las credenciales de una cuenta ya existente.
+
+V7 se verificó el 05/10/2026 con MySQL y las JSP, incluyendo altas y edición de
+empleados, documentos duplicados y consulta del DNI actualizado del cliente.
+Antes de aplicarla a la base local se guardó
+`tije-back/config/mysql-pruebas/respaldo-antes-dni-empleados.sql` (ignorado por Git).
+Se compararon las seis tablas del negocio antes y después: sus datos y
+credenciales se conservaron.

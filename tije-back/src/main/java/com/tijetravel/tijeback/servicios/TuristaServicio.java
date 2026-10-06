@@ -46,26 +46,27 @@ public class TuristaServicio {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Turista crear(Usuario actor, String nombre, String apellido, String direccion,
+    public Turista crear(Usuario actor, String dni, String nombre, String apellido, String direccion,
             String email, String telefonoFijo, String telefonoCelular,
             Integer codigoSucursal, Integer codigoTitular) {
         if (codigoTitular == null) {
             if (codigoSucursal == null) {
                 throw new IllegalArgumentException("El codigo de sucursal es obligatorio para un turista titular");
             }
-            return crearTitular(actor, nombre, apellido, direccion, email,
+            return crearTitular(actor, dni, nombre, apellido, direccion, email,
                     telefonoFijo, telefonoCelular, codigoSucursal);
         }
         if (codigoSucursal != null) {
             throw new IllegalArgumentException("Un turista familiar hereda la sucursal del titular");
         }
-        return crearFamiliar(actor, codigoTitular, nombre, apellido, direccion, email,
+        return crearFamiliar(actor, codigoTitular, dni, nombre, apellido, direccion, email,
                 telefonoFijo, telefonoCelular);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Turista crearTitular(
             Usuario actor,
+            String dni,
             String nombre,
             String apellido,
             String direccion,
@@ -77,7 +78,8 @@ public class TuristaServicio {
         bloqueoEscrituras.adquirir();
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = new Turista(
-                nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
+                dni, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
+        verificarDniDisponible(turista.getDni());
         verificarEmailDisponible(turista.getEmail());
         return turistaRepositorio.save(turista);
     }
@@ -86,6 +88,7 @@ public class TuristaServicio {
     public Turista crearFamiliar(
             Usuario actor,
             Integer codigoTitular,
+            String dni,
             String nombre,
             String apellido,
             String direccion,
@@ -100,6 +103,7 @@ public class TuristaServicio {
         }
 
         Turista familiar = new Turista(
+                dni,
                 nombre,
                 apellido,
                 direccion,
@@ -108,6 +112,7 @@ public class TuristaServicio {
                 telefonoCelular,
                 titular.getSucursalContratacion(),
                 titular);
+        verificarDniDisponible(familiar.getDni());
         verificarEmailDisponible(familiar.getEmail());
         return turistaRepositorio.save(familiar);
     }
@@ -149,6 +154,7 @@ public class TuristaServicio {
     public Turista modificar(
             Usuario actor,
             Integer codigo,
+            String dni,
             String nombre,
             String apellido,
             String direccion,
@@ -160,12 +166,16 @@ public class TuristaServicio {
         bloqueoEscrituras.adquirir();
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = encontrarPorId(codigo);
+        String dniValidado = ValidacionModelo.dni(dni);
+        if (turistaRepositorio.existsByDniAndCodigoNot(dniValidado, codigo)) {
+            throw new EntidadDuplicadaException("Ya existe un turista con ese DNI");
+        }
         String emailNormalizado = ValidacionModelo.email(email);
         if (turistaRepositorio.existsByEmailIgnoreCaseAndCodigoNot(emailNormalizado, codigo)) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese email");
         }
         turista.actualizarDatos(
-                nombre, apellido, direccion, emailNormalizado, telefonoFijo, telefonoCelular, sucursal);
+                dniValidado, nombre, apellido, direccion, emailNormalizado, telefonoFijo, telefonoCelular, sucursal);
         if (turista.isTitular()) {
             turistaRepositorio.findByTitularCodigo(codigo)
                     .forEach(familiar -> familiar.cambiarSucursal(sucursal));
@@ -193,6 +203,12 @@ public class TuristaServicio {
     private Sucursal encontrarSucursal(Integer codigo) {
         return sucursalRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la sucursal " + codigo));
+    }
+
+    private void verificarDniDisponible(String dni) {
+        if (turistaRepositorio.existsByDni(dni)) {
+            throw new EntidadDuplicadaException("Ya existe un turista con ese DNI");
+        }
     }
 
     private void verificarEmailDisponible(String email) {

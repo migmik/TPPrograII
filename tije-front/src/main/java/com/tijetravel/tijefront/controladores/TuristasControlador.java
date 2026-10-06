@@ -71,6 +71,7 @@ public class TuristasControlador {
             return salida;
         TuristaRespuesta actual = turistasApi.buscar(codigo);
         GuardarTuristaFormulario formulario = new GuardarTuristaFormulario();
+        formulario.setDni(actual.getDni());
         formulario.setNombre(actual.getNombre());
         formulario.setApellido(actual.getApellido());
         formulario.setDireccion(actual.getDireccion());
@@ -122,7 +123,7 @@ public class TuristasControlador {
             if (estado != 400 && estado != 409 && estado != 403)
                 throw error;
             respuesta.setStatus(estado);
-            modelo.addAttribute("errorOperacion", estado == 409 ? "Ya existe un turista con ese email. Elegí otro."
+            modelo.addAttribute("errorOperacion", estado == 409 ? "Ya existe un turista con ese DNI o email. Revisá los datos."
                     : "No se pudo guardar. Revisá los datos, la sucursal, el titular y tus permisos.");
             return "turistas/formulario";
         } catch (ResourceAccessException error) {

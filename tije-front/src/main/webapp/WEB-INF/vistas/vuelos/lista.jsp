@@ -12,6 +12,8 @@
     <%@ include file="../fragmentos/navegacion.jspf" %>
     <main>
         <h1>Vuelos</h1>
+        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}"><p><a href="<c:url value='/vuelos/nuevo'/>">Agregar vuelo</a></p></c:if>
+        <c:if test="${not empty mensajeExito}"><p role="status"><c:out value="${mensajeExito}"/></p></c:if>
         <c:choose>
             <c:when test="${empty vuelos}">
                 <p>Todavía no hay vuelos registrados.</p>
@@ -22,7 +24,8 @@
                     <thead>
                         <tr><th scope="col">Número</th><th scope="col">Origen</th>
                             <th scope="col">Destino</th><th scope="col">Fecha y hora</th>
-                            <th scope="col">Consulta</th></tr>
+                            <th scope="col">Consulta</th>
+                            <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}"><th scope="col">Administrar</th></c:if></tr>
                     </thead>
                     <tbody>
                         <c:forEach items="${vuelos}" var="vuelo">
@@ -32,6 +35,10 @@
                                 <td><c:out value="${vuelo.destino}"/></td>
                                 <td><c:out value="${vuelo.fechaYHoraFormateada}"/></td>
                                 <td><a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver detalle y disponibilidad</a></td>
+                                <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}"><td>
+                                    <a href="<c:url value='/vuelos/${vuelo.numero}/editar'/>">Editar</a>
+                                    <a href="<c:url value='/vuelos/${vuelo.numero}/eliminar'/>">Eliminar</a>
+                                </td></c:if>
                             </tr>
                         </c:forEach>
                     </tbody>

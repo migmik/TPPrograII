@@ -11,6 +11,7 @@ public class TuristaMapeador {
     public TuristaRespuesta aRespuesta(Turista turista) {
         return new TuristaRespuesta(
                 turista.getCodigo(),
+                turista.getDni(),
                 turista.getNombre(),
                 turista.getApellido(),
                 turista.getDireccion(),
