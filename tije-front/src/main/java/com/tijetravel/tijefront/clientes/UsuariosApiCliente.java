@@ -20,7 +20,17 @@ public class UsuariosApiCliente {
     }
 
     public List<UsuarioRespuesta> listar() {
-        UsuarioRespuesta[] usuarios = conexion.getCliente().get().uri("/api/v1/usuarios")
+        return listar(null);
+    }
+
+    public List<UsuarioRespuesta> listar(String rol) {
+        UsuarioRespuesta[] usuarios = conexion.getCliente().get().uri(uriBuilder -> {
+            var ruta = uriBuilder.path("/api/v1/usuarios");
+            if (rol != null && !rol.isBlank()) {
+                ruta.queryParam("rol", rol.trim());
+            }
+            return ruta.build();
+        })
                 .retrieve().body(UsuarioRespuesta[].class);
         if (usuarios == null) {
             throw new RestClientException("La API no devolvió el listado de usuarios.");

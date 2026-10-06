@@ -18,6 +18,7 @@ import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.ValidacionModelo;
 import com.tijetravel.tijeback.servicios.usuarios.UsuarioFactory;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
+import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @Service
@@ -27,12 +28,14 @@ public class UsuarioServicio {
     private final UsuarioFactory usuarioFactory;
     private final UsuarioRepositorio usuarioRepositorio;
     private final TuristaRepositorio turistaRepositorio;
+    private final SucursalRepositorio sucursalRepositorio;
     private final AutorizacionServicio autorizacion;
     private final PasswordEncoder codificadorContrasenias;
 
     public UsuarioServicio(
             UsuarioRepositorio usuarioRepositorio,
             TuristaRepositorio turistaRepositorio,
+            SucursalRepositorio sucursalRepositorio,
             AutorizacionServicio autorizacion,
             PasswordEncoder codificadorContrasenias,
             BloqueoEscrituras bloqueoEscrituras, UsuarioFactory usuarioFactory) {
@@ -40,6 +43,7 @@ public class UsuarioServicio {
         this.bloqueoEscrituras = bloqueoEscrituras;
         this.usuarioRepositorio = usuarioRepositorio;
         this.turistaRepositorio = turistaRepositorio;
+        this.sucursalRepositorio = sucursalRepositorio;
         this.autorizacion = autorizacion;
         this.codificadorContrasenias = codificadorContrasenias;
     }
@@ -101,8 +105,56 @@ public class UsuarioServicio {
     }
 
     public List<Usuario> listarPara(Usuario actor) {
+        return listarPara(actor, null);
+    }
+
+    public List<Usuario> listarPara(Usuario actor, RolUsuario rol) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
-        return listar();
+        return rol == null ? listar() : usuarioRepositorio.findByRol(rol);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Usuario registrarCliente(
+            String nombreUsuario,
+            String contrasenia,
+            String dni,
+            String nombre,
+            String apellido,
+            String direccion,
+            String email,
+            String telefonoFijo,
+            String telefonoCelular,
+            Integer codigoSucursal) {
+        bloqueoEscrituras.adquirir();
+        String nombreNormalizado = ValidacionModelo.textoObligatorio(nombreUsuario, "nombreUsuario");
+        if (usuarioRepositorio.existsByNombreUsuarioIgnoreCase(nombreNormalizado)) {
+            throw new EntidadDuplicadaException("Ya existe el nombre de usuario indicado");
+        }
+        String dniValidado = ValidacionModelo.dni(dni);
+        if (turistaRepositorio.existsByDni(dniValidado)) {
+            throw new EntidadDuplicadaException("Ya existe un turista con ese DNI");
+        }
+        String emailValidado = ValidacionModelo.email(email);
+        if (turistaRepositorio.existsByEmailIgnoreCase(emailValidado)) {
+            throw new EntidadDuplicadaException("Ya existe un turista con ese email");
+        }
+        if (codigoSucursal == null || codigoSucursal < 1) {
+            throw new IllegalArgumentException("El codigo de sucursal debe ser positivo");
+        }
+        var sucursal = sucursalRepositorio.findById(codigoSucursal)
+                .orElseThrow(() -> new EntidadNoEncontradaException(
+                        "No se encontro la sucursal " + codigoSucursal));
+
+        Turista turista = turistaRepositorio.save(new Turista(
+                dniValidado, nombre, apellido, direccion, emailValidado,
+                telefonoFijo, telefonoCelular, sucursal));
+        Usuario cliente = usuarioFactory.crear(
+                nombreNormalizado,
+                codificarContrasenia(contrasenia),
+                RolUsuario.CLIENTE,
+                turista,
+                null);
+        return usuarioRepositorio.save(cliente);
     }
 
     public Usuario encontrarPorId(Integer codigo) {

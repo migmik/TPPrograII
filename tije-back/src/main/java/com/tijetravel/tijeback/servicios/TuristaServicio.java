@@ -122,9 +122,31 @@ public class TuristaServicio {
     }
 
     public List<Turista> listarPara(Usuario actor) {
+        return listarPara(actor, null);
+    }
+
+    public List<Turista> listarPara(Usuario actor, String dni) {
+        return listarPara(actor, dni, null);
+    }
+
+    public List<Turista> listarPara(Usuario actor, String dni, Boolean titular) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        String dniBusqueda = dni == null || dni.isBlank() ? null : dni.trim();
         if (actor.getRol() != RolUsuario.CLIENTE) {
-            return listar();
+            List<Turista> turistas;
+            if (dniBusqueda != null) {
+                turistas = turistaRepositorio.findByDni(dniBusqueda);
+            } else if (titular == null) {
+                return listar();
+            } else if (titular) {
+                turistas = turistaRepositorio.findByTitularIsNull();
+            } else {
+                turistas = turistaRepositorio.findByTitularIsNotNull();
+            }
+            if (titular != null && dniBusqueda != null) {
+                return filtrarPorTipo(turistas, titular);
+            }
+            return turistas;
         }
 
         Integer codigoTitular = autorizacion.codigoTitular(actor);
@@ -132,7 +154,27 @@ public class TuristaServicio {
         if (grupoFamiliar.isEmpty()) {
             throw new EntidadNoEncontradaException("No se encontro el turista " + codigoTitular);
         }
-        return List.copyOf(grupoFamiliar);
+        List<Turista> turistasVisibles = dniBusqueda == null ? grupoFamiliar
+                : grupoFamiliar.stream().filter(turista -> dniBusqueda.equals(turista.getDni())).toList();
+        return titular == null ? List.copyOf(turistasVisibles) : filtrarPorTipo(turistasVisibles, titular);
+    }
+
+    public List<Turista> listarPorCodigosPara(Usuario actor, List<Integer> codigos) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        if (codigos == null || codigos.isEmpty()) {
+            return List.of();
+        }
+        List<Turista> turistas = turistaRepositorio.findByCodigoIn(codigos);
+        if (actor.getRol() != RolUsuario.CLIENTE) {
+            return turistas;
+        }
+        return turistas.stream()
+                .filter(turista -> autorizacion.perteneceAlGrupoFamiliar(actor, turista))
+                .toList();
+    }
+
+    private List<Turista> filtrarPorTipo(List<Turista> turistas, boolean titular) {
+        return turistas.stream().filter(turista -> turista.isTitular() == titular).toList();
     }
 
     public Turista encontrarPorId(Integer codigo) {

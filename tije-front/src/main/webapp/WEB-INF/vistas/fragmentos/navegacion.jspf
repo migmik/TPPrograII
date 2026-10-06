@@ -18,6 +18,7 @@
                 </c:when>
                 <c:otherwise>
                     <a href="<c:url value='/login'/>">Iniciar sesión</a>
+                    <a href="<c:url value='/registro'/>">Crear cuenta</a>
                 </c:otherwise>
             </c:choose>
         </nav>

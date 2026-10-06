@@ -14,6 +14,7 @@ vendedor, gestionar reservas y consultar el grupo familiar y sus reservas como c
 - Alta, modificación y eliminación de datos según los permisos del usuario.
 - Reservas con control de fechas, destino y plazas disponibles.
 - Gestión de turistas titulares y sus familiares.
+- Registro público de clientes asociado a un nuevo turista titular.
 - Inicio y cierre de sesión.
 
 | Usuario | Qué puede hacer |

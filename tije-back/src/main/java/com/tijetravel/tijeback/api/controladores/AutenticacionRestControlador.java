@@ -20,9 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.CsrfRespuesta;
 import com.tijetravel.tijeback.api.dto.IniciarSesionSolicitud;
+import com.tijetravel.tijeback.api.dto.RegistroClienteSolicitud;
 import com.tijetravel.tijeback.api.dto.SesionRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.SesionMapeador;
 import com.tijetravel.tijeback.seguridad.UsuarioAutenticado;
+import com.tijetravel.tijeback.servicios.UsuarioServicio;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,22 +37,42 @@ public class AutenticacionRestControlador {
     private final SessionAuthenticationStrategy estrategiaAutenticacionSesion;
     private final SecurityContextRepository repositorioContextoSeguridad;
     private final SesionMapeador sesionMapeador;
+    private final UsuarioServicio usuarioServicio;
     private final SecurityContextHolderStrategy contextoEstrategia = SecurityContextHolder.getContextHolderStrategy();
 
     public AutenticacionRestControlador(
             AuthenticationManager administradorAutenticacion,
             SessionAuthenticationStrategy estrategiaAutenticacionSesion,
             SecurityContextRepository repositorioContextoSeguridad,
-            SesionMapeador sesionMapeador) {
+            SesionMapeador sesionMapeador,
+            UsuarioServicio usuarioServicio) {
         this.administradorAutenticacion = administradorAutenticacion;
         this.estrategiaAutenticacionSesion = estrategiaAutenticacionSesion;
         this.repositorioContextoSeguridad = repositorioContextoSeguridad;
         this.sesionMapeador = sesionMapeador;
+        this.usuarioServicio = usuarioServicio;
     }
 
     @GetMapping("/csrf")
     public CsrfRespuesta obtenerCsrf(CsrfToken token) {
         return new CsrfRespuesta(token.getHeaderName(), token.getParameterName(), token.getToken());
+    }
+
+    @PostMapping("/registro")
+    public org.springframework.http.ResponseEntity<Void> registrar(
+            @Valid @RequestBody RegistroClienteSolicitud solicitud) {
+        usuarioServicio.registrarCliente(
+                solicitud.nombreUsuario(),
+                solicitud.contrasenia(),
+                solicitud.dni(),
+                solicitud.nombre(),
+                solicitud.apellido(),
+                solicitud.direccion(),
+                solicitud.email(),
+                solicitud.telefonoFijo(),
+                solicitud.telefonoCelular(),
+                solicitud.codigoSucursal());
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")

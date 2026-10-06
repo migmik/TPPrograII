@@ -15,6 +15,7 @@ No usa JavaScript ni se conecta directamente a MySQL.
 - Alta, edición y eliminación de hoteles y vuelos para administradores.
 - Listado, alta, edición y eliminación de sucursales para administradores.
 - Inicio y cierre de sesión con los usuarios existentes del backend.
+- Registro público de cuentas Cliente asociadas a un nuevo turista titular.
 - Pantalla «Mi cuenta» con el nombre de usuario y el rol informado por la API.
 - Listado, creación, edición de credenciales y eliminación de usuarios para administradores.
 - Listado, detalle, creación, edición y eliminación de turistas para administradores y vendedores.
