@@ -2,12 +2,14 @@ package com.tijetravel.tijeback.servicios;
 
 import com.tijetravel.tijeback.DnisPrueba;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -60,11 +62,11 @@ class TuristaServicioTest {
                 "100",
                 "200",
                 new Sucursal("Av. Colon 100", "351-1000"));
-        when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
     }
 
     @Test
     void noEliminaTuristaConReservas() {
+            when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         when(reservaRepositorio.existsByTuristaCodigo(1)).thenReturn(true);
 
         assertThrows(
@@ -76,6 +78,7 @@ class TuristaServicioTest {
 
     @Test
     void noEliminaTitularConFamiliares() {
+        when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         when(turistaRepositorio.existsByTitularCodigo(1)).thenReturn(true);
 
         assertThrows(
@@ -87,6 +90,7 @@ class TuristaServicioTest {
 
     @Test
     void noEliminaTuristaVinculadoAUnUsuario() {
+        when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         when(usuarioRepositorio.contarClientesPorTurista(1)).thenReturn(1L);
 
         assertThrows(
@@ -98,8 +102,29 @@ class TuristaServicioTest {
 
     @Test
     void eliminaTuristaSinRelaciones() {
+        when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         servicio.eliminar(administrador, 1);
 
         verify(turistaRepositorio).delete(turista);
+    }
+
+    @Test
+    void buscaTuristaPorDniSinListarTodaLaTabla() {
+        when(turistaRepositorio.findByDni(turista.getDni())).thenReturn(List.of(turista));
+
+        assertEquals(List.of(turista), servicio.listarPara(administrador, turista.getDni()));
+
+        verify(turistaRepositorio).findByDni(turista.getDni());
+        verify(turistaRepositorio, never()).findAll();
+    }
+
+    @Test
+    void filtraTitularesSinListarTodaLaTabla() {
+        when(turistaRepositorio.findByTitularIsNull()).thenReturn(List.of(turista));
+
+        assertEquals(List.of(turista), servicio.listarPara(administrador, null, true));
+
+        verify(turistaRepositorio).findByTitularIsNull();
+        verify(turistaRepositorio, never()).findAll();
     }
 }

@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,11 +20,13 @@ import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.modelos.Cliente;
+import com.tijetravel.tijeback.modelos.Administrador;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.modelos.Vuelo;
 
 @SpringBootTest
@@ -80,6 +83,8 @@ class RepositoriosIntegracionTest {
                                 15,
                                 5));
                 usuarioRepositorio.save(new Cliente("ana", "clave", titular));
+                usuarioRepositorio.save(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                usuarioRepositorio.save(new Administrador("admin", "clave", DnisPrueba.siguiente()));
                 reservaRepositorio.saveAndFlush(new Reserva(
                                 familiar,
                                 vuelo,
@@ -96,7 +101,22 @@ class RepositoriosIntegracionTest {
                 assertEquals(titular.getCodigo(), usuario.getCodigoTurista());
                 assertEquals(1, usuarioRepositorio.contarClientesPorTurista(titular.getCodigo()));
                 assertEquals(1, turistaRepositorio.findByTitularCodigo(titular.getCodigo()).size());
+                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNull().get(0).getCodigo());
+                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNull().get(0).getCodigo());
+                assertEquals(familiar.getCodigo(), turistaRepositorio.findByDni(familiar.getDni()).get(0).getCodigo());
+                assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.CLIENTE).size());
+                assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.VENDEDOR).size());
+                assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.ADMINISTRADOR).size());
                 assertEquals(1, reservaRepositorio.listarPorTitularYFamiliares(titular.getCodigo()).size());
+                assertEquals(1, reservaRepositorio.findByTuristaCodigo(familiar.getCodigo(), PageRequest.of(0, 1))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.findByVueloNumero(100, PageRequest.of(0, 1)).getTotalElements());
+                assertEquals(1, reservaRepositorio.findByHotelCodigo(hotel.getCodigo(), PageRequest.of(0, 1))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.findByFechaLlegadaBetween(
+                                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3), PageRequest.of(0, 1))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.findAll(PageRequest.of(0, 1)).getTotalElements());
         }
 
         @Test

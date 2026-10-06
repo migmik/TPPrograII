@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
@@ -48,12 +49,17 @@ public class UsuariosControlador {
     }
 
     @GetMapping
-    public String listar(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+    public String listar(@RequestParam(required = false) String rol,
+            HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
         if (salida != null) {
             return salida;
         }
-        modelo.addAttribute("usuarios", usuariosApi.listar());
+        List<UsuarioRespuesta> usuarios = rol == null || rol.isBlank()
+                ? usuariosApi.listar()
+                : usuariosApi.listar(rol);
+        modelo.addAttribute("usuarios", usuarios);
+        modelo.addAttribute("rolBusqueda", rol == null ? "" : rol.trim());
         return "usuarios/lista";
     }
 
@@ -253,14 +259,14 @@ public class UsuariosControlador {
 
     private List<TuristaResumen> turistasSinCuenta() {
         Set<Integer> ocupados = new HashSet<>();
-        for (UsuarioRespuesta usuario : usuariosApi.listar()) {
+        for (UsuarioRespuesta usuario : usuariosApi.listar("CLIENTE")) {
             if (usuario.getCodigoTurista() != null) {
                 ocupados.add(usuario.getCodigoTurista());
             }
         }
         List<TuristaResumen> disponibles = new ArrayList<>();
-        for (TuristaResumen turista : turistasApi.listar()) {
-            if (turista.isTitular() && turista.getDni() != null && !ocupados.contains(turista.getCodigo())) {
+        for (TuristaResumen turista : turistasApi.listar(true)) {
+            if (turista.getDni() != null && !ocupados.contains(turista.getCodigo())) {
                 disponibles.add(turista);
             }
         }

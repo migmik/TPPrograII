@@ -25,6 +25,21 @@
                         </c:if>
                         <c:if test="${puedeGestionar}">
                             <p><a href="<c:url value='/turistas/nuevo'/>">Crear turista</a></p>
+                            <form method="get" action="<c:url value='/turistas'/>">
+                                <label for="dni">Buscar por DNI</label>
+                                <input type="search" id="dni" name="dni" inputmode="numeric" minlength="7"
+                                    maxlength="8" pattern="[0-9]{7,8}" value="<c:out value='${dniBusqueda}'/>"
+                                    aria-describedby="dni-ayuda">
+                                <span id="dni-ayuda">Ingresá 7 u 8 dígitos.</span>
+                                <label for="titular">Tipo</label>
+                                <select id="titular" name="titular">
+                                    <option value="" <c:if test="${empty titularBusqueda}">selected</c:if>>Todos</option>
+                                    <option value="true" <c:if test="${titularBusqueda == 'true'}">selected</c:if>>Titulares</option>
+                                    <option value="false" <c:if test="${titularBusqueda == 'false'}">selected</c:if>>Familiares</option>
+                                </select>
+                                <button type="submit">Buscar</button>
+                                <a href="<c:url value='/turistas'/>">Ver todos</a>
+                            </form>
                         </c:if>
                         <c:choose>
                             <c:when test="${empty turistas}">

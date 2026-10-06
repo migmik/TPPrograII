@@ -49,14 +49,32 @@ public class ReservasControlador {
     }
 
     @GetMapping
-    public String listar(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+    public String listar(@RequestParam(required = false) Integer codigoTurista,
+            @RequestParam(required = false) Integer numeroVuelo,
+            @RequestParam(required = false) Integer codigoHotel,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(defaultValue = "0") int pagina,
+            HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null)
             return salida;
-        modelo.addAttribute("reservas", reservasApi.listar());
-        // Una consulta para los nombres del listado, sin consultar por cada fila.
+        var resultado = reservasApi.listarPagina(
+                codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, 20);
+        List<ReservaRespuesta> reservas = resultado.elementos();
+        modelo.addAttribute("reservas", reservas);
+        modelo.addAttribute("pagina", resultado.pagina());
+        modelo.addAttribute("totalPaginas", resultado.totalPaginas());
+        modelo.addAttribute("hayAnterior", resultado.hayAnterior());
+        modelo.addAttribute("haySiguiente", resultado.haySiguiente());
+        modelo.addAttribute("codigoTuristaBusqueda", codigoTurista);
+        modelo.addAttribute("numeroVueloBusqueda", numeroVuelo);
+        modelo.addAttribute("codigoHotelBusqueda", codigoHotel);
+        modelo.addAttribute("fechaDesdeBusqueda", fechaDesde);
+        modelo.addAttribute("fechaHastaBusqueda", fechaHasta);
         Map<Integer, TuristaResumen> turistas = new HashMap<>();
-        for (TuristaResumen turista : turistasApi.listar())
+        List<Integer> codigos = reservas.stream().map(ReservaRespuesta::getCodigoTurista).distinct().toList();
+        for (TuristaResumen turista : turistasApi.listarPorCodigos(codigos))
             turistas.put(turista.getCodigo(), turista);
         modelo.addAttribute("turistasPorCodigo", turistas);
         return "reservas/lista";

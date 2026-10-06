@@ -112,6 +112,10 @@ class RecursosProtegidosApiIntegracionTest {
                 mockMvc.perform(get("/api/v1/reservas"))
                                 .andExpect(status().isUnauthorized())
                                 .andExpect(jsonPath("$.error").value("AUTENTICACION_REQUERIDA"));
+
+                mockMvc.perform(get("/api/v1/reservas/pagina"))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.error").value("AUTENTICACION_REQUERIDA"));
         }
 
         @Test
@@ -152,9 +156,28 @@ class RecursosProtegidosApiIntegracionTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.length()").value(3));
 
+                mockMvc.perform(get("/api/v1/turistas").session(sesion).param("codigos", "2", "3"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(2))
+                                .andExpect(jsonPath("$[0].codigo").value(2))
+                                .andExpect(jsonPath("$[1].codigo").value(3));
+
                 mockMvc.perform(get("/api/v1/reservas").session(sesion))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.length()").value(3));
+
+                mockMvc.perform(get("/api/v1/reservas/pagina").session(sesion)
+                                .param("codigoTurista", "3").param("pagina", "0").param("tamanio", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.elementos.length()").value(1))
+                                .andExpect(jsonPath("$.elementos[0].codigoTurista").value(3))
+                                .andExpect(jsonPath("$.pagina").value(0));
+
+                mockMvc.perform(get("/api/v1/reservas/pagina").session(sesion)
+                                .param("pagina", "0").param("tamanio", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.elementos.length()").value(1))
+                                .andExpect(jsonPath("$.elementos[0].codigoSucursalContratacion").exists());
 
                 mockMvc.perform(get("/api/v1/usuarios").session(sesion))
                                 .andExpect(status().isForbidden())
@@ -176,6 +199,13 @@ class RecursosProtegidosApiIntegracionTest {
                                 .andExpect(jsonPath("$.length()").value(2))
                                 .andExpect(jsonPath("$[0].codigo").value(1))
                                 .andExpect(jsonPath("$[1].codigo").value(2));
+
+                mockMvc.perform(get("/api/v1/reservas/pagina").session(sesion).param("pagina", "0")
+                                .param("tamanio", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.elementos.length()").value(1))
+                                .andExpect(jsonPath("$.elementos[0].codigoTurista").value(1))
+                                .andExpect(jsonPath("$.haySiguiente").value(true));
 
                 mockMvc.perform(get("/api/v1/turistas/{codigo}", 2).session(sesion))
                                 .andExpect(status().isOk())
