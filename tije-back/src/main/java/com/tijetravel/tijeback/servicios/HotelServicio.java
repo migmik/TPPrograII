@@ -59,6 +59,10 @@ public class HotelServicio {
         return hotelRepositorio.findAll();
     }
 
+    public List<Hotel> buscarPorCiudad(String ciudad) {
+        return hotelRepositorio.buscarPorCiudad(CiudadConsulta.nombres(ciudad));
+    }
+
     public Hotel encontrarPorId(Integer codigo) {
         return hotelRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el hotel " + codigo));

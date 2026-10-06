@@ -3,6 +3,8 @@ package com.tijetravel.tijeback.api;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -194,6 +197,36 @@ class RecursosProtegidosApiIntegracionTest {
                 mockMvc.perform(get("/api/v1/usuarios").session(sesion))
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
+        }
+
+        @Test
+        @Transactional
+        void clienteCreaParaSuFamiliaPeroNoParaOtrosNiEditaNiElimina() throws Exception {
+                MockHttpSession sesion = iniciarSesion(USUARIO_CLIENTE, CONTRASENIA_CLIENTE);
+                String ajena = datosReserva(3);
+                mockMvc.perform(post("/api/v1/reservas").session(sesion).with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON).content(ajena))
+                                .andExpect(status().isForbidden());
+
+                MvcResult creada = mockMvc.perform(post("/api/v1/reservas").session(sesion).with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON).content(datosReserva(2)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.codigoTurista").value(2))
+                                .andReturn();
+                String ubicacion = creada.getResponse().getHeader("Location");
+                mockMvc.perform(put(ubicacion).session(sesion).with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON).content(datosReserva(2)))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(delete(ubicacion).session(sesion).with(csrf()))
+                                .andExpect(status().isForbidden());
+        }
+
+        private String datosReserva(int codigoTurista) {
+                return """
+                                {"codigoTurista": %d, "numeroVuelo": 102, "codigoHotel": 1,
+                                 "claseVuelo": "TURISTA", "tipoHospedaje": "MEDIA_PENSION",
+                                 "fechaLlegada": "2026-10-12", "fechaPartida": "2026-10-15"}
+                                """.formatted(codigoTurista);
         }
 
         private MockHttpSession iniciarSesion(String usuario, String contrasenia) throws Exception {

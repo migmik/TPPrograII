@@ -9,8 +9,13 @@ public class CrearUsuarioFormulario {
     @jakarta.validation.constraints.Pattern(regexp = "[0-9]{7,8}", message = "El DNI debe tener 7 u 8 dígitos, sin puntos ni espacios.")
     private String dni;
 
-    public String getDni() { return dni; }
-    public void setDni(String dni) { this.dni = (dni != null && dni.isEmpty()) ? null : dni; }
+    public String getDni() {
+        return dni;
+    }
+
+    public void setDni(String dni) {
+        this.dni = (dni != null && dni.isEmpty()) ? null : dni;
+    }
 
     @NotBlank(message = "Ingresá un nombre de usuario.")
     @Size(max = 255, message = "El nombre no puede superar 255 caracteres.")
