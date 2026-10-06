@@ -63,21 +63,38 @@ class ReservasControladorTest {
     }
 
     @Test
-    void clienteSoloConsultaLasReservasQueDevuelveSuApi() throws Exception {
+    void clienteConsultaSusReservasYCreaPeroNoEditaNiElimina() throws Exception {
         preparar("CLIENTE");
         var grupo = List.of(reserva());
         when(reservasApi.listar()).thenReturn(grupo);
         mvc.perform(get("/reservas").session(sesion()))
                 .andExpect(model().attribute("reservas", grupo)).andExpect(model().attribute("puedeGestionar", false));
-        for (String ruta : List.of("/reservas/nueva", "/reservas/1/editar", "/reservas/1/eliminar")) {
+        mvc.perform(get("/reservas/nueva").session(sesion()))
+                .andExpect(view().name("reservas/formulario"));
+        mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas"));
+        for (String ruta : List.of("/reservas/1/editar", "/reservas/1/eliminar")) {
             mvc.perform(get(ruta).session(sesion())).andExpect(status().isForbidden());
         }
-        for (String ruta : List.of("/reservas", "/reservas/1/editar", "/reservas/1/eliminar")) {
+        for (String ruta : List.of("/reservas/1/editar", "/reservas/1/eliminar")) {
             mvc.perform(formulario(ruta)).andExpect(status().isForbidden());
         }
-        verify(reservasApi, never()).crear(any());
+        verify(reservasApi).crear(any());
         verify(reservasApi, never()).modificar(any(), any());
         verify(reservasApi, never()).eliminar(any());
+    }
+
+    @Test
+    void reservaDesdeElBuscadorLlegaConVueloHotelYFechasPrecargados() throws Exception {
+        preparar("CLIENTE");
+        var resultado = mvc.perform(get("/reservas/nueva").session(sesion())
+                .param("numeroVuelo", "100").param("codigoHotel", "3")
+                .param("fechaLlegada", "2027-01-10").param("fechaPartida", "2027-01-12"))
+                .andExpect(view().name("reservas/formulario")).andReturn();
+        var formulario = (GuardarReservaFormulario) resultado.getModelAndView().getModel().get("reserva");
+        assertEquals(100, formulario.getNumeroVuelo());
+        assertEquals(3, formulario.getCodigoHotel());
+        assertEquals(LocalDate.of(2027, 1, 10), formulario.getFechaLlegada());
+        assertEquals("TURISTA", formulario.getClaseVuelo());
     }
 
     @Test

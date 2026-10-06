@@ -2,6 +2,7 @@ package com.tijetravel.tijefront.controladores;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -47,11 +50,13 @@ public class ReservasControlador {
     @GetMapping
     public String listar(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         modelo.addAttribute("reservas", reservasApi.listar());
         // Una consulta para los nombres del listado, sin consultar por cada fila.
         Map<Integer, TuristaResumen> turistas = new HashMap<>();
-        for (TuristaResumen turista : turistasApi.listar()) turistas.put(turista.getCodigo(), turista);
+        for (TuristaResumen turista : turistasApi.listar())
+            turistas.put(turista.getCodigo(), turista);
         modelo.addAttribute("turistasPorCodigo", turistas);
         return "reservas/lista";
     }
@@ -60,16 +65,28 @@ public class ReservasControlador {
     public String detalle(@PathVariable Integer codigo, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         cargarDetalle(codigo, modelo);
         return "reservas/detalle";
     }
 
     @GetMapping("/nueva")
-    public String nueva(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        String salida = comprobarAcceso(true, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
-        modelo.addAttribute("reserva", new GuardarReservaFormulario());
+    public String nueva(@RequestParam(required = false) Integer numeroVuelo,
+            @RequestParam(required = false) Integer codigoHotel,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaLlegada,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaPartida,
+            HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+        String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
+        if (salida != null)
+            return salida;
+        GuardarReservaFormulario formulario = new GuardarReservaFormulario();
+        formulario.setNumeroVuelo(numeroVuelo);
+        formulario.setCodigoHotel(codigoHotel);
+        formulario.setFechaLlegada(fechaLlegada);
+        formulario.setFechaPartida(fechaPartida);
+        formulario.setClaseVuelo("TURISTA");
+        modelo.addAttribute("reserva", formulario);
         cargarOpciones(modelo);
         return "reservas/formulario";
     }
@@ -78,7 +95,8 @@ public class ReservasControlador {
     public String editar(@PathVariable Integer codigo, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(true, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         ReservaRespuesta actual = reservasApi.buscar(codigo);
         GuardarReservaFormulario formulario = new GuardarReservaFormulario();
         formulario.setCodigoTurista(actual.getCodigoTurista());
@@ -94,35 +112,44 @@ public class ReservasControlador {
         return "reservas/formulario";
     }
 
-    @PostMapping({"", "/{codigo}/editar"})
+    @PostMapping({ "", "/{codigo}/editar" })
     public String guardar(@PathVariable(required = false) Integer codigo,
             @Valid @ModelAttribute("reserva") GuardarReservaFormulario formulario,
             BindingResult errores, HttpServletRequest solicitud, HttpServletResponse respuesta,
             Model modelo, RedirectAttributes redireccion) {
-        String salida = comprobarAcceso(true, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
-        if (codigo != null) modelo.addAttribute("actual", reservasApi.buscar(codigo));
+        String salida = comprobarAcceso(codigo != null, solicitud, respuesta, modelo);
+        if (salida != null)
+            return salida;
+        if (codigo != null)
+            modelo.addAttribute("actual", reservasApi.buscar(codigo));
         cargarOpciones(modelo);
         if (!errores.hasFieldErrors("fechaLlegada") && !errores.hasFieldErrors("fechaPartida")
                 && !formulario.getFechaLlegada().isBefore(formulario.getFechaPartida())) {
             errores.rejectValue("fechaPartida", "fechas.orden", "La partida debe ser posterior a la llegada.");
         }
-        if (errores.hasErrors()) return "reservas/formulario";
+        if (errores.hasErrors())
+            return "reservas/formulario";
         try {
-            if (codigo == null) reservasApi.crear(formulario);
-            else reservasApi.modificar(codigo, formulario);
+            if (codigo == null)
+                reservasApi.crear(formulario);
+            else
+                reservasApi.modificar(codigo, formulario);
         } catch (RestClientResponseException error) {
             int estado = error.getStatusCode().value();
-            if (estado != 400 && estado != 403 && estado != 409) throw error;
+            if (estado != 400 && estado != 403 && estado != 409)
+                throw error;
             respuesta.setStatus(estado);
             String mensaje = "Revisá los datos y las fechas de la reserva.";
-            if (estado == 409) mensaje = "No se pudo guardar: faltan plazas en el vuelo o el hotel, o el turista ya tiene una reserva para ese vuelo.";
-            if (estado == 403) mensaje = "No se pudo guardar. Verificá tus permisos y que la llegada coincida con la fecha del vuelo y la ciudad del hotel con su destino.";
+            if (estado == 409)
+                mensaje = "No se pudo guardar: faltan plazas en el vuelo o el hotel, o el turista ya tiene una reserva para ese vuelo.";
+            if (estado == 403)
+                mensaje = "No se pudo guardar. Verificá tus permisos y que la llegada coincida con la fecha del vuelo y la ciudad del hotel con su destino.";
             modelo.addAttribute("errorOperacion", mensaje);
             return "reservas/formulario";
         } catch (ResourceAccessException error) {
             respuesta.setStatus(503);
-            modelo.addAttribute("errorOperacion", "No pudimos confirmar el guardado. Consultá el listado antes de volver a enviarlo.");
+            modelo.addAttribute("errorOperacion",
+                    "No pudimos confirmar el guardado. Consultá el listado antes de volver a enviarlo.");
             return "reservas/formulario";
         }
         redireccion.addFlashAttribute("mensajeExito", "Reserva guardada correctamente.");
@@ -133,7 +160,8 @@ public class ReservasControlador {
     public String confirmarEliminacion(@PathVariable Integer codigo, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(true, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         cargarDetalle(codigo, modelo);
         return "reservas/eliminar";
     }
@@ -142,13 +170,15 @@ public class ReservasControlador {
     public String eliminar(@PathVariable Integer codigo, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo, RedirectAttributes redireccion) {
         String salida = comprobarAcceso(true, solicitud, respuesta, modelo);
-        if (salida != null) return salida;
+        if (salida != null)
+            return salida;
         cargarDetalle(codigo, modelo);
         try {
             reservasApi.eliminar(codigo);
         } catch (ResourceAccessException error) {
             respuesta.setStatus(503);
-            modelo.addAttribute("errorOperacion", "No pudimos confirmar la eliminación. Consultá el listado antes de volver a intentarlo.");
+            modelo.addAttribute("errorOperacion",
+                    "No pudimos confirmar la eliminación. Consultá el listado antes de volver a intentarlo.");
             return "reservas/eliminar";
         }
         redireccion.addFlashAttribute("mensajeExito", "Reserva eliminada correctamente.");
@@ -173,12 +203,14 @@ public class ReservasControlador {
     private String comprobarAcceso(boolean escritura, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
         var sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null) return "redirect:/login";
+        if (sesion == null || sesion.getAttribute("usuarioActual") == null)
+            return "redirect:/login";
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();
         sesion.setAttribute("usuarioActual", usuario);
         modelo.addAttribute("usuarioActual", usuario);
         boolean puedeGestionar = "ADMINISTRADOR".equals(usuario.getRol()) || "VENDEDOR".equals(usuario.getRol());
         modelo.addAttribute("puedeGestionar", puedeGestionar);
+        modelo.addAttribute("puedeCrear", puedeGestionar || "CLIENTE".equals(usuario.getRol()));
         if (escritura && !puedeGestionar) {
             respuesta.setStatus(403);
             modelo.addAttribute("mensaje", "Solo administradores y vendedores pueden gestionar reservas.");
