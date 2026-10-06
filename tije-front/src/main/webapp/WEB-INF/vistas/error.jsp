@@ -12,7 +12,7 @@
 
         <body>
             <%@ include file="fragmentos/navegacion.jspf" %>
-                <main>
+                <main class="compact-page">
                     <h1>No se pudo completar la consulta</h1>
                     <p role="alert">
                         <c:out value="${mensaje}" default="La página solicitada no está disponible." />

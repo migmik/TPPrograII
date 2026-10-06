@@ -12,7 +12,7 @@
 
         <body>
             <%@ include file="../fragmentos/navegacion.jspf" %>
-                <main>
+                <main class="compact-page">
                     <h1>Mi cuenta</h1>
                     <dl>
                         <dt>Usuario</dt>

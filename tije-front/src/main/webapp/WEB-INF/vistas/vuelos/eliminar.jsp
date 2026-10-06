@@ -10,7 +10,7 @@
 </head>
 <body>
     <%@ include file="../fragmentos/navegacion.jspf" %>
-    <main>
+    <main class="compact-page">
         <h1>Eliminar vuelo</h1>
         <p>Vuelo <strong><c:out value="${vuelo.numero}"/></strong> de <c:out value="${vuelo.origen}"/>
             a <c:out value="${vuelo.destino}"/> el <c:out value="${vuelo.fechaYHoraFormateada}"/>.</p>
