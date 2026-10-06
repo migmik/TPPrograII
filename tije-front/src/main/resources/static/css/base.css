@@ -21,7 +21,7 @@ body {
 body.pagina-inicio {
     background-color: #e9f3f8;
     background-image:
-        linear-gradient(rgba(239, 247, 250, .76), rgba(239, 247, 250, .76)),
+        linear-gradient(rgba(239, 247, 250, .52), rgba(239, 247, 250, .52)),
         url("../img/playa-fondo.png");
     background-position: center, center;
     background-size: cover, cover;
