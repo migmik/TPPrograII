@@ -30,6 +30,19 @@ public class HotelesApiCliente {
         return Arrays.asList(hoteles);
     }
 
+    public List<HotelRespuesta> buscar(String ciudad, LocalDate llegada, LocalDate partida,
+            int personas) {
+        HotelRespuesta[] hoteles = clienteBackend.get()
+                .uri(uri -> uri.path("/api/v1/hoteles/buscar")
+                        .queryParam("ciudad", ciudad).queryParam("fechaLlegada", llegada)
+                        .queryParam("fechaPartida", partida).queryParam("personas", personas).build())
+                .retrieve().body(HotelRespuesta[].class);
+        if (hoteles == null) {
+            throw new RestClientException("La API no devolvio los resultados de hoteles.");
+        }
+        return Arrays.asList(hoteles);
+    }
+
     public HotelRespuesta buscar(Integer codigo) {
         HotelRespuesta hotel = clienteBackend.get()
                 .uri("/api/v1/hoteles/{codigo}", codigo)

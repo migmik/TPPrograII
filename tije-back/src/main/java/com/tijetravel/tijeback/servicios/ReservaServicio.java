@@ -62,11 +62,15 @@ public class ReservaServicio {
             TipoHospedaje tipoHospedaje,
             LocalDate fechaLlegada,
             LocalDate fechaPartida) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
+        autorizacion.verificarPermiso(actor, Permiso.CREAR_RESERVAS);
         bloqueoEscrituras.adquirir();
         disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Turista turista = encontrarTurista(codigoTurista);
+        if (actor.getRol() == RolUsuario.CLIENTE
+                && !autorizacion.perteneceAlGrupoFamiliar(actor, turista)) {
+            throw new OperacionNoPermitidaException("El cliente solo puede reservar para su grupo familiar");
+        }
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
 
@@ -173,7 +177,7 @@ public class ReservaServicio {
 
     private void validarCompatibilidad(Vuelo vuelo, Hotel hotel, LocalDate fechaLlegada) {
         boolean coincideFecha = fechaLlegada.equals(vuelo.getFechaYHora().toLocalDate());
-        boolean coincideDestino = hotel.getCiudad().trim().equalsIgnoreCase(vuelo.getDestino().trim());
+        boolean coincideDestino = CiudadConsulta.misma(hotel.getCiudad(), vuelo.getDestino());
         if (!coincideFecha || !coincideDestino) {
             throw new OperacionNoPermitidaException(
                     "El hotel, el destino del vuelo y la fecha de llegada no son compatibles");

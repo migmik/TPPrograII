@@ -1,6 +1,7 @@
 package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
@@ -57,6 +58,16 @@ public class VuelosRestControlador {
                 .map(vueloMapeador::aRespuesta)
                 .sorted(Comparator.comparing(VueloRespuesta::numero))
                 .toList();
+    }
+
+    @GetMapping("/buscar")
+    public List<VueloRespuesta> buscar(@RequestParam String origen, @RequestParam String destino,
+            @RequestParam LocalDate fecha, @RequestParam int personas,
+            @RequestParam(defaultValue = "false") boolean sugerencias) {
+        List<Vuelo> vuelos = sugerencias
+                ? vueloServicio.sugerirOtrosDias(origen, destino, fecha, personas)
+                : vueloServicio.buscarEnFecha(origen, destino, fecha, personas);
+        return vuelos.stream().map(vueloMapeador::aRespuesta).toList();
     }
 
     @GetMapping("/{numero}")

@@ -8,7 +8,9 @@ import com.tijetravel.tijefront.formularios.GuardarVueloFormulario;
 public class VuelosGestionApiCliente {
     private final ConexionApiSesion conexion;
 
-    public VuelosGestionApiCliente(ConexionApiSesion conexion) { this.conexion = conexion; }
+    public VuelosGestionApiCliente(ConexionApiSesion conexion) {
+        this.conexion = conexion;
+    }
 
     public void crear(GuardarVueloFormulario formulario) {
         CsrfRespuesta csrf = conexion.obtenerCsrf();

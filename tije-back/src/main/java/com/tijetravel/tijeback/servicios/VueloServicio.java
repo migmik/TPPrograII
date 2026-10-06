@@ -1,6 +1,9 @@
 package com.tijetravel.tijeback.servicios;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -59,6 +62,31 @@ public class VueloServicio {
 
     public List<Vuelo> listar() {
         return vueloRepositorio.findAll();
+    }
+
+    public List<Vuelo> buscarEnFecha(String origen, String destino, LocalDate fecha, int personas) {
+        validarBusqueda(fecha, personas);
+        return vueloRepositorio.buscarEnFecha(CiudadConsulta.nombres(origen), CiudadConsulta.nombres(destino),
+                fecha.atStartOfDay(), fecha.plusDays(1).atStartOfDay(), ClaseVuelo.TURISTA, personas);
+    }
+
+    public List<Vuelo> sugerirOtrosDias(String origen, String destino, LocalDate fecha, int personas) {
+        validarBusqueda(fecha, personas);
+        List<Vuelo> vuelos = vueloRepositorio.buscarOtrosDias(
+                CiudadConsulta.nombres(origen), CiudadConsulta.nombres(destino),
+                LocalDate.now().atStartOfDay(), fecha.atStartOfDay(),
+                fecha.plusDays(1).atStartOfDay(), ClaseVuelo.TURISTA, personas);
+        return vuelos.stream()
+                .sorted(Comparator.comparingLong((Vuelo vuelo) -> Math.abs(ChronoUnit.DAYS.between(
+                        fecha, vuelo.getFechaYHora().toLocalDate())))
+                        .thenComparing(Vuelo::getFechaYHora))
+                .limit(5).toList();
+    }
+
+    private void validarBusqueda(LocalDate fecha, int personas) {
+        if (fecha == null || personas < 1 || personas > 20) {
+            throw new IllegalArgumentException("La fecha y una cantidad de 1 a 20 personas son obligatorias");
+        }
     }
 
     public Vuelo encontrarPorId(Integer numero) {

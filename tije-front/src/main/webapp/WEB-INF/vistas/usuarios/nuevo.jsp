@@ -24,10 +24,12 @@
                         <form:form method="post" action="${urlCrear}" modelAttribute="usuario" htmlEscape="true">
                             <p>
                                 <form:label path="dni">DNI</form:label>
-                                <form:input path="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8"/>
-                                <form:errors path="dni" cssClass="error"/>
+                                <form:input path="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7"
+                                    maxlength="8" />
+                                <form:errors path="dni" cssClass="error" />
                             </p>
-                            <p>Obligatorio para administradores y vendedores. Para clientes dejalo vacío: se usa el DNI del turista elegido, que debe estar completo.</p>
+                            <p>Obligatorio para administradores y vendedores. Para clientes dejalo vacío: se usa el DNI
+                                del turista elegido, que debe estar completo.</p>
 
                             <p>
                                 <form:label path="nombreUsuario">Nombre de usuario</form:label>
@@ -59,7 +61,8 @@
                                         <form:option value="${turista.codigo}">
                                             <c:out value="${turista.codigo}" /> -
                                             <c:out value="${turista.nombre}" />
-                                            <c:out value="${turista.apellido}" /> - DNI: <c:out value="${turista.dni}" default="pendiente" />
+                                            <c:out value="${turista.apellido}" /> - DNI:
+                                            <c:out value="${turista.dni}" default="pendiente" />
                                         </form:option>
                                     </c:forEach>
                                 </form:select>

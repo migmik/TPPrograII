@@ -123,8 +123,9 @@ public class TuristasControlador {
             if (estado != 400 && estado != 409 && estado != 403)
                 throw error;
             respuesta.setStatus(estado);
-            modelo.addAttribute("errorOperacion", estado == 409 ? "Ya existe un turista con ese DNI o email. Revisá los datos."
-                    : "No se pudo guardar. Revisá los datos, la sucursal, el titular y tus permisos.");
+            modelo.addAttribute("errorOperacion",
+                    estado == 409 ? "Ya existe un turista con ese DNI o email. Revisá los datos."
+                            : "No se pudo guardar. Revisá los datos, la sucursal, el titular y tus permisos.");
             return "turistas/formulario";
         } catch (ResourceAccessException error) {
             respuesta.setStatus(503);
