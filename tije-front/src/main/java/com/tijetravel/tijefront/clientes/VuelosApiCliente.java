@@ -1,6 +1,7 @@
 package com.tijetravel.tijefront.clientes;
 
 import java.util.Arrays;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -25,6 +26,20 @@ public class VuelosApiCliente {
                 .body(VueloRespuesta[].class);
         if (vuelos == null) {
             throw new RestClientException("La API no devolvió el listado de vuelos.");
+        }
+        return Arrays.asList(vuelos);
+    }
+
+    public List<VueloRespuesta> buscar(String origen, String destino, LocalDate fecha,
+            int personas, boolean sugerencias) {
+        VueloRespuesta[] vuelos = clienteBackend.get()
+                .uri(uri -> uri.path("/api/v1/vuelos/buscar")
+                        .queryParam("origen", origen).queryParam("destino", destino)
+                        .queryParam("fecha", fecha).queryParam("personas", personas)
+                        .queryParam("sugerencias", sugerencias).build())
+                .retrieve().body(VueloRespuesta[].class);
+        if (vuelos == null) {
+            throw new RestClientException("La API no devolvio los resultados de vuelos.");
         }
         return Arrays.asList(vuelos);
     }

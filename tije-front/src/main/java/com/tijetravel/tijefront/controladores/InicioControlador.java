@@ -1,7 +1,6 @@
 package com.tijetravel.tijefront.controladores;
 
 import java.text.Normalizer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,28 +48,19 @@ public class InicioControlador {
             return "inicio";
         }
 
-        List<VueloRespuesta> vuelos = new ArrayList<>();
-        for (VueloRespuesta vuelo : vuelosApi.listar()) {
-            if (mismaCiudad(vuelo.getOrigen(), busqueda.getOrigen())
-                    && mismaCiudad(vuelo.getDestino(), busqueda.getDestino())
-                    && vuelo.getFechaYHora().toLocalDate().equals(busqueda.getFechaLlegada())
-                    && vuelosApi.consultarDisponibilidad(vuelo.getNumero(), "TURISTA")
-                            .getPlazasDisponibles() >= busqueda.getPersonas()) {
-                vuelos.add(vuelo);
-            }
+        List<VueloRespuesta> vuelos = vuelosApi.buscar(busqueda.getOrigen(), busqueda.getDestino(),
+                busqueda.getFechaLlegada(), busqueda.getPersonas(), false);
+        List<VueloRespuesta> vuelosSugeridos = List.of();
+        if (vuelos.isEmpty()) {
+            vuelosSugeridos = vuelosApi.buscar(busqueda.getOrigen(), busqueda.getDestino(),
+                    busqueda.getFechaLlegada(), busqueda.getPersonas(), true);
         }
 
-        List<HotelRespuesta> hoteles = new ArrayList<>();
-        for (HotelRespuesta hotel : hotelesApi.listar()) {
-            if (mismaCiudad(hotel.getCiudad(), busqueda.getDestino())
-                    && hotelesApi.consultarDisponibilidad(hotel.getCodigo(),
-                            busqueda.getFechaLlegada(), busqueda.getFechaPartida())
-                            .getPlazasDisponibles() >= busqueda.getPersonas()) {
-                hoteles.add(hotel);
-            }
-        }
+        List<HotelRespuesta> hoteles = hotelesApi.buscar(busqueda.getDestino(),
+                busqueda.getFechaLlegada(), busqueda.getFechaPartida(), busqueda.getPersonas());
 
         modelo.addAttribute("vuelosEncontrados", vuelos);
+        modelo.addAttribute("vuelosSugeridos", vuelosSugeridos);
         modelo.addAttribute("hotelesEncontrados", hoteles);
         modelo.addAttribute("busquedaRealizada", true);
         return "inicio";

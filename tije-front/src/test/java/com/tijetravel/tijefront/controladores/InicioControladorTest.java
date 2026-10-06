@@ -1,8 +1,5 @@
 package com.tijetravel.tijefront.controladores;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,8 +22,6 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
-import com.tijetravel.tijefront.dto.DisponibilidadHotelRespuesta;
-import com.tijetravel.tijefront.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;
 
@@ -53,28 +48,38 @@ class InicioControladorTest {
     }
 
     @Test
-    void buscaSoloOpcionesConPlazasParaTodasLasPersonas() throws Exception {
+    void muestraLasOpcionesFiltradasQueDevuelveElBackend() throws Exception {
         VueloRespuesta correcto = vuelo(101, "Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1));
-        VueloRespuesta otroDestino = vuelo(102, "Buenos Aires", "Salta", LocalDate.of(2027, 2, 1));
-        VueloRespuesta sinPlazas = vuelo(103, "Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1));
         HotelRespuesta hotel = hotel(1, "Cordoba");
-        HotelRespuesta lleno = hotel(2, "Córdoba");
-        when(vuelosApi.listar()).thenReturn(List.of(correcto, otroDestino, sinPlazas));
-        when(vuelosApi.consultarDisponibilidad(101, "TURISTA")).thenReturn(plazasVuelo(3));
-        when(vuelosApi.consultarDisponibilidad(103, "TURISTA")).thenReturn(plazasVuelo(1));
-        when(hotelesApi.listar()).thenReturn(List.of(hotel, lleno));
-        when(hotelesApi.consultarDisponibilidad(1, LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4)))
-                .thenReturn(plazasHotel(3));
-        when(hotelesApi.consultarDisponibilidad(2, LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4)))
-                .thenReturn(plazasHotel(0));
+        when(vuelosApi.buscar("Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1), 2, false))
+                .thenReturn(List.of(correcto));
+        when(hotelesApi.buscar("Córdoba", LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4), 2))
+                .thenReturn(List.of(hotel));
 
         mvc.perform(busqueda())
                 .andExpect(status().isOk())
                 .andExpect(view().name("inicio"))
                 .andExpect(model().attribute("vuelosEncontrados", List.of(correcto)))
+                .andExpect(model().attribute("vuelosSugeridos", List.of()))
                 .andExpect(model().attribute("hotelesEncontrados", List.of(hotel)))
                 .andExpect(model().attribute("busquedaRealizada", true));
-        verify(vuelosApi, never()).consultarDisponibilidad(102, "TURISTA");
+    }
+
+    @Test
+    void solicitaSugerenciasSoloSiNoHayVueloEnLaFechaPedida() throws Exception {
+        VueloRespuesta cercano = vuelo(201, "Buenos Aires", "Cordoba", LocalDate.of(2027, 2, 2));
+        VueloRespuesta lejano = vuelo(202, "Buenos Aires", "Cordoba", LocalDate.of(2027, 2, 10));
+        when(vuelosApi.buscar("Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1), 2, false))
+                .thenReturn(List.of());
+        when(vuelosApi.buscar("Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1), 2, true))
+                .thenReturn(List.of(cercano, lejano));
+        when(hotelesApi.buscar("Córdoba", LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4), 2))
+                .thenReturn(List.of());
+
+        mvc.perform(busqueda())
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("vuelosEncontrados", List.of()))
+                .andExpect(model().attribute("vuelosSugeridos", List.of(cercano, lejano)));
     }
 
     @Test
@@ -122,15 +127,4 @@ class InicioControladorTest {
         return hotel;
     }
 
-    private DisponibilidadVueloRespuesta plazasVuelo(int cantidad) {
-        DisponibilidadVueloRespuesta respuesta = new DisponibilidadVueloRespuesta();
-        respuesta.setPlazasDisponibles(cantidad);
-        return respuesta;
-    }
-
-    private DisponibilidadHotelRespuesta plazasHotel(int cantidad) {
-        DisponibilidadHotelRespuesta respuesta = new DisponibilidadHotelRespuesta();
-        respuesta.setPlazasDisponibles(cantidad);
-        return respuesta;
-    }
 }
