@@ -17,6 +17,7 @@
                     <p>Consultá nuestros hoteles, vuelos y las plazas disponibles para tu viaje.</p>
                     <p><a href="<c:url value='/hoteles'/>">Ver hoteles</a></p>
                     <p><a href="<c:url value='/vuelos'/>">Ver vuelos</a></p>
+                    <p><a href="<c:url value='/sucursales'/>">Ver sucursales</a></p>
                 </main>
         </body>
 

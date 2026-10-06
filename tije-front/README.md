@@ -12,15 +12,19 @@ No usa JavaScript ni se conecta directamente a MySQL.
 - Formulario para consultar plazas disponibles entre dos fechas.
 - Listado y detalle de vuelos, con fechas en formato día/mes/año y hora.
 - Capacidad y plazas libres por clase: turista y primera.
+- Alta, edición y eliminación de hoteles y vuelos para administradores.
+- Listado, alta, edición y eliminación de sucursales para administradores.
 - Inicio y cierre de sesión con los usuarios existentes del backend.
 - Pantalla «Mi cuenta» con el nombre de usuario y el rol informado por la API.
 - Listado, creación, edición de credenciales y eliminación de usuarios para administradores.
 - Listado, detalle, creación, edición y eliminación de turistas para administradores y vendedores.
 - Consulta del propio grupo familiar para clientes.
+- Listado, detalle, alta, edición y eliminación de reservas para administradores y vendedores.
+- Consulta de las reservas del grupo familiar para clientes.
 - Mensajes para fechas inválidas, recursos inexistentes y problemas de conexión.
 
-Los catálogos son públicos. La creación de cuentas requiere ingresar como
-administrador. La gestión de los otros recursos queda para las siguientes etapas.
+Los catálogos son públicos. La administración de sucursales, hoteles, vuelos y
+usuarios requiere ingresar como administrador.
 El CSS actual solo facilita la lectura.
 
 ## Cómo ejecutarlo
@@ -129,11 +133,14 @@ y `PRIMERA`. El frontend no importa clases Java del backend.
 | `pom.xml` | Dependencias, Java 21 y empaquetado WAR. |
 | `TijeFrontApplication.java` | Inicia la aplicación. También permite desplegar el WAR en un contenedor compatible. |
 | `configuracion/ConfiguracionApi.java` | Crea el cliente HTTP con la dirección del backend y límites de espera de cinco segundos. |
-| `clientes/HotelesApiCliente.java` | Reúne las tres llamadas HTTP de hoteles. |
-| `clientes/VuelosApiCliente.java` | Consulta listado, detalle y disponibilidad por clase de vuelos. |
+| `clientes/HotelesApiCliente.java` y `clientes/VuelosApiCliente.java` | Consultan los catálogos y la disponibilidad. |
+| `clientes/HotelesGestionApiCliente.java` y `clientes/VuelosGestionApiCliente.java` | Envían los cambios con la sesión del administrador. |
+| `clientes/SucursalesApiCliente.java` | Consulta y administra sucursales; también aporta el selector para turistas. |
 | `controladores/InicioControlador.java` | Muestra la página de inicio. |
 | `controladores/HotelesControlador.java` | Recibe las solicitudes y prepara los datos de las páginas. |
 | `controladores/VuelosControlador.java` | Prepara el listado de vuelos y el detalle con ambas clases. |
+| `controladores/HotelesGestionControlador.java` y `controladores/VuelosGestionControlador.java` | Reciben los formularios de administración. |
+| `controladores/SucursalesControlador.java` | Muestra el listado y recibe los cambios de sucursales. |
 | `controladores/ManejadorErrores.java` | Convierte errores de conexión o consulta en una página comprensible. |
 | `dto/` | Datos recibidos de la API. No son entidades JPA ni acceden a la base. |
 | `dto/VueloRespuesta.java` y `dto/DisponibilidadVueloRespuesta.java` | Datos del vuelo y de las plazas libres recibidas. |
@@ -141,7 +148,8 @@ y `PRIMERA`. El frontend no importa clases Java del backend.
 | `resources/application.properties` | Puerto, URL del backend y ubicación de las JSP. |
 | `resources/messages.properties` | Mensajes en español para fechas mal escritas. |
 | `webapp/WEB-INF/vistas/` | Páginas JSP y navegación compartida. |
-| `webapp/WEB-INF/vistas/vuelos/` | `lista.jsp` recorre el catálogo; `detalle.jsp` muestra el vuelo y sus plazas. |
+| `webapp/WEB-INF/vistas/vuelos/` | Listado, detalle y formularios de vuelos. |
+| `webapp/WEB-INF/vistas/sucursales/` | Listado, formulario y confirmación de baja. |
 | `resources/static/css/base.css` | Estilos mínimos de lectura. |
 | `src/test/java/` | Pruebas del cliente HTTP y los controladores. |
 
@@ -296,7 +304,7 @@ Verificá que el valor de `$carpetaFront` tampoco contenga espacios. Esa copia s
 sirve para ejecutar: el código se sigue editando en el repositorio. Al recompilar,
 detené la aplicación antes de reemplazar la copia del WAR.
 
-La suite contiene pruebas automatizadas para hoteles, vuelos, sesiones, usuarios y turistas. Comprueba,
+La suite contiene pruebas automatizadas para hoteles, vuelos, sesiones, usuarios, turistas y reservas. Comprueba,
 entre otras cosas, que se lean correctamente las fechas del JSON y que se muestren
 las plazas libres recibidas aunque sean menores a la capacidad del vuelo.
 También verifica el aislamiento de cookies, los tokens CSRF, el cambio de
@@ -417,3 +425,94 @@ con documento completo. El DNI del cliente se consulta desde ese turista y se
 modifica desde Turistas. El documento se muestra en Usuarios, Mi cuenta y la
 confirmación de eliminación. Las cuentas anteriores muestran DNI pendiente.
 La edición de usuario sigue requiriendo una nueva contraseña, como antes.
+
+## Gestionar reservas
+
+Ingresá y abrí **Reservas**. Administradores y vendedores pueden crear, editar
+y eliminar; los clientes solamente consultan las reservas de su grupo familiar.
+
+1. Elegí **Crear reserva**.
+2. Seleccioná el turista (se muestra su DNI), el vuelo y el hotel.
+3. Elegí clase de vuelo y tipo de hospedaje.
+4. Ingresá llegada y partida. La llegada debe coincidir con la fecha del vuelo,
+   el hotel debe estar en la ciudad de destino y la partida debe ser posterior.
+5. Guardá. La API confirma la disponibilidad y evita repetir turista y vuelo.
+
+El listado muestra turista, DNI, vuelo, hotel y fechas. El detalle agrega nombres,
+destino, clase, hospedaje y sucursal de contratación. Editar conserva los datos
+para cambiarlos; la sucursal original se mantiene y no se envía como campo editable.
+La API descuenta la propia reserva al verificar las plazas durante la edición.
+
+Eliminar abre una confirmación con todos los datos. La reserva se borra solamente
+al enviar el formulario de confirmación: libera las plazas y conserva al turista,
+el hotel y el vuelo. No es un cambio de estado ni se guarda un historial de cancelación.
+
+El recorrido del código es JSP -> `ReservasControlador` -> `ReservasApiCliente`
+-> API del backend. `GuardarReservaFormulario` valida campos y fechas, y
+`ReservaRespuesta` recibe los datos de la API. Las cuatro JSP están en
+`WEB-INF/vistas/reservas`; `resumen.jspf` comparte la presentación del detalle
+con la confirmación de eliminación. Se usa la conexión de la sesión existente
+con CSRF para las escrituras. Las consultas de turistas del cliente y sus reservas
+siguen siendo filtradas por el backend, no por el menú de la página.
+
+Ante un error de fechas, falta de plazas, duplicado o incompatibilidad se conserva
+el formulario con un mensaje. Si se pierde la conexión al guardar o eliminar,
+se pide consultar el listado antes de reintentar. No se repiten escrituras
+automáticamente. Los catálogos vacíos y las sesiones vencidas también se contemplan.
+
+Se compiló y generó el WAR con `mvn.cmd -f tije-front/pom.xml package` desde la
+raíz. Las 111 pruebas del frontend incluyen ahora permisos de reservas, CSRF,
+fechas ISO, validaciones, errores de la API, edición y confirmación de eliminación.
+No se modificaron el backend, la base, JavaScript ni CSS para esta etapa.
+
+## Administrar hoteles y vuelos
+
+Ingresá como administrador y abrí **Hoteles** o **Vuelos**. Desde el listado podés
+agregar, editar o abrir la confirmación para eliminar. Las consultas de ambos
+catálogos siguen disponibles sin iniciar sesión.
+
+El formulario de hotel pide nombre, dirección, ciudad, teléfono y capacidad. La
+capacidad puede ser cero. El de vuelo pide número, fecha y hora, origen, destino y
+plazas. La suma de plazas turista y primera no puede superar el total. El número
+del vuelo no cambia durante una edición. El backend impide modificar datos que
+dejarían reservas incompatibles y eliminar hoteles o vuelos con reservas.
+
+Las JSP envían formularios POST a `HotelesGestionControlador` o
+`VuelosGestionControlador`. Esos controladores comprueban el rol actual con la API,
+validan los datos y llaman a `HotelesGestionApiCliente` o
+`VuelosGestionApiCliente`. Los clientes usan la conexión privada de la sesión y
+el token CSRF del backend para crear, modificar o eliminar. Al terminar se vuelve
+al listado con un mensaje. Los clientes públicos de consulta no cambiaron.
+
+Las páginas nuevas están en `WEB-INF/vistas/hoteles` y
+`WEB-INF/vistas/vuelos`. No se agregó JavaScript ni diseño visual nuevo.
+
+Se generó el WAR con `mvn -q package`: las 120 pruebas del frontend pasaron.
+Además se ejecutó el WAR contra una base MySQL de demostración y se comprobaron
+por HTTP el alta, la edición y la baja de un hotel y un vuelo desde las JSP.
+También se verificó que la fecha de un vuelo se precarga correctamente al editarlo.
+Los registros temporales se eliminaron al finalizar.
+
+## Administrar sucursales
+
+El listado de **Sucursales** está disponible sin iniciar sesión. El administrador
+puede agregar una dirección y teléfono, editar esos datos o abrir la confirmación
+de eliminación. La API rechaza una dirección repetida y no permite borrar una
+sucursal vinculada a turistas o reservas.
+
+`SucursalesControlador` recibe los formularios JSP y consulta el rol actual en la
+API antes de cada operación privada. `GuardarSucursalFormulario` valida los dos
+campos. `SucursalesApiCliente` consulta y envía los cambios al backend usando la
+sesión y el token CSRF. Las JSP están en `WEB-INF/vistas/sucursales`. No se agregó
+JavaScript ni CSS nuevo.
+
+Se ejecutó `mvn -q package` y pasaron las 126 pruebas del frontend. También se
+probó el WAR por HTTP contra MySQL de demostración: listado público, alta,
+dirección duplicada, edición, rechazo de baja con un turista asociado y
+eliminación confirmada. Se retiraron los datos temporales al finalizar.
+
+El 05/10/2026 se verificó además el WAR contra MySQL con datos temporales:
+alta como vendedor, duplicados, vuelo y hotel completos, edición sin contar dos
+veces las propias plazas, fechas incompatibles, permisos del cliente y
+eliminación con liberación de plazas. Se eliminaron al finalizar todas las
+reservas, cuentas, turistas, hotel y vuelo creados para esa prueba.
