@@ -2,6 +2,7 @@ package com.tijetravel.tijefront.controladores;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.time.LocalDate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -86,8 +87,9 @@ public class ReservasControlador {
         formulario.setFechaLlegada(fechaLlegada);
         formulario.setFechaPartida(fechaPartida);
         formulario.setClaseVuelo("TURISTA");
+        formulario.setSeleccionBuscador(numeroVuelo != null && codigoHotel != null);
         modelo.addAttribute("reserva", formulario);
-        cargarOpciones(modelo);
+        cargarOpciones(modelo, formulario);
         return "reservas/formulario";
     }
 
@@ -108,7 +110,7 @@ public class ReservasControlador {
         formulario.setFechaPartida(actual.getFechaPartida());
         modelo.addAttribute("reserva", formulario);
         modelo.addAttribute("actual", actual);
-        cargarOpciones(modelo);
+        cargarOpciones(modelo, formulario);
         return "reservas/formulario";
     }
 
@@ -120,15 +122,14 @@ public class ReservasControlador {
         String salida = comprobarAcceso(codigo != null, solicitud, respuesta, modelo);
         if (salida != null)
             return salida;
-        if (codigo != null)
-            modelo.addAttribute("actual", reservasApi.buscar(codigo));
-        cargarOpciones(modelo);
         if (!errores.hasFieldErrors("fechaLlegada") && !errores.hasFieldErrors("fechaPartida")
                 && !formulario.getFechaLlegada().isBefore(formulario.getFechaPartida())) {
             errores.rejectValue("fechaPartida", "fechas.orden", "La partida debe ser posterior a la llegada.");
         }
-        if (errores.hasErrors())
+        if (errores.hasErrors()) {
+            prepararFormulario(codigo, formulario, modelo);
             return "reservas/formulario";
+        }
         try {
             if (codigo == null)
                 reservasApi.crear(formulario);
@@ -145,11 +146,13 @@ public class ReservasControlador {
             if (estado == 403)
                 mensaje = "No se pudo guardar. Verificá tus permisos y que la llegada coincida con la fecha del vuelo y la ciudad del hotel con su destino.";
             modelo.addAttribute("errorOperacion", mensaje);
+            prepararFormulario(codigo, formulario, modelo);
             return "reservas/formulario";
         } catch (ResourceAccessException error) {
             respuesta.setStatus(503);
             modelo.addAttribute("errorOperacion",
                     "No pudimos confirmar el guardado. Consultá el listado antes de volver a enviarlo.");
+            prepararFormulario(codigo, formulario, modelo);
             return "reservas/formulario";
         }
         redireccion.addFlashAttribute("mensajeExito", "Reserva guardada correctamente.");
@@ -185,10 +188,22 @@ public class ReservasControlador {
         return "redirect:/reservas";
     }
 
-    private void cargarOpciones(Model modelo) {
+    private void prepararFormulario(Integer codigo, GuardarReservaFormulario formulario, Model modelo) {
+        if (codigo != null)
+            modelo.addAttribute("actual", reservasApi.buscar(codigo));
+        cargarOpciones(modelo, formulario);
+    }
+
+    private void cargarOpciones(Model modelo, GuardarReservaFormulario formulario) {
         modelo.addAttribute("turistas", turistasApi.listar());
-        modelo.addAttribute("hoteles", hotelesApi.listar());
-        modelo.addAttribute("vuelos", vuelosApi.listar());
+        if (formulario.isSeleccionBuscador()
+                && formulario.getCodigoHotel() != null && formulario.getNumeroVuelo() != null) {
+            modelo.addAttribute("hoteles", List.of(hotelesApi.buscar(formulario.getCodigoHotel())));
+            modelo.addAttribute("vuelos", List.of(vuelosApi.buscar(formulario.getNumeroVuelo())));
+        } else {
+            modelo.addAttribute("hoteles", hotelesApi.listar());
+            modelo.addAttribute("vuelos", vuelosApi.listar());
+        }
     }
 
     private void cargarDetalle(Integer codigo, Model modelo) {

@@ -304,6 +304,56 @@ main>h1::after {
     gap: 1.5rem;
 }
 
+.search-results__panel,
+.search-results__booking {
+    padding: 1.25rem;
+    border: 1px solid #d9e7ee;
+    border-radius: 10px;
+    background: #f6fafc;
+}
+
+.search-results__panel h3,
+.search-results__booking h3 {
+    margin: 0 0 .75rem;
+}
+
+.search-results__suggestions {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #eaf4f9;
+}
+
+.search-results__suggestions h4 {
+    margin: 0 0 .5rem;
+}
+
+.search-results__booking {
+    margin-top: 1.5rem;
+    background: #fff9f4;
+}
+
+.search-results__booking .search-results__list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-results__reserve-link {
+    display: inline-block;
+    padding: .55rem .9rem;
+    border-radius: 6px;
+    background: #dd6a22;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.search-results__reserve-link:hover {
+    background: #b84f10;
+    color: #fff;
+}
+
 .search-results__columns h3 {
     color: #194767;
 }
@@ -644,6 +694,10 @@ section[aria-label="Resultado de disponibilidad"] {
 
     .search-grid,
     .search-results__columns {
+        grid-template-columns: 1fr;
+    }
+
+    .search-results__booking .search-results__list li {
         grid-template-columns: 1fr;
     }
 
