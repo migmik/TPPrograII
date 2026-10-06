@@ -3,6 +3,11 @@ package com.tijetravel.tijeback.servicios;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
@@ -102,6 +107,77 @@ public class ReservaServicio {
             return listarPorTitularYFamiliares(autorizacion.codigoTitular(actor));
         }
         return listar();
+    }
+
+    public Page<Reserva> paginaPara(
+            Usuario actor,
+            Integer codigoTurista,
+            Integer numeroVuelo,
+            Integer codigoHotel,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            int pagina,
+            int tamanio) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        validarConsultaPaginada(codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
+        Pageable pageable = PageRequest.of(pagina, tamanio, Sort.by("codigo").ascending());
+
+        if (actor.getRol() == RolUsuario.CLIENTE) {
+            List<Reserva> reservas = listarPorTitularYFamiliares(autorizacion.codigoTitular(actor)).stream()
+                    .filter(reserva -> codigoTurista == null || codigoTurista.equals(reserva.getTurista().getCodigo()))
+                    .filter(reserva -> numeroVuelo == null || numeroVuelo.equals(reserva.getVuelo().getNumero()))
+                    .filter(reserva -> codigoHotel == null || codigoHotel.equals(reserva.getHotel().getCodigo()))
+                    .filter(reserva -> fechaDesde == null || !reserva.getFechaLlegada().isBefore(fechaDesde))
+                    .filter(reserva -> fechaHasta == null || !reserva.getFechaLlegada().isAfter(fechaHasta))
+                    .sorted(java.util.Comparator.comparing(Reserva::getCodigo))
+                    .toList();
+            int inicio = (int) Math.min(pageable.getOffset(), reservas.size());
+            int fin = Math.min(inicio + tamanio, reservas.size());
+            return new PageImpl<>(reservas.subList(inicio, fin), pageable, reservas.size());
+        }
+
+        if (codigoTurista != null) {
+            return reservaRepositorio.findByTuristaCodigo(codigoTurista, pageable);
+        }
+        if (numeroVuelo != null) {
+            return reservaRepositorio.findByVueloNumero(numeroVuelo, pageable);
+        }
+        if (codigoHotel != null) {
+            return reservaRepositorio.findByHotelCodigo(codigoHotel, pageable);
+        }
+        if (fechaDesde != null) {
+            return reservaRepositorio.findByFechaLlegadaBetween(fechaDesde, fechaHasta, pageable);
+        }
+        return reservaRepositorio.findAll(pageable);
+    }
+
+    private void validarConsultaPaginada(
+            Integer codigoTurista,
+            Integer numeroVuelo,
+            Integer codigoHotel,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            int pagina,
+            int tamanio) {
+        int filtros = (codigoTurista == null ? 0 : 1)
+                + (numeroVuelo == null ? 0 : 1)
+                + (codigoHotel == null ? 0 : 1)
+                + (fechaDesde == null && fechaHasta == null ? 0 : 1);
+        if (filtros > 1) {
+            throw new IllegalArgumentException("Usa un solo filtro por consulta");
+        }
+        if ((fechaDesde == null) != (fechaHasta == null)
+                || (fechaDesde != null && fechaHasta.isBefore(fechaDesde))) {
+            throw new IllegalArgumentException("El rango de fechas debe estar completo y en orden");
+        }
+        if ((codigoTurista != null && codigoTurista < 1)
+                || (numeroVuelo != null && numeroVuelo < 1)
+                || (codigoHotel != null && codigoHotel < 1)) {
+            throw new IllegalArgumentException("Los codigos deben ser positivos");
+        }
+        if (pagina < 0 || tamanio < 1 || tamanio > 100) {
+            throw new IllegalArgumentException("La pagina debe ser positiva y el tamanio debe estar entre 1 y 100");
+        }
     }
 
     public Reserva encontrarPorId(Integer codigo) {

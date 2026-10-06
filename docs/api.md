@@ -35,9 +35,30 @@ GET /api/v1/turistas
 GET /api/v1/turistas/{codigo}
 GET /api/v1/reservas
 GET /api/v1/reservas/{codigo}
+GET /api/v1/reservas/pagina
 GET /api/v1/usuarios
 GET /api/v1/usuarios/{codigo}
 ```
+
+El listado de turistas acepta `dni` para buscar una coincidencia exacta y
+`titular=true` o `titular=false` para filtrar titulares o familiares. Por ejemplo,
+`GET /api/v1/turistas?dni=12345678&titular=true`. Sin filtros se conserva el
+listado completo para administradores y vendedores. Los clientes solo consultan
+su grupo familiar; cualquier filtro sigue limitado a ese grupo.
+El parámetro repetible `codigos` permite solicitar solo turistas específicos,
+por ejemplo `GET /api/v1/turistas?codigos=2&codigos=3`; en clientes también se
+respeta el grupo familiar.
+
+El listado de usuarios acepta `rol=ADMINISTRADOR`, `rol=VENDEDOR` o `rol=CLIENTE`,
+por ejemplo `GET /api/v1/usuarios?rol=VENDEDOR`. Sin `rol`, conserva el listado
+completo. Solo un administrador puede consultar este recurso.
+
+La interfaz usa `GET /api/v1/reservas/pagina` con `pagina` (desde 0) y
+`tamanio` (1 a 100). Se puede aplicar un criterio por consulta: `codigoTurista`,
+`numeroVuelo`, `codigoHotel` o el rango completo `fechaDesde`/`fechaHasta` sobre
+la fecha de llegada. La respuesta incluye `elementos`, `pagina`, `totalPaginas`,
+`hayAnterior` y `haySiguiente`. Por ejemplo:
+`GET /api/v1/reservas/pagina?pagina=0&tamanio=20&numeroVuelo=100`.
 
 Las operaciones protegidas de escritura son:
 
@@ -74,6 +95,7 @@ La autenticacion usa estas rutas:
 ```text
 GET  /api/v1/autenticacion/csrf
 POST /api/v1/autenticacion/login
+POST /api/v1/autenticacion/registro
 GET  /api/v1/autenticacion/sesion
 POST /api/v1/autenticacion/logout
 ```
@@ -83,6 +105,11 @@ token recibido en el encabezado `X-CSRF-TOKEN` al hacer `POST`, `PUT` o
 `DELETE`. Despues del login debe pedir un token nuevo. Si frontend y backend
 usan origenes diferentes, las peticiones del frontend deben incluir
 credenciales para que el navegador envie la cookie.
+
+El registro público requiere CSRF y crea exclusivamente un usuario `CLIENTE`
+asociado a un turista titular nuevo. El formulario solicita sus datos personales,
+credenciales y una sucursal; no permite elegir roles administrativos. Repetir
+nombre de usuario, DNI o email devuelve `409`.
 
 Los catalogos `GET` siguen siendo publicos. Sus escrituras y todas las rutas de
 usuarios requieren rol `ADMINISTRADOR`. Administradores y vendedores consultan

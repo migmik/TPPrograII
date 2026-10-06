@@ -199,6 +199,9 @@
                                 <a href="<c:url value='/sucursales'/>">Ver sucursales</a>
                             </section>
                         </div>
+                        <c:if test="${empty usuarioActual}">
+                            <p><a href="<c:url value='/registro'/>">Crear una cuenta de cliente</a></p>
+                        </c:if>
                     </main>
             </body>
 

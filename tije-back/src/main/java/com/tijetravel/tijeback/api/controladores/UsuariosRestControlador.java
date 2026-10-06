@@ -13,12 +13,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.CrearUsuarioSolicitud;
 import com.tijetravel.tijeback.api.dto.ModificarUsuarioSolicitud;
 import com.tijetravel.tijeback.api.dto.UsuarioRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.UsuarioMapeador;
+import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.servicios.UsuarioServicio;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
@@ -44,9 +46,11 @@ public class UsuariosRestControlador {
 
         @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
-        public List<UsuarioRespuesta> listar(Authentication autenticacion) {
+        public List<UsuarioRespuesta> listar(
+                        @RequestParam(required = false) RolUsuario rol,
+                        Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return usuarioServicio.listarPara(actor).stream()
+                return usuarioServicio.listarPara(actor, rol).stream()
                                 .map(usuarioMapeador::aRespuesta)
                                 .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
                                 .toList();

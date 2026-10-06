@@ -48,6 +48,26 @@ class TuristasApiClienteTest {
         servidor.verify();
     }
 
+        @Test
+        void consultaSoloLosCodigosDeTuristaSolicitados() {
+                servidor.expect(requestTo("http://backend/api/v1/turistas?codigos=2&codigos=3"))
+                                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+                assertEquals(0, cliente.listarPorCodigos(java.util.List.of(2, 3)).size());
+                servidor.verify();
+        }
+
+        @Test
+        void pideSoloTuristasTitularesParaLosSelectores()
+                        throws Exception {
+                servidor.expect(requestTo("http://backend/api/v1/turistas?titular=true"))
+                                .andExpect(method(HttpMethod.GET))
+                                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+                assertEquals(0, cliente.listar(true).size());
+                servidor.verify();
+        }
+
     @Test
     void leeDniEnDetalleListadoYSelector() {
         String turista = "{\"codigo\":1,\"dni\":\"12345678\",\"nombre\":\"Ana\",\"titular\":true}";
@@ -62,4 +82,30 @@ class TuristasApiClienteTest {
         assertEquals("12345678", cliente.listar().get(0).getDni());
         servidor.verify();
     }
+
+        @Test
+        void filtraElListadoPorDni() {
+                String turista = "[{\"codigo\":1,\"dni\":\"12345678\",\"nombre\":\"Ana\"}]";
+                servidor.expect(requestTo("http://backend/api/v1/turistas?dni=12345678"))
+                                .andExpect(method(HttpMethod.GET))
+                                .andRespond(withSuccess(turista, MediaType.APPLICATION_JSON));
+
+                assertEquals("12345678", cliente.listarDetalles("12345678").get(0).getDni());
+                servidor.verify();
+        }
+
+        @Test
+        void filtraPorTitularYCombinaConDni() {
+                String turista = "[{\"codigo\":1,\"dni\":\"12345678\",\"nombre\":\"Ana\",\"titular\":true}]";
+                servidor.expect(requestTo("http://backend/api/v1/turistas?dni=12345678&titular=true"))
+                                .andExpect(method(HttpMethod.GET))
+                                .andRespond(withSuccess(turista, MediaType.APPLICATION_JSON));
+                servidor.expect(requestTo("http://backend/api/v1/turistas?titular=false"))
+                                .andExpect(method(HttpMethod.GET))
+                                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+                assertEquals("12345678", cliente.listarDetalles("12345678", true).get(0).getDni());
+                assertEquals(0, cliente.listarDetalles(null, false).size());
+                servidor.verify();
+        }
 }

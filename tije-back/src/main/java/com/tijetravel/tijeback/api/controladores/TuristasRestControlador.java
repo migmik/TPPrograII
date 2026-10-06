@@ -1,8 +1,8 @@
 package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Comparator;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.CrearTuristaSolicitud;
@@ -45,9 +46,16 @@ public class TuristasRestControlador {
 
         @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
-        public List<TuristaRespuesta> listar(Authentication autenticacion) {
+        public List<TuristaRespuesta> listar(
+                        @RequestParam(required = false) String dni,
+                        @RequestParam(required = false) Boolean titular,
+                        @RequestParam(required = false) List<Integer> codigos,
+                        Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return turistaServicio.listarPara(actor).stream()
+                List<Turista> resultado = codigos == null
+                                ? turistaServicio.listarPara(actor, dni, titular)
+                                : turistaServicio.listarPorCodigosPara(actor, codigos);
+                return resultado.stream()
                                 .map(turistaMapeador::aRespuesta)
                                 .sorted(Comparator.comparing(TuristaRespuesta::codigo))
                                 .toList();

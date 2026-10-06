@@ -14,6 +14,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException;
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
+import com.tijetravel.tijefront.dto.PaginaReservasRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarReservaFormulario;
 
 class ReservasApiClienteTest {
@@ -41,6 +42,22 @@ class ReservasApiClienteTest {
         servidor.expect(requestTo("http://backend/api/v1/reservas/1")).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
         assertEquals("10/01/2027", cliente.listar().get(0).getFechaLlegadaFormateada());
         assertEquals(7, cliente.buscar(1).getCodigoSucursalContratacion());
+        servidor.verify();
+    }
+
+    @Test
+    void consultaUnaPaginaFiltradaPorTurista() {
+        servidor.expect(requestTo("http://backend/api/v1/reservas/pagina?pagina=2&tamanio=20&codigoTurista=4"))
+                .andRespond(withSuccess("""
+                        {"elementos":[],"pagina":2,"totalPaginas":3,"hayAnterior":true,"haySiguiente":false}
+                        """, MediaType.APPLICATION_JSON));
+
+        PaginaReservasRespuesta pagina = cliente.listarPagina(4, null, null, null, null, 2, 20);
+
+        assertEquals(2, pagina.pagina());
+        assertEquals(3, pagina.totalPaginas());
+        assertTrue(pagina.hayAnterior());
+        assertFalse(pagina.haySiguiente());
         servidor.verify();
     }
 

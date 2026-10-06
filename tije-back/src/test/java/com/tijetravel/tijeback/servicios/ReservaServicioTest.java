@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -16,6 +19,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -189,6 +196,32 @@ class ReservaServicioTest {
                 when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
                 when(vueloRepositorio.findById(100)).thenReturn(Optional.of(vuelo));
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
+        }
+
+        @Test
+        void buscaUnaPaginaPorTuristaSinConsultarTodasLasReservas() {
+                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+                Page<Reserva> pagina = new PageImpl<>(java.util.List.of(), PageRequest.of(0, 20), 0);
+                when(reservaRepositorio.findByTuristaCodigo(eq(1), any(Pageable.class))).thenReturn(pagina);
+
+                Page<Reserva> resultado = servicio.paginaPara(
+                                vendedor, 1, null, null, null, null, 0, 20);
+
+                assertSame(pagina, resultado);
+                verify(reservaRepositorio).findByTuristaCodigo(eq(1), any(Pageable.class));
+                verify(reservaRepositorio, never()).findAll(any(Pageable.class));
+        }
+
+        @Test
+        void rechazaFiltrosCombinadosYFechasIncompletas() {
+                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+
+                assertThrows(IllegalArgumentException.class,
+                                () -> servicio.paginaPara(vendedor, 1, 100, null, null, null, 0, 20));
+                assertThrows(IllegalArgumentException.class,
+                                () -> servicio.paginaPara(vendedor, null, null, null,
+                                                LocalDate.of(2026, 10, 1), null, 0, 20));
+                verify(reservaRepositorio, never()).findAll(any(Pageable.class));
         }
 
         private Reserva ingresarReservaValida(Usuario actor) {

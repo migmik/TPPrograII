@@ -91,18 +91,32 @@ class UsuariosControladorTest {
     }
 
     @Test
+    void filtraUsuariosPorRol() throws Exception {
+        when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
+        List<UsuarioRespuesta> resultado = List.of(new UsuarioRespuesta());
+        when(usuariosApi.listar("VENDEDOR")).thenReturn(resultado);
+
+        mvc.perform(get("/usuarios").param("rol", "VENDEDOR").session(sesion()))
+                .andExpect(view().name("usuarios/lista"))
+                .andExpect(model().attribute("usuarios", resultado))
+                .andExpect(model().attribute("rolBusqueda", "VENDEDOR"));
+
+        verify(usuariosApi).listar("VENDEDOR");
+    }
+
+    @Test
     void ofreceSolamenteLosTuristasSinCuenta() throws Exception {
         prepararFormulario();
         UsuarioRespuesta cliente = new UsuarioRespuesta();
         cliente.setCodigoTurista(1);
-        when(usuariosApi.listar()).thenReturn(List.of(cliente));
+        when(usuariosApi.listar("CLIENTE")).thenReturn(List.of(cliente));
         TuristaResumen disponible = turista(2);
-        TuristaResumen familiar = turista(3);
-        familiar.setTitular(false);
-        when(turistasApi.listar()).thenReturn(List.of(turista(1), disponible, familiar));
+        when(turistasApi.listar(true)).thenReturn(List.of(turista(1), disponible));
         mvc.perform(get("/usuarios/nuevo").session(sesion()))
                 .andExpect(view().name("usuarios/nuevo"))
                 .andExpect(model().attribute("turistasDisponibles", List.of(disponible)));
+            verify(usuariosApi).listar("CLIENTE");
+            verify(turistasApi).listar(true);
     }
 
     @ParameterizedTest
@@ -321,7 +335,7 @@ class UsuariosControladorTest {
         prepararFormulario();
         TuristaResumen pendiente = turista(1);
         pendiente.setDni(null);
-        when(turistasApi.listar()).thenReturn(List.of(pendiente));
+        when(turistasApi.listar(true)).thenReturn(List.of(pendiente));
         mvc.perform(get("/usuarios/nuevo").session(sesion()))
                 .andExpect(model().attribute("turistasDisponibles", List.of()));
     }
@@ -342,8 +356,8 @@ class UsuariosControladorTest {
 
     private void prepararFormulario() {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
-        when(usuariosApi.listar()).thenReturn(List.of());
-        when(turistasApi.listar()).thenReturn(List.of(turista(1)));
+        when(usuariosApi.listar("CLIENTE")).thenReturn(List.of());
+        when(turistasApi.listar(true)).thenReturn(List.of(turista(1)));
     }
 
     private MockHttpServletRequestBuilder alta(String rol) {
