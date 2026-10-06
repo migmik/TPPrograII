@@ -56,7 +56,9 @@ class ReservasApiClienteTest {
                 """;
         servidor.expect(requestTo("http://backend/api/v1/reservas"))
                 .andExpect(method(HttpMethod.POST)).andExpect(header("X-CSRF-TOKEN", "token-prueba"))
-                .andExpect(content().json(json)).andRespond(withStatus(HttpStatus.CREATED));
+                .andExpect(content().json(json))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("seleccionBuscador"))))
+                .andRespond(withStatus(HttpStatus.CREATED));
         servidor.expect(requestTo("http://backend/api/v1/reservas/1"))
                 .andExpect(method(HttpMethod.PUT)).andExpect(header("X-CSRF-TOKEN", "token-prueba"))
                 .andExpect(content().json(json)).andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("codigoSucursal"))))
@@ -72,6 +74,7 @@ class ReservasApiClienteTest {
         formulario.setTipoHospedaje("MEDIA_PENSION");
         formulario.setFechaLlegada(LocalDate.of(2027, 1, 10));
         formulario.setFechaPartida(LocalDate.of(2027, 1, 12));
+        formulario.setSeleccionBuscador(true);
         cliente.crear(formulario);
         cliente.modificar(1, formulario);
         cliente.eliminar(1);

@@ -60,6 +60,7 @@ class ReservasControladorTest {
         mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas"))
                 .andExpect(flash().attribute("mensajeExito", "Reserva guardada correctamente."));
         verify(reservasApi).crear(any());
+        verifyNoInteractions(turistasApi, hotelesApi, vuelosApi);
     }
 
     @Test
@@ -86,6 +87,10 @@ class ReservasControladorTest {
     @Test
     void reservaDesdeElBuscadorLlegaConVueloHotelYFechasPrecargados() throws Exception {
         preparar("CLIENTE");
+        HotelRespuesta hotel = new HotelRespuesta();
+        VueloRespuesta vuelo = new VueloRespuesta();
+        when(hotelesApi.buscar(3)).thenReturn(hotel);
+        when(vuelosApi.buscar(100)).thenReturn(vuelo);
         var resultado = mvc.perform(get("/reservas/nueva").session(sesion())
                 .param("numeroVuelo", "100").param("codigoHotel", "3")
                 .param("fechaLlegada", "2027-01-10").param("fechaPartida", "2027-01-12"))
@@ -95,6 +100,26 @@ class ReservasControladorTest {
         assertEquals(3, formulario.getCodigoHotel());
         assertEquals(LocalDate.of(2027, 1, 10), formulario.getFechaLlegada());
         assertEquals("TURISTA", formulario.getClaseVuelo());
+        assertTrue(formulario.isSeleccionBuscador());
+        assertEquals(List.of(hotel), resultado.getModelAndView().getModel().get("hoteles"));
+        assertEquals(List.of(vuelo), resultado.getModelAndView().getModel().get("vuelos"));
+        verify(hotelesApi, never()).listar();
+        verify(vuelosApi, never()).listar();
+    }
+
+    @Test
+    void formularioDelBuscadorConErrorRecuperaSoloLasOpcionesSeleccionadas() throws Exception {
+        preparar("CLIENTE");
+        when(hotelesApi.buscar(3)).thenReturn(new HotelRespuesta());
+        when(vuelosApi.buscar(100)).thenReturn(new VueloRespuesta());
+        mvc.perform(formulario("/reservas")
+                .param("seleccionBuscador", "true")
+                .with(r -> { r.setParameter("fechaPartida", "2027-01-10"); return r; }))
+                .andExpect(view().name("reservas/formulario"))
+                .andExpect(model().attributeHasFieldErrors("reserva", "fechaPartida"));
+        verify(hotelesApi, never()).listar();
+        verify(vuelosApi, never()).listar();
+        verify(reservasApi, never()).crear(any());
     }
 
     @Test
