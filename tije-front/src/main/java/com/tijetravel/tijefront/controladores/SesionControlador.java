@@ -30,7 +30,11 @@ public class SesionControlador {
     }
 
     @GetMapping("/login")
-    public String formulario(Model modelo) {
+    public String formulario(HttpServletRequest solicitud, Model modelo) {
+        HttpSession sesion = solicitud.getSession(false);
+        if (sesion != null && sesion.getAttribute("usuarioActual") != null) {
+            return "redirect:/cuenta";
+        }
         modelo.addAttribute("credenciales", new IniciarSesionFormulario());
         return "sesion/login";
     }
