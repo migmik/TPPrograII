@@ -13,8 +13,8 @@ public class Vendedor extends Usuario {
     protected Vendedor() {
     }
 
-    public Vendedor(String nombreUsuario, String contrasenia) {
-        super(nombreUsuario, contrasenia, RolUsuario.VENDEDOR);
+    public Vendedor(String nombreUsuario, String contrasenia, String dni) {
+        super(nombreUsuario, contrasenia, RolUsuario.VENDEDOR, dni);
     }
 
     @Override

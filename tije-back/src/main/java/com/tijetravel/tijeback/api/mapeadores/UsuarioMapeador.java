@@ -11,6 +11,7 @@ public class UsuarioMapeador {
     public UsuarioRespuesta aRespuesta(Usuario usuario) {
         return new UsuarioRespuesta(
                 usuario.getCodigo(),
+                usuario.getDni(),
                 usuario.getNombreUsuario(),
                 usuario.getRol(),
                 usuario.getCodigoTurista());

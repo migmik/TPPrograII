@@ -12,13 +12,14 @@
 
         <body>
             <%@ include file="../fragmentos/navegacion.jspf" %>
-                <main>
+                <main class="compact-page">
                     <h1>Mi cuenta</h1>
                     <dl>
                         <dt>Usuario</dt>
                         <dd>
                             <c:out value="${usuarioActual.nombreUsuario}" />
                         </dd>
+                        <dt>DNI</dt><dd><c:out value="${usuarioActual.dni}" default="DNI pendiente"/></dd>
                         <dt>Rol</dt>
                         <dd>
                             <c:out value="${usuarioActual.rol}" />

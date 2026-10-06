@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.repositorios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -69,9 +71,9 @@ class CargaRelacionesIntegracionTest {
         codigoHotel = hotelComun.getCodigo();
         numeroVuelo = vueloComun.getNumero();
         for (int i = 1; i <= 3; i++) {
-            Turista titular = guardar(new Turista("Titular " + i, "Perez", "Calle",
+            Turista titular = guardar(new Turista(DnisPrueba.siguiente(), "Titular " + i, "Perez", "Calle",
                     "titular" + i + "@ejemplo.com", "1", "2", sucursal));
-            Turista familiar = guardar(new Turista("Familiar " + i, "Perez", "Calle",
+            Turista familiar = guardar(new Turista(DnisPrueba.siguiente(), "Familiar " + i, "Perez", "Calle",
                     "familiar" + i + "@ejemplo.com", "1", "2", sucursal, titular));
             codigosUsuarios.add(guardar(new Cliente("cliente" + i, "hash", titular)).getCodigo());
             Vuelo vuelo = guardar(new Vuelo(9000 + i, DIA.atTime(10, 0), "Buenos Aires", "Cordoba", 20, 20, 0));
@@ -86,8 +88,8 @@ class CargaRelacionesIntegracionTest {
                 codigoTitular = titular.getCodigo();
             }
         }
-        codigosUsuarios.add(guardar(new Administrador("administrador", "hash")).getCodigo());
-        codigosUsuarios.add(guardar(new Vendedor("vendedor", "hash")).getCodigo());
+        codigosUsuarios.add(guardar(new Administrador("administrador", "hash", com.tijetravel.tijeback.DnisPrueba.siguiente())).getCodigo());
+        codigosUsuarios.add(guardar(new Vendedor("vendedor", "hash", com.tijetravel.tijeback.DnisPrueba.siguiente())).getCodigo());
 
         // Excluir INSERTs y evitar que la cache de primer nivel oculte consultas
         // adicionales.

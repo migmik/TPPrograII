@@ -3,11 +3,10 @@
 Trabajo práctico de Programación II para administrar una cadena de agencias de
 viajes. Permite gestionar sucursales, hoteles, vuelos, turistas, reservas y usuarios.
 
-El backend está implementado y probado con MySQL. El frontend tiene una primera
-versión con inicio, listados y detalles de hoteles y vuelos, consulta de disponibilidad,
+El backend está implementado y probado con MySQL. El frontend permite consultar y administrar sucursales, hoteles y vuelos, consultar disponibilidad,
 inicio y cierre de sesión, una pantalla de cuenta y listado, creación, edición y eliminación de usuarios
 para administradores. También permite gestionar turistas como administrador o
-vendedor, y consultar el grupo familiar como cliente.
+vendedor, gestionar reservas y consultar el grupo familiar y sus reservas como cliente.
 
 ## Funcionalidades
 
@@ -112,6 +111,10 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 - [API REST](docs/api.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
 
-Falta ampliar el frontend con gestión de reservas y administración de los demás recursos,
-trabajar el diseño visual y preparar la presentación con MySQL en una PC,
+Falta trabajar el diseño visual y preparar la presentación con MySQL en una PC,
 el backend y frontend en otra, y el acceso desde la computadora del profesor.
+
+El DNI se registra para turistas, administradores y vendedores. Los clientes
+usan el del turista asociado, sin duplicarlo. Es obligatorio en las altas y
+modificaciones de personas. Los registros previos quedan con DNI pendiente hasta completar
+el dato real. Ver [actualización de la base](database/README.md#incorporación-del-dni).

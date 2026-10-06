@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.repositorios;
 
+import com.tijetravel.tijeback.DnisPrueba;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
@@ -52,16 +54,14 @@ class RepositoriosIntegracionTest {
         @Test
         void persisteRelacionesHerenciaYConsultasDelDominio() {
                 Sucursal sucursal = sucursalRepositorio.save(new Sucursal("Av. Colon 100", "351-1000"));
-                Turista titular = turistaRepositorio.save(new Turista(
-                                "Ana",
+                Turista titular = turistaRepositorio.save(new Turista(DnisPrueba.siguiente(), "Ana",
                                 "Perez",
                                 "Calle 1",
                                 "ana@example.com",
                                 "351-2000",
                                 "351-3000",
                                 sucursal));
-                Turista familiar = turistaRepositorio.save(new Turista(
-                                "Luis",
+                Turista familiar = turistaRepositorio.save(new Turista(DnisPrueba.siguiente(), "Luis",
                                 "Perez",
                                 "Calle 1",
                                 "luis@example.com",
@@ -101,6 +101,6 @@ class RepositoriosIntegracionTest {
 
         @Test
         void aplicaLaMigracionInicialAntesDeValidarJpa() {
-                assertEquals("5", flyway.info().current().getVersion().getVersion());
+                assertEquals("7", flyway.info().current().getVersion().getVersion());
         }
 }

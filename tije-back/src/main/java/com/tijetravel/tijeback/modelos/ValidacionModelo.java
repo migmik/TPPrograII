@@ -3,6 +3,13 @@ package com.tijetravel.tijeback.modelos;
 import java.util.regex.Pattern;
 
 public final class ValidacionModelo {
+    public static String dni(String dni) {
+        if (dni == null || !dni.matches("[0-9]{7,8}")) {
+            throw new IllegalArgumentException("El DNI debe tener 7 u 8 digitos, sin puntos ni espacios");
+        }
+        return dni;
+    }
+
     private static final Pattern EMAIL_VALIDO = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private ValidacionModelo() {

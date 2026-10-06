@@ -1,0 +1,12 @@
+<%@ page pageEncoding="UTF-8" %>
+<dl>
+    <dt>Código de reserva</dt><dd><c:out value="${reserva.codigo}"/></dd>
+    <dt>Turista</dt><dd><c:out value="${turista.nombre}"/> <c:out value="${turista.apellido}"/> - DNI: <c:out value="${turista.dni}" default="pendiente"/></dd>
+    <dt>Vuelo</dt><dd><c:out value="${vuelo.numero}"/>: <c:out value="${vuelo.origen}"/> a <c:out value="${vuelo.destino}"/> - <c:out value="${vuelo.fechaYHoraFormateada}"/></dd>
+    <dt>Clase</dt><dd>${reserva.claseVuelo == 'PRIMERA' ? 'Primera' : 'Turista'}</dd>
+    <dt>Hotel</dt><dd><c:out value="${hotel.nombre}"/> - <c:out value="${hotel.ciudad}"/></dd>
+    <dt>Hospedaje</dt><dd>${reserva.tipoHospedaje == 'PENSION_COMPLETA' ? 'Pensión completa' : 'Media pensión'}</dd>
+    <dt>Llegada</dt><dd><c:out value="${reserva.fechaLlegadaFormateada}"/></dd>
+    <dt>Partida</dt><dd><c:out value="${reserva.fechaPartidaFormateada}"/></dd>
+    <dt>Código de sucursal de contratación</dt><dd><c:out value="${reserva.codigoSucursalContratacion}"/></dd>
+</dl>
