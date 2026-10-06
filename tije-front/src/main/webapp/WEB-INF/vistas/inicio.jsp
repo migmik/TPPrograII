@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,12 +11,103 @@
 </head>
 <body>
     <%@ include file="fragmentos/navegacion.jspf" %>
-    <main>
-        <section class="hero" aria-labelledby="tituloInicio">
-            <h1 id="tituloInicio">Descubrí tu próximo destino</h1>
-            <p>Explorá nuestros vuelos y hoteles, y consultá la disponibilidad para tu viaje.</p>
-            <a class="button" href="<c:url value='/vuelos'/>">Ver vuelos</a>
+    <main class="home-main">
+        <section class="search-hero" aria-labelledby="tituloInicio">
+            <div class="search-hero__intro">
+                <p class="search-hero__eyebrow">Tu viaje empieza acá</p>
+                <h1 id="tituloInicio">Encontrá vuelos y alojamiento para tu próxima escapada</h1>
+                <p>Elegí las ciudades y las fechas. Te mostramos las opciones con plazas disponibles.</p>
+            </div>
+            <c:url var="urlBuscar" value="/buscar" />
+            <form:form method="get" action="${urlBuscar}" modelAttribute="busqueda" cssClass="search-panel" htmlEscape="true">
+                <h2>Buscá tu viaje</h2>
+                <div class="search-grid">
+                    <div class="search-field">
+                        <form:label path="origen">Salgo de</form:label>
+                        <form:select path="origen" required="required">
+                            <form:option value="" label="Elegí una ciudad" />
+                            <form:option value="Buenos Aires" label="Buenos Aires" />
+                            <form:option value="Córdoba" label="Córdoba" />
+                            <form:option value="Bariloche" label="Bariloche" />
+                            <form:option value="Salta" label="Salta" />
+                        </form:select>
+                        <form:errors path="origen" cssClass="error" />
+                    </div>
+                    <div class="search-field">
+                        <form:label path="destino">Voy a</form:label>
+                        <form:select path="destino" required="required">
+                            <form:option value="" label="Elegí una ciudad" />
+                            <form:option value="Buenos Aires" label="Buenos Aires" />
+                            <form:option value="Córdoba" label="Córdoba" />
+                            <form:option value="Bariloche" label="Bariloche" />
+                            <form:option value="Salta" label="Salta" />
+                        </form:select>
+                        <form:errors path="destino" cssClass="error" />
+                    </div>
+                    <div class="search-field">
+                        <form:label path="fechaLlegada">Llegada</form:label>
+                        <form:input path="fechaLlegada" type="date" required="required" />
+                        <form:errors path="fechaLlegada" cssClass="error" />
+                    </div>
+                    <div class="search-field">
+                        <form:label path="fechaPartida">Partida del hotel</form:label>
+                        <form:input path="fechaPartida" type="date" required="required" />
+                        <form:errors path="fechaPartida" cssClass="error" />
+                    </div>
+                    <div class="search-field">
+                        <form:label path="personas">Personas</form:label>
+                        <form:input path="personas" type="number" min="1" max="20" required="required" />
+                        <form:errors path="personas" cssClass="error" />
+                    </div>
+                    <div class="search-field search-field--button">
+                        <button type="submit">Buscar opciones</button>
+                    </div>
+                </div>
+                <p class="search-panel__note">La llegada es el día del vuelo de ida. Esta búsqueda consulta disponibilidad; no realiza una reserva.</p>
+            </form:form>
         </section>
+
+        <c:if test="${busquedaRealizada}">
+            <section class="search-results" aria-labelledby="tituloResultados">
+                <h2 id="tituloResultados">Opciones para tu viaje</h2>
+                <p>De <strong><c:out value="${busqueda.origen}"/></strong> a <strong><c:out value="${busqueda.destino}"/></strong>, para <c:out value="${busqueda.personas}"/> persona(s).</p>
+                <div class="search-results__columns">
+                    <div>
+                        <h3>Vuelos de ida</h3>
+                        <c:choose>
+                            <c:when test="${empty vuelosEncontrados}"><p>No hay vuelos con plazas suficientes para esa fecha.</p></c:when>
+                            <c:otherwise>
+                                <ul class="search-results__list">
+                                    <c:forEach items="${vuelosEncontrados}" var="vuelo">
+                                        <li><strong>Vuelo <c:out value="${vuelo.numero}"/></strong>
+                                            <span><c:out value="${vuelo.fechaYHoraFormateada}"/></span>
+                                            <a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver vuelo</a>
+                                        </li>
+                                    </c:forEach>
+                                </ul>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div>
+                        <h3>Alojamientos</h3>
+                        <c:choose>
+                            <c:when test="${empty hotelesEncontrados}"><p>No hay hoteles con plazas suficientes para esas fechas.</p></c:when>
+                            <c:otherwise>
+                                <ul class="search-results__list">
+                                    <c:forEach items="${hotelesEncontrados}" var="hotel">
+                                        <li><strong><c:out value="${hotel.nombre}"/></strong>
+                                            <span><c:out value="${hotel.direccion}"/></span>
+                                            <a href="<c:url value='/hoteles/${hotel.codigo}'/>">Ver hotel</a>
+                                        </li>
+                                    </c:forEach>
+                                </ul>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+            </section>
+        </c:if>
+
         <div class="cards">
             <section class="card">
                 <h2>Vuelos</h2>
