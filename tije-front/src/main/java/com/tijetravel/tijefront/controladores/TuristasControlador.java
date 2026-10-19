@@ -35,13 +35,24 @@ public class TuristasControlador {
     @GetMapping
         public String listar(@RequestParam(required = false) String dni,
             @RequestParam(required = false) Boolean titular,
+            @RequestParam(defaultValue = "0") int pagina,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null)
             return salida;
-        List<TuristaRespuesta> turistas = (dni == null || dni.isBlank()) && titular == null
-            ? turistasApi.listarDetalles()
-            : turistasApi.listarDetalles(dni, titular);
+        List<TuristaRespuesta> turistas;
+        if (Boolean.TRUE.equals(modelo.asMap().get("puedeGestionar"))) {
+            var resultado = turistasApi.listarPagina(dni, titular, Math.max(0, pagina));
+            turistas = resultado.elementos();
+            modelo.addAttribute("pagina", resultado.pagina());
+            modelo.addAttribute("totalPaginas", resultado.totalPaginas());
+            modelo.addAttribute("hayAnterior", resultado.hayAnterior());
+            modelo.addAttribute("haySiguiente", resultado.haySiguiente());
+        } else {
+            turistas = (dni == null || dni.isBlank()) && titular == null
+                    ? turistasApi.listarDetalles()
+                    : turistasApi.listarDetalles(dni, titular);
+        }
         modelo.addAttribute("turistas", turistas);
         modelo.addAttribute("dniBusqueda", dni == null ? "" : dni.trim());
         modelo.addAttribute("titularBusqueda", titular == null ? "" : titular.toString());

@@ -2,6 +2,8 @@ package com.tijetravel.tijeback.servicios;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,6 +104,13 @@ public class UsuarioServicio {
 
     public List<Usuario> listar() {
         return usuarioRepositorio.findAll();
+    }
+
+    public Page<Usuario> buscarPaginaPara(Usuario actor, RolUsuario rol, String nombre,
+            Pageable pagina) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
+        return usuarioRepositorio.buscarPagina(rol, nombre == null || nombre.isBlank() ? null : nombre.trim(),
+                pagina);
     }
 
     public List<Usuario> listarPara(Usuario actor) {

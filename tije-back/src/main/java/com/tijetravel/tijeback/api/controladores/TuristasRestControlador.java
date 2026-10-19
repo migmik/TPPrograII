@@ -3,6 +3,10 @@ package com.tijetravel.tijeback.api.controladores;
 import java.net.URI;
 import java.util.List;
 import java.util.Comparator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -59,6 +63,30 @@ public class TuristasRestControlador {
                                 .map(turistaMapeador::aRespuesta)
                                 .sorted(Comparator.comparing(TuristaRespuesta::codigo))
                                 .toList();
+        }
+
+        @GetMapping("/pagina")
+        public PaginaRespuesta<TuristaRespuesta> listarPagina(
+                        @RequestParam(required = false) String dni,
+                        @RequestParam(required = false) Boolean titular,
+                        @RequestParam(defaultValue = "0") int pagina,
+                        @RequestParam(defaultValue = "20") int tamanio,
+                        Authentication autenticacion) {
+                if (pagina < 0 || tamanio < 1 || tamanio > 100)
+                        throw new IllegalArgumentException("Pagina o tamanio no valido");
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                Page<Turista> resultado = turistaServicio.buscarPaginaParaPersonal(actor, dni, titular,
+                                PageRequest.of(pagina, tamanio, Sort.by("codigo")));
+                return new PaginaRespuesta<>(resultado.map(turistaMapeador::aRespuesta).getContent(),
+                                resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(),
+                                resultado.hasNext());
+        }
+
+        @GetMapping("/sin-cuenta")
+        public List<TuristaRespuesta> listarTitularesSinCuenta(Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return turistaServicio.listarTitularesSinCuentaPara(actor).stream()
+                                .map(turistaMapeador::aRespuesta).toList();
         }
 
         @GetMapping("/{codigo}")

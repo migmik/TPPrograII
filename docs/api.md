@@ -1,21 +1,25 @@
 # API REST
 
-La primera version publica catalogos sin datos personales:
+Los catálogos públicos permiten búsquedas puntuales:
 
 ```text
 GET /api/v1/sucursales
 GET /api/v1/sucursales/{codigo}
-GET /api/v1/hoteles
+GET /api/v1/hoteles/pagina?ciudad=Salta
 GET /api/v1/hoteles/{codigo}
 GET /api/v1/ciudades
 GET /api/v1/hoteles/{codigo}/disponibilidad?fechaLlegada=AAAA-MM-DD&fechaPartida=AAAA-MM-DD
-GET /api/v1/vuelos
+GET /api/v1/vuelos/pagina?origen=Buenos%20Aires
 GET /api/v1/vuelos/{numero}
 GET /api/v1/vuelos/{numero}/disponibilidad?clase=TURISTA
 ```
 
-La consulta de estos catalogos es publica, pero su escritura requiere un
-administrador:
+Las búsquedas filtradas son públicas. `GET /api/v1/hoteles` y
+`GET /api/v1/vuelos`, así como sus páginas sin filtros, requieren sesión de
+vendedor o administrador. Las escrituras requieren administrador.
+Las páginas aceptan `pagina` desde 0, `tamanio` entre 1 y 100, y `orden`
+(`precioAsc`, `precioDesc` o el identificador). Vuelos acepta `origen`,
+`destino`, `fechaDesde` y `fechaHasta`; hoteles acepta `ciudad` y `nombre`.
 
 `GET /api/v1/ciudades` devuelve las ciudades distintas registradas en hoteles,
 orígenes y destinos de vuelos. El inicio usa esta lista para sus selectores de
@@ -37,11 +41,14 @@ Las consultas protegidas son:
 
 ```text
 GET /api/v1/turistas
+GET /api/v1/turistas/pagina
+GET /api/v1/turistas/sin-cuenta
 GET /api/v1/turistas/{codigo}
 GET /api/v1/reservas
 GET /api/v1/reservas/{codigo}
 GET /api/v1/reservas/pagina
 GET /api/v1/usuarios
+GET /api/v1/usuarios/pagina
 GET /api/v1/usuarios/{codigo}
 ```
 
@@ -57,6 +64,11 @@ respeta el grupo familiar.
 El listado de usuarios acepta `rol=ADMINISTRADOR`, `rol=VENDEDOR` o `rol=CLIENTE`,
 por ejemplo `GET /api/v1/usuarios?rol=VENDEDOR`. Sin `rol`, conserva el listado
 completo. Solo un administrador puede consultar este recurso.
+
+La interfaz de administración usa las rutas `/pagina` para turistas y usuarios
+con páginas de 20 registros. Turistas admite `dni` y `titular`; usuarios admite
+`rol` y `nombre`. `/turistas/sin-cuenta` devuelve únicamente titulares con DNI
+que todavía no tienen cuenta y requiere administrador.
 
 La interfaz usa `GET /api/v1/reservas/pagina` con `pagina` (desde 0) y
 `tamanio` (1 a 100). Se puede aplicar un criterio por consulta: `codigoTurista`,
@@ -119,7 +131,7 @@ asociado a un turista titular nuevo. El formulario solicita sus datos personales
 credenciales y una sucursal; no permite elegir roles administrativos. Repetir
 nombre de usuario, DNI o email devuelve `409`.
 
-Los catalogos `GET` siguen siendo publicos. Sus escrituras y todas las rutas de
+Las búsquedas filtradas de hoteles y vuelos son públicas. Sus escrituras y todas las rutas de
 usuarios requieren rol `ADMINISTRADOR`. Administradores y vendedores consultan
 todos los turistas y reservas. Un cliente solo recibe su turista titular, sus
 familiares y las reservas de ese grupo. Las escrituras de turistas y reservas

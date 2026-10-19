@@ -5,12 +5,25 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Usuario;
 
 public interface UsuarioRepositorio extends JpaRepository<Usuario, Integer> {
+    @Query(value = """
+            select u from Usuario u left join fetch treat(u as Cliente).turista
+            where (:rol is null or u.rol = :rol)
+              and (:nombre is null or lower(u.nombreUsuario) like lower(concat('%', :nombre, '%')))
+            """, countQuery = """
+            select count(u) from Usuario u
+            where (:rol is null or u.rol = :rol)
+              and (:nombre is null or lower(u.nombreUsuario) like lower(concat('%', :nombre, '%')))
+            """)
+    Page<Usuario> buscarPagina(@Param("rol") RolUsuario rol, @Param("nombre") String nombre,
+            Pageable pagina);
     boolean existsByDni(String dni);
 
     boolean existsByDniAndCodigoNot(String dni, Integer codigo);

@@ -62,10 +62,12 @@ Una vez desplegados, comprobá en este orden:
 
 1. Los logs de `tije-back` muestran que Flyway creó o verificó las tablas y que
    Tomcat arrancó. No hace falta ejecutar `database/crear_base.sql` en Railway.
-2. `https://<dominio-del-back>/api/v1/hoteles` responde con JSON.
-3. `https://<dominio-del-front>/` abre la página y el catálogo de hoteles carga.
-4. Iniciá sesión con el administrador inicial y probá una operación desde el
-   frontend. Después desactivá el alta inicial como se indicó arriba.
+2. `https://<dominio-del-back>/api/v1/hoteles/pagina?ciudad=Salta` responde con
+   JSON paginado. El listado sin filtros requiere una sesión de personal.
+3. `https://<dominio-del-front>/` abre la página y permite buscar un viaje.
+4. Probá la búsqueda de vuelo y hotel, la reserva y el pago simulado con una cuenta
+   cliente. Verificá con un vendedor o administrador que puedan abrir los listados
+   completos. Después desactivá el alta inicial como se indicó arriba.
 
 Si un servicio no arranca, mirá sus **Deploy Logs**. Un error de conexión a
 MySQL suele indicar una referencia o variable incorrecta; un error de puerto o

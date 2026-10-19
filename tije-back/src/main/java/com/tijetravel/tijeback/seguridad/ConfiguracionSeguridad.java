@@ -129,6 +129,9 @@ public class ConfiguracionSeguridad {
                                                                 "/api/v1/autenticacion/csrf",
                                                                 "/error")
                                                 .permitAll()
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/v1/hoteles", "/api/v1/vuelos")
+                                                .authenticated()
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/v1/ciudades",

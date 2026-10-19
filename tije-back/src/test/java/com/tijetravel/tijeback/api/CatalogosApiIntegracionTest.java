@@ -53,14 +53,42 @@ class CatalogosApiIntegracionTest {
     }
 
     @Test
-    void listaVuelosComoDto() throws Exception {
-        mockMvc.perform(get("/api/v1/vuelos"))
+    void paginaVuelosFiltradosComoDto() throws Exception {
+        mockMvc.perform(get("/api/v1/vuelos/pagina").queryParam("origen", "Buenos Aires"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(4))
-                .andExpect(jsonPath("$[0].numero").value(100))
-                .andExpect(jsonPath("$[0].fechaYHora").value("2026-08-15T10:30:00"))
-                .andExpect(jsonPath("$[0].origen").value("Buenos Aires"))
-                .andExpect(jsonPath("$[0].destino").value("Cordoba"));
+                .andExpect(jsonPath("$.elementos[0].numero").value(100))
+                .andExpect(jsonPath("$.elementos[0].fechaYHora").value("2026-08-15T10:30:00"))
+                .andExpect(jsonPath("$.elementos[0].origen").value("Buenos Aires"))
+                .andExpect(jsonPath("$.elementos[0].destino").value("Cordoba"));
+    }
+
+    @Test
+    void noEntregaCatalogosCompletosSinSesion() throws Exception {
+        mockMvc.perform(get("/api/v1/vuelos")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/hoteles")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/vuelos/pagina")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/hoteles/pagina")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void filtraYPaginaHotelesEnLaBase() throws Exception {
+        mockMvc.perform(get("/api/v1/hoteles/pagina")
+                .queryParam("ciudad", "Goya").queryParam("tamanio", "1")
+                .queryParam("orden", "precioAsc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.elementos.length()").value(1))
+                .andExpect(jsonPath("$.elementos[0].ciudad").value("Goya"))
+                .andExpect(jsonPath("$.pagina").value(0));
+    }
+
+    @Test
+    void rechazaPaginaDemasiadoGrandeYFiltrosConComodines() throws Exception {
+        mockMvc.perform(get("/api/v1/vuelos/pagina")
+                .queryParam("origen", "Buenos Aires").queryParam("tamanio", "101"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/v1/hoteles/pagina")
+                .queryParam("ciudad", "%"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
