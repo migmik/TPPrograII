@@ -7,6 +7,7 @@ public class HotelRespuesta {
     private String ciudad;
     private String telefono;
     private int capacidadTotal;
+    private int precioNochePersona;
 
     public Integer getCodigo() {
         return codigo;
@@ -51,6 +52,9 @@ public class HotelRespuesta {
     public int getCapacidadTotal() {
         return capacidadTotal;
     }
+
+    public int getPrecioNochePersona() { return precioNochePersona; }
+    public void setPrecioNochePersona(int precioNochePersona) { this.precioNochePersona = precioNochePersona; }
 
     public void setCapacidadTotal(int capacidadTotal) {
         this.capacidadTotal = capacidadTotal;

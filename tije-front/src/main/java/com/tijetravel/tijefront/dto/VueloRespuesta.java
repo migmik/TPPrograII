@@ -11,6 +11,7 @@ public class VueloRespuesta {
     private int totalPlazas;
     private int plazasTurista;
     private int plazasPrimera;
+    private int precio;
 
     public Integer getNumero() {
         return numero;
@@ -63,6 +64,9 @@ public class VueloRespuesta {
     public int getPlazasPrimera() {
         return plazasPrimera;
     }
+
+    public int getPrecio() { return precio; }
+    public void setPrecio(int precio) { this.precio = precio; }
 
     public void setPlazasPrimera(int plazasPrimera) {
         this.plazasPrimera = plazasPrimera;

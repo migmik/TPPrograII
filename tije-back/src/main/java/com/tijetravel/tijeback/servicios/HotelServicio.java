@@ -45,9 +45,15 @@ public class HotelServicio {
             String ciudad,
             String telefono,
             int capacidadTotal) {
+        return crear(actor, nombre, direccion, ciudad, telefono, capacidadTotal, 25000);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Hotel crear(Usuario actor, String nombre, String direccion, String ciudad, String telefono,
+            int capacidadTotal, int precioNochePersona) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
         bloqueoEscrituras.adquirir();
-        Hotel hotel = new Hotel(nombre, direccion, ciudad, telefono, capacidadTotal);
+        Hotel hotel = new Hotel(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
         if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCase(
                 hotel.getNombre(), hotel.getCiudad())) {
             throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
@@ -77,6 +83,12 @@ public class HotelServicio {
             String ciudad,
             String telefono,
             int capacidadTotal) {
+        return modificar(actor, codigo, nombre, direccion, ciudad, telefono, capacidadTotal, 25000);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Hotel modificar(Usuario actor, Integer codigo, String nombre, String direccion, String ciudad,
+            String telefono, int capacidadTotal, int precioNochePersona) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
         bloqueoEscrituras.adquirir();
         String nombreNormalizado = ValidacionModelo.textoObligatorio(nombre, "nombre");
@@ -98,7 +110,8 @@ public class HotelServicio {
         }
 
         Hotel hotel = encontrarPorId(codigo);
-        hotel.actualizarDatos(nombreNormalizado, direccion, ciudadNormalizada, telefono, capacidadTotal);
+        hotel.actualizarDatos(nombreNormalizado, direccion, ciudadNormalizada, telefono, capacidadTotal,
+                precioNochePersona);
         return hotel;
     }
 

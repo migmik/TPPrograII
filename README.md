@@ -99,6 +99,14 @@ se verificó contra MySQL, junto con una prueba HTTP y de reinicio del backend.
 
 ## Reglas importantes
 
+Los vuelos tienen un precio por persona de $150.000 a $300.000 (múltiplos de
+$10.000). Los hoteles cobran de $25.000 a $55.000 por persona y noche (múltiplos
+de $1.000). Primera clase suma 10% al vuelo y pensión completa suma 5% al hotel.
+El importe calculado queda guardado en la reserva, por lo que un cambio posterior
+del catálogo no modifica una venta ya hecha. La reserva pasa por una pantalla de
+pago simulado de cuatro segundos; no se solicitan datos de tarjeta. El balance
+del administrador suma solamente las reservas pagadas.
+
 - Un turista no puede reservar dos veces el mismo vuelo.
 - Las fechas, el destino del vuelo y la ciudad del hotel deben ser compatibles.
 - La disponibilidad hotelera considera la ocupación simultánea durante la estadía.

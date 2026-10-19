@@ -85,6 +85,7 @@ public class VuelosGestionControlador {
         formulario.setTotalPlazas(actual.getTotalPlazas());
         formulario.setPlazasTurista(actual.getPlazasTurista());
         formulario.setPlazasPrimera(actual.getPlazasPrimera());
+        formulario.setPrecio(actual.getPrecio());
         modelo.addAttribute("vuelo", formulario);
         modelo.addAttribute("numero", numero);
         modelo.addAttribute("titulo", "Editar vuelo");
@@ -147,6 +148,9 @@ public class VuelosGestionControlador {
     }
 
     private void validarPlazas(GuardarVueloFormulario formulario, BindingResult errores) {
+        if (formulario.getPrecio() != null && formulario.getPrecio() % 10000 != 0) {
+            errores.rejectValue("precio", "precio.invalido", "El precio debe ser múltiplo de $10.000.");
+        }
         if (formulario.getTotalPlazas() != null && formulario.getPlazasTurista() != null
                 && formulario.getPlazasPrimera() != null
                 && (long) formulario.getPlazasTurista() + formulario.getPlazasPrimera() > formulario.getTotalPlazas()) {

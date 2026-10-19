@@ -21,6 +21,10 @@ public class GuardarHotelFormulario {
     @NotNull(message = "Ingresá la capacidad.")
     @PositiveOrZero(message = "La capacidad no puede ser negativa.")
     private Integer capacidadTotal;
+    @NotNull(message = "Ingresá el precio por persona y noche.")
+    @jakarta.validation.constraints.Min(25000)
+    @jakarta.validation.constraints.Max(55000)
+    private Integer precioNochePersona;
 
     public String getNombre() {
         return nombre;
@@ -57,6 +61,9 @@ public class GuardarHotelFormulario {
     public Integer getCapacidadTotal() {
         return capacidadTotal;
     }
+
+    public Integer getPrecioNochePersona() { return precioNochePersona; }
+    public void setPrecioNochePersona(Integer precioNochePersona) { this.precioNochePersona = precioNochePersona; }
 
     public void setCapacidadTotal(Integer capacidadTotal) {
         this.capacidadTotal = capacidadTotal;

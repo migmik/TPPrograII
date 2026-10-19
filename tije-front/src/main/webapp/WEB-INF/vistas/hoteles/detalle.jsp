@@ -30,6 +30,7 @@
                             <dd>
                                 <c:out value="${hotel.telefono}" />
                             </dd>
+                            <dt>Precio por persona y noche</dt><dd>$<c:out value="${hotel.precioNochePersona}" /> (pensión completa +5%)</dd>
                             <dt>Capacidad total</dt>
                             <dd>
                                 <c:out value="${hotel.capacidadTotal}" /> plazas

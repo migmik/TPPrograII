@@ -20,8 +20,16 @@ public class HotelesApiCliente {
     }
 
     public List<HotelRespuesta> listar() {
+        HotelRespuesta[] hoteles = clienteBackend.get().uri("/api/v1/hoteles")
+                .retrieve().body(HotelRespuesta[].class);
+        if (hoteles == null) throw new RestClientException("La API no devolvió el listado de hoteles.");
+        return Arrays.asList(hoteles);
+    }
+
+    public List<HotelRespuesta> listar(String orden) {
+        if ("codigo".equals(orden)) return listar();
         HotelRespuesta[] hoteles = clienteBackend.get()
-                .uri("/api/v1/hoteles")
+                .uri(uri -> uri.path("/api/v1/hoteles").queryParam("orden", orden).build())
                 .retrieve()
                 .body(HotelRespuesta[].class);
         if (hoteles == null) {

@@ -14,7 +14,8 @@
     <main>
         <h1>Detalle de la reserva</h1>
         <%@ include file="resumen.jspf" %>
-        <c:if test="${puedeGestionar}"><p><a href="<c:url value='/reservas/${reserva.codigo}/editar'/>">Editar</a> | <a href="<c:url value='/reservas/${reserva.codigo}/eliminar'/>">Eliminar</a></p></c:if>
+        <c:if test="${puedeGestionar and not reserva.pagada}"><p><a href="<c:url value='/reservas/${reserva.codigo}/editar'/>">Editar</a> | <a href="<c:url value='/reservas/${reserva.codigo}/eliminar'/>">Eliminar</a></p></c:if>
+        <c:if test="${not reserva.pagada}"><p><a href="<c:url value='/reservas/${reserva.codigo}/pago'/>">Completar pago simulado</a></p></c:if>
         <p><a href="<c:url value='/reservas'/>">Volver al listado</a></p>
     </main>
 </body>

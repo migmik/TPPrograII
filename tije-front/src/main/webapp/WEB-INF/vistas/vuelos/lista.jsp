@@ -14,6 +14,9 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Vuelos</h1>
+                    <form method="get" action="<c:url value='/vuelos'/>"><label for="orden">Ordenar por</label>
+                        <select id="orden" name="orden"><option value="numero">Número</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select>
+                        <button type="submit">Ordenar</button></form>
                     <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                         <p><a href="<c:url value='/vuelos/nuevo'/>">Agregar vuelo</a></p>
                     </c:if>
@@ -35,6 +38,7 @@
                                         <th scope="col">Origen</th>
                                         <th scope="col">Destino</th>
                                         <th scope="col">Fecha y hora</th>
+                                        <th scope="col">Precio por persona</th>
                                         <th scope="col">Consulta</th>
                                         <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                                             <th scope="col">Administrar</th>
@@ -56,6 +60,7 @@
                                             <td>
                                                 <c:out value="${vuelo.fechaYHoraFormateada}" />
                                             </td>
+                                            <td>$<c:out value="${vuelo.precio}" /></td>
                                             <td><a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver detalle y
                                                     disponibilidad</a></td>
                                             <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">

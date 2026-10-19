@@ -766,3 +766,37 @@ section[aria-label="Resultado de disponibilidad"] {
         transform: none;
     }
 }
+
+.payment-panel {
+    max-width: 680px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 12px;
+}
+
+.payment-progress {
+    height: 8px;
+    background: #e5edf2;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.payment-progress::before {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: #e66b1e;
+    transform-origin: left;
+    animation: pago 4s linear forwards;
+}
+
+@keyframes pago {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+.balance-grid {
+    max-width: 650px;
+}

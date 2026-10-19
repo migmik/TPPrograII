@@ -1,6 +1,8 @@
 package com.tijetravel.tijeback.modelos;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -65,6 +67,21 @@ public class Reserva {
     @Column(name = "fecha_partida", nullable = false)
     private LocalDate fechaPartida;
 
+    @Column(name = "precio_vuelo", nullable = false)
+    private int precioVuelo;
+
+    @Column(name = "precio_hotel", nullable = false)
+    private int precioHotel;
+
+    @Column(nullable = false)
+    private int total;
+
+    @Column(nullable = false)
+    private boolean pagada;
+
+    @Column(name = "fecha_pago")
+    private LocalDateTime fechaPago;
+
     protected Reserva() {
     }
 
@@ -106,6 +123,25 @@ public class Reserva {
         this.tipoHospedaje = ValidacionModelo.obligatorio(tipoHospedaje, "tipoHospedaje");
         this.fechaLlegada = fechaLlegada;
         this.fechaPartida = fechaPartida;
+        if (pagada) {
+            throw new IllegalStateException("Una reserva pagada no se puede modificar");
+        }
+        this.precioVuelo = vuelo.getPrecio() * (claseVuelo == ClaseVuelo.PRIMERA ? 110 : 100) / 100;
+        long noches = ChronoUnit.DAYS.between(fechaLlegada, fechaPartida);
+        long hotelBase = noches * hotel.getPrecioNochePersona();
+        long hotelFinal = hotelBase * (tipoHospedaje == TipoHospedaje.PENSION_COMPLETA ? 105 : 100) / 100;
+        if (hotelFinal > Integer.MAX_VALUE - precioVuelo) {
+            throw new IllegalArgumentException("La estadía excede el importe máximo permitido");
+        }
+        this.precioHotel = (int) hotelFinal;
+        this.total = precioVuelo + precioHotel;
+    }
+
+    public void confirmarPago() {
+        if (!pagada) {
+            pagada = true;
+            fechaPago = LocalDateTime.now();
+        }
     }
 
     private void validarFechas(LocalDate fechaLlegada, LocalDate fechaPartida) {
@@ -151,6 +187,12 @@ public class Reserva {
     public LocalDate getFechaPartida() {
         return fechaPartida;
     }
+
+    public int getPrecioVuelo() { return precioVuelo; }
+    public int getPrecioHotel() { return precioHotel; }
+    public int getTotal() { return total; }
+    public boolean isPagada() { return pagada; }
+    public LocalDateTime getFechaPago() { return fechaPago; }
 
     @Override
     public String toString() {

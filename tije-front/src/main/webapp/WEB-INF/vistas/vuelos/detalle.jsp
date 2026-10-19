@@ -29,6 +29,7 @@
                         <dd>
                             <c:out value="${vuelo.fechaYHoraFormateada}" />
                         </dd>
+                        <dt>Precio por persona</dt><dd>$<c:out value="${vuelo.precio}" /> (primera clase +10%)</dd>
                         <dt>Capacidad total</dt>
                         <dd>
                             <c:out value="${vuelo.totalPlazas}" /> plazas

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
+import com.tijetravel.tijeback.api.dto.BalanceRespuesta;
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -196,6 +197,22 @@ public class ReservaServicio {
         return reserva;
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Reserva confirmarPago(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        bloqueoEscrituras.adquirir();
+        Reserva reserva = encontrarVisiblePara(actor, codigo);
+        reserva.confirmarPago();
+        return reserva;
+    }
+
+    public BalanceRespuesta balance(Usuario actor) {
+        if (actor.getRol() != RolUsuario.ADMINISTRADOR) {
+            throw new OperacionNoPermitidaException("Solo un administrador puede consultar el balance");
+        }
+        return reservaRepositorio.balancePagadas();
+    }
+
     public List<Reserva> listarPorTitularYFamiliares(Integer codigoTitular) {
         Turista titular = encontrarTurista(codigoTitular);
         if (!titular.isTitular()) {
@@ -220,6 +237,9 @@ public class ReservaServicio {
         disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Reserva reserva = encontrarPorId(codigoReserva);
+        if (reserva.isPagada()) {
+            throw new OperacionNoPermitidaException("Una reserva pagada no se puede modificar");
+        }
         Turista turista = encontrarTurista(codigoTurista);
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
@@ -248,6 +268,9 @@ public class ReservaServicio {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
         bloqueoEscrituras.adquirir();
         Reserva reserva = encontrarPorId(codigoReserva);
+        if (reserva.isPagada()) {
+            throw new OperacionNoPermitidaException("Una reserva pagada no se puede eliminar");
+        }
         reservaRepositorio.delete(reserva);
     }
 

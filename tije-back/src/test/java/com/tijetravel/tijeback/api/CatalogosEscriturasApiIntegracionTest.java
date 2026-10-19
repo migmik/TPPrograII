@@ -133,7 +133,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "direccion": "Costanera 100",
                                                   "ciudad": "Rosario",
                                                   "telefono": "2222-1000",
-                                                  "capacidadTotal": 25
+                                                  "capacidadTotal": 25,"precioNochePersona":35000
                                                 }
                                                 """))
                                 .andExpect(status().isCreated())
@@ -158,7 +158,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "direccion": "Costanera 200",
                                                   "ciudad": "Rosario",
                                                   "telefono": "2222-2000",
-                                                  "capacidadTotal": 30
+                                                  "capacidadTotal": 30,"precioNochePersona":35000
                                                 }
                                                 """))
                                 .andExpect(status().isOk())
@@ -177,7 +177,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "destino": "Rosario",
                                                   "totalPlazas": 100,
                                                   "plazasTurista": 80,
-                                                  "plazasPrimera": 20
+                                                  "plazasPrimera": 20,"precio":200000
                                                 }
                                                 """))
                                 .andExpect(status().isCreated())
@@ -195,7 +195,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "destino": "Rosario",
                                                   "totalPlazas": 110,
                                                   "plazasTurista": 85,
-                                                  "plazasPrimera": 25
+                                                  "plazasPrimera": 25,"precio":200000
                                                 }
                                                 """))
                                 .andExpect(status().isOk())
@@ -277,7 +277,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "destino": "Rosario",
                                                   "totalPlazas": 0,
                                                   "plazasTurista": -1,
-                                                  "plazasPrimera": 10
+                                                  "plazasPrimera": 10,"precio":200000
                                                 }
                                                 """))
                                 .andExpect(status().isBadRequest())
@@ -333,7 +333,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "direccion": "Ruta Provincial 5 Km 70",
                                                   "ciudad": "Cordoba",
                                                   "telefono": "0351-555-1111",
-                                                  "capacidadTotal": 0
+                                                  "capacidadTotal": 0,"precioNochePersona":35000
                                                 }
                                                 """))
                                 .andExpect(status().isConflict())
@@ -350,7 +350,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                   "destino": "Cordoba",
                                                   "totalPlazas": 20,
                                                   "plazasTurista": 0,
-                                                  "plazasPrimera": 20
+                                                  "plazasPrimera": 20,"precio":200000
                                                 }
                                                 """))
                                 .andExpect(status().isConflict())
