@@ -74,6 +74,9 @@ DELETE /api/v1/turistas/{codigo}
 POST   /api/v1/reservas
 PUT    /api/v1/reservas/{codigo}
 DELETE /api/v1/reservas/{codigo}
+
+POST   /api/v1/reservas/{codigo}/pagar
+GET    /api/v1/reservas/balance
 POST   /api/v1/usuarios
 PUT    /api/v1/usuarios/{codigo}
 DELETE /api/v1/usuarios/{codigo}
@@ -130,6 +133,14 @@ backend cierra las sesiones; si en el futuro se ejecutan varias instancias, se
 debera agregar Spring Session con un almacen compartido como Redis o JDBC.
 
 ## Nombres del contrato de hoteles
+
+Los vuelos incluyen `precio` por persona y los hoteles `precioNochePersona`
+por persona y noche. En altas y ediciones son obligatorios; los listados aceptan
+`orden=precioAsc` o `orden=precioDesc`. La respuesta de una reserva incluye
+`precioVuelo`, `precioHotel`, `total`, `pagada` y `fechaPago`. Primera clase
+suma 10% al vuelo y pensión completa suma 5% al hotel. El pago es simulado e
+idempotente; el balance solo lo puede consultar un administrador y cuenta las
+reservas pagadas.
 
 `capacidadTotal` representa la capacidad base del hotel en las solicitudes y
 respuestas de catalogo. Es el unico nombre aceptado para ingresar la capacidad.

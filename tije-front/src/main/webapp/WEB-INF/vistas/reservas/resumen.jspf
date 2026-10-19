@@ -9,4 +9,8 @@
     <dt>Llegada</dt><dd><c:out value="${reserva.fechaLlegadaFormateada}"/></dd>
     <dt>Partida</dt><dd><c:out value="${reserva.fechaPartidaFormateada}"/></dd>
     <dt>Código de sucursal de contratación</dt><dd><c:out value="${reserva.codigoSucursalContratacion}"/></dd>
+    <dt>Vuelo (incluye 10% si es primera clase)</dt><dd>$<c:out value="${reserva.precioVuelo}"/></dd>
+    <dt>Hotel (noches, incluye 5% si es pensión completa)</dt><dd>$<c:out value="${reserva.precioHotel}"/></dd>
+    <dt>Total</dt><dd><strong>$<c:out value="${reserva.total}"/></strong></dd>
+    <dt>Pago</dt><dd>${reserva.pagada ? 'Pagado' : 'Pendiente'}</dd>
 </dl>

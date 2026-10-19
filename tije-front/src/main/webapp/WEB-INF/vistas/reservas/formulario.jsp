@@ -69,6 +69,7 @@
                                             <c:out value="${vuelo.origen}" /> a
                                             <c:out value="${vuelo.destino}" /> -
                                             <c:out value="${vuelo.fechaYHoraFormateada}" />
+                                            - $<c:out value="${vuelo.precio}" /> por persona
                                         </form:option>
                                     </c:forEach>
                                 </form:select>
@@ -82,6 +83,7 @@
                                         <form:option value="${hotel.codigo}">
                                             <c:out value="${hotel.nombre}" /> -
                                             <c:out value="${hotel.ciudad}" />
+                                            - $<c:out value="${hotel.precioNochePersona}" /> por persona y noche
                                         </form:option>
                                     </c:forEach>
                                 </form:select>
@@ -115,7 +117,9 @@
                                 <form:input path="fechaPartida" type="date" required="required" />
                                 <form:errors path="fechaPartida" cssClass="error" />
                             </p>
-                            <button type="submit">Guardar reserva</button>
+                            <p>Primera clase suma 10% al vuelo. Pensión completa suma 5% al hotel.
+                                El total exacto se muestra antes del pago simulado.</p>
+                            <button type="submit">${empty actual ? 'Continuar al pago' : 'Guardar reserva'}</button>
                         </form:form>
                         <p><a href="<c:url value='/reservas'/>">Cancelar y volver al listado</a></p>
                     </main>

@@ -35,6 +35,9 @@ public class Vuelo {
     @Column(name = "plazas_primera", nullable = false)
     private int plazasPrimera;
 
+    @Column(nullable = false)
+    private int precio;
+
     protected Vuelo() {
     }
 
@@ -46,8 +49,13 @@ public class Vuelo {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
+        this(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, 150000);
+    }
+
+    public Vuelo(int numero, LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
         this.numero = ValidacionModelo.enteroPositivo(numero, "numero");
-        actualizarDatos(fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
+        actualizarDatos(fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
     }
 
     public void actualizarDatos(
@@ -57,6 +65,11 @@ public class Vuelo {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
+        actualizarDatos(fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
+    }
+
+    public void actualizarDatos(LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
         ValidacionModelo.obligatorio(fechaYHora, "fechaYHora");
         ValidacionModelo.enteroPositivo(totalPlazas, "totalPlazas");
         ValidacionModelo.enteroNoNegativo(plazasTurista, "plazasTurista");
@@ -71,6 +84,10 @@ public class Vuelo {
         this.totalPlazas = totalPlazas;
         this.plazasTurista = plazasTurista;
         this.plazasPrimera = plazasPrimera;
+        if (precio < 150000 || precio > 300000 || precio % 10000 != 0) {
+            throw new IllegalArgumentException("El precio del vuelo debe estar entre 150000 y 300000 y ser multiplo de 10000");
+        }
+        this.precio = precio;
     }
 
     public Integer getNumero() {
@@ -99,6 +116,10 @@ public class Vuelo {
 
     public int getPlazasPrimera() {
         return plazasPrimera;
+    }
+
+    public int getPrecio() {
+        return precio;
     }
 
     @Override

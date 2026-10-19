@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.formularios.ConsultaDisponibilidad;
@@ -23,8 +24,10 @@ public class HotelesControlador {
     }
 
     @GetMapping
-    public String listar(Model modelo) {
-        modelo.addAttribute("hoteles", hotelesApi.listar());
+    public String listar(@RequestParam(defaultValue = "codigo") String orden, Model modelo) {
+        if (!java.util.List.of("codigo", "precioAsc", "precioDesc").contains(orden)) orden = "codigo";
+        modelo.addAttribute("hoteles", "codigo".equals(orden) ? hotelesApi.listar() : hotelesApi.listar(orden));
+        modelo.addAttribute("orden", orden);
         return "hoteles/lista";
     }
 
