@@ -3,6 +3,10 @@ package com.tijetravel.tijeback.api.controladores;
 import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -54,6 +58,25 @@ public class UsuariosRestControlador {
                                 .map(usuarioMapeador::aRespuesta)
                                 .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
                                 .toList();
+        }
+
+        @GetMapping("/pagina")
+        public PaginaRespuesta<UsuarioRespuesta> listarPagina(
+                        @RequestParam(required = false) RolUsuario rol,
+                        @RequestParam(required = false) String nombre,
+                        @RequestParam(defaultValue = "0") int pagina,
+                        @RequestParam(defaultValue = "20") int tamanio,
+                        Authentication autenticacion) {
+                if (pagina < 0 || tamanio < 1 || tamanio > 100)
+                        throw new IllegalArgumentException("Pagina o tamanio no valido");
+                if (nombre != null && (nombre.contains("%") || nombre.contains("_")))
+                        throw new IllegalArgumentException("El filtro contiene caracteres no permitidos");
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                Page<Usuario> resultado = usuarioServicio.buscarPaginaPara(actor, rol, nombre,
+                                PageRequest.of(pagina, tamanio, Sort.by("codigo")));
+                return new PaginaRespuesta<>(resultado.map(usuarioMapeador::aRespuesta).getContent(),
+                                resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(),
+                                resultado.hasNext());
         }
 
         @GetMapping("/{codigo}")

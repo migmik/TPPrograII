@@ -28,6 +28,8 @@
                             <option value="VENDEDOR" <c:if test="${rolBusqueda == 'VENDEDOR'}">selected</c:if>>Vendedores</option>
                             <option value="CLIENTE" <c:if test="${rolBusqueda == 'CLIENTE'}">selected</c:if>>Clientes</option>
                         </select>
+                        <label for="nombre">Nombre de usuario</label>
+                        <input id="nombre" name="nombre" type="search" value="<c:out value='${nombreBusqueda}'/>">
                         <button type="submit">Filtrar</button>
                         <a href="<c:url value='/usuarios'/>">Ver todos</a>
                     </form>
@@ -78,6 +80,15 @@
                                     </c:forEach>
                                 </tbody>
                             </table>
+                            <c:if test="${totalPaginas > 1}">
+                                <form method="get" action="<c:url value='/usuarios'/>">
+                                    <input type="hidden" name="rol" value="<c:out value='${rolBusqueda}'/>">
+                                    <input type="hidden" name="nombre" value="<c:out value='${nombreBusqueda}'/>">
+                                    <c:if test="${hayAnterior}"><button name="pagina" value="${pagina - 1}">Anterior</button></c:if>
+                                    <span>Página <c:out value="${pagina + 1}" /> de <c:out value="${totalPaginas}" /></span>
+                                    <c:if test="${haySiguiente}"><button name="pagina" value="${pagina + 1}">Siguiente</button></c:if>
+                                </form>
+                            </c:if>
                         </c:otherwise>
                     </c:choose>
                 </main>

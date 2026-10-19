@@ -85,7 +85,8 @@ class UsuariosControladorTest {
     void entregaElListadoDelBackend() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         var usuarios = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listar()).thenReturn(usuarios);
+        when(usuariosApi.listarPagina(null, null, 0))
+                .thenReturn(new com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta(usuarios, 0, 1, false, false));
         mvc.perform(get("/usuarios").session(sesion()))
                 .andExpect(view().name("usuarios/lista")).andExpect(model().attribute("usuarios", usuarios));
     }
@@ -94,29 +95,26 @@ class UsuariosControladorTest {
     void filtraUsuariosPorRol() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         List<UsuarioRespuesta> resultado = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listar("VENDEDOR")).thenReturn(resultado);
+        when(usuariosApi.listarPagina("VENDEDOR", null, 0))
+                .thenReturn(new com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/usuarios").param("rol", "VENDEDOR").session(sesion()))
                 .andExpect(view().name("usuarios/lista"))
                 .andExpect(model().attribute("usuarios", resultado))
                 .andExpect(model().attribute("rolBusqueda", "VENDEDOR"));
 
-        verify(usuariosApi).listar("VENDEDOR");
+        verify(usuariosApi).listarPagina("VENDEDOR", null, 0);
     }
 
     @Test
     void ofreceSolamenteLosTuristasSinCuenta() throws Exception {
         prepararFormulario();
-        UsuarioRespuesta cliente = new UsuarioRespuesta();
-        cliente.setCodigoTurista(1);
-        when(usuariosApi.listar("CLIENTE")).thenReturn(List.of(cliente));
         TuristaResumen disponible = turista(2);
-        when(turistasApi.listar(true)).thenReturn(List.of(turista(1), disponible));
+        when(turistasApi.listarTitularesSinCuenta()).thenReturn(List.of(disponible));
         mvc.perform(get("/usuarios/nuevo").session(sesion()))
                 .andExpect(view().name("usuarios/nuevo"))
                 .andExpect(model().attribute("turistasDisponibles", List.of(disponible)));
-            verify(usuariosApi).listar("CLIENTE");
-            verify(turistasApi).listar(true);
+            verify(turistasApi).listarTitularesSinCuenta();
     }
 
     @ParameterizedTest
@@ -333,9 +331,7 @@ class UsuariosControladorTest {
     @Test
     void noOfreceTitularesSinDocumentoParaCrearCuenta() throws Exception {
         prepararFormulario();
-        TuristaResumen pendiente = turista(1);
-        pendiente.setDni(null);
-        when(turistasApi.listar(true)).thenReturn(List.of(pendiente));
+        when(turistasApi.listarTitularesSinCuenta()).thenReturn(List.of());
         mvc.perform(get("/usuarios/nuevo").session(sesion()))
                 .andExpect(model().attribute("turistasDisponibles", List.of()));
     }
@@ -356,8 +352,7 @@ class UsuariosControladorTest {
 
     private void prepararFormulario() {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
-        when(usuariosApi.listar("CLIENTE")).thenReturn(List.of());
-        when(turistasApi.listar(true)).thenReturn(List.of(turista(1)));
+        when(turistasApi.listarTitularesSinCuenta()).thenReturn(List.of(turista(1)));
     }
 
     private MockHttpServletRequestBuilder alta(String rol) {

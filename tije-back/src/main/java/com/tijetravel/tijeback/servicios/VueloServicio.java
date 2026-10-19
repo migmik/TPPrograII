@@ -7,6 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 
@@ -68,6 +70,13 @@ public class VueloServicio {
 
     public List<Vuelo> listar() {
         return vueloRepositorio.findAll();
+    }
+
+    public Page<Vuelo> buscarPagina(String origen, String destino, LocalDate desde, LocalDate hasta,
+            Pageable pagina) {
+        return vueloRepositorio.buscarPagina(origen, destino,
+                desde == null ? null : desde.atStartOfDay(),
+                hasta == null ? null : hasta.plusDays(1).atStartOfDay(), pagina);
     }
 
     public List<Vuelo> buscarEnFecha(String origen, String destino, LocalDate fecha, int personas) {

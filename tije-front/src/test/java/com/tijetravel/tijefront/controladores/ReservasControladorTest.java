@@ -123,10 +123,6 @@ class ReservasControladorTest {
     @Test
     void reservaDesdeElBuscadorLlegaConVueloHotelYFechasPrecargados() throws Exception {
         preparar("CLIENTE");
-        HotelRespuesta hotel = new HotelRespuesta();
-        VueloRespuesta vuelo = new VueloRespuesta();
-        when(hotelesApi.buscar(3)).thenReturn(hotel);
-        when(vuelosApi.buscar(100)).thenReturn(vuelo);
         var resultado = mvc.perform(get("/reservas/nueva").session(sesion())
                 .param("numeroVuelo", "100").param("codigoHotel", "3")
                 .param("fechaLlegada", "2027-01-10").param("fechaPartida", "2027-01-12"))
@@ -137,17 +133,32 @@ class ReservasControladorTest {
         assertEquals(LocalDate.of(2027, 1, 10), formulario.getFechaLlegada());
         assertEquals("TURISTA", formulario.getClaseVuelo());
         assertTrue(formulario.isSeleccionBuscador());
-        assertEquals(List.of(hotel), resultado.getModelAndView().getModel().get("hoteles"));
-        assertEquals(List.of(vuelo), resultado.getModelAndView().getModel().get("vuelos"));
+        assertEquals(List.of(), resultado.getModelAndView().getModel().get("hoteles"));
+        assertEquals(List.of(), resultado.getModelAndView().getModel().get("vuelos"));
         verify(hotelesApi, never()).listar();
         verify(vuelosApi, never()).listar();
     }
 
     @Test
+    void vendedorBuscaPasajeroPorDniSinDescargarTodosLosTuristas() throws Exception {
+        preparar("VENDEDOR");
+        var pasajero = new TuristaRespuesta();
+        pasajero.setCodigo(2);
+        pasajero.setDni("12345678");
+        when(turistasApi.listarDetalles("12345678")).thenReturn(List.of(pasajero));
+        mvc.perform(get("/reservas/nueva").session(sesion())
+                .param("numeroVuelo", "100").param("codigoHotel", "3")
+                .param("fechaLlegada", "2027-01-10").param("fechaPartida", "2027-01-12")
+                .param("dniTurista", "12345678"))
+                .andExpect(view().name("reservas/formulario"))
+                .andExpect(model().attribute("turistas", List.of(pasajero)));
+        verify(turistasApi, never()).listar();
+        verify(turistasApi).listarDetalles("12345678");
+    }
+
+    @Test
     void formularioDelBuscadorConErrorRecuperaSoloLasOpcionesSeleccionadas() throws Exception {
         preparar("CLIENTE");
-        when(hotelesApi.buscar(3)).thenReturn(new HotelRespuesta());
-        when(vuelosApi.buscar(100)).thenReturn(new VueloRespuesta());
         mvc.perform(formulario("/reservas")
                 .param("seleccionBuscador", "true")
                 .with(r -> { r.setParameter("fechaPartida", "2027-01-10"); return r; }))

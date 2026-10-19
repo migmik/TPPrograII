@@ -14,9 +14,15 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Hoteles</h1>
-                    <form method="get" action="<c:url value='/hoteles'/>"><label for="orden">Ordenar por</label>
+                    <form method="get" action="<c:url value='/hoteles'/>">
+                        <label for="ciudad">Ciudad</label>
+                        <input id="ciudad" name="ciudad" value="<c:out value='${ciudadBusqueda}'/>" placeholder="Ej.: Salta">
+                        <label for="nombre">Nombre</label>
+                        <input id="nombre" name="nombre" value="<c:out value='${nombreBusqueda}'/>" placeholder="Nombre del hotel">
+                        <label for="orden">Ordenar por</label>
                         <select id="orden" name="orden"><option value="codigo">Código</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select>
-                        <button type="submit">Ordenar</button></form>
+                        <button type="submit">Buscar</button>
+                    </form>
                     <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                         <p><a href="<c:url value='/hoteles/nuevo'/>">Agregar hotel</a></p>
                     </c:if>
@@ -26,8 +32,11 @@
                         </p>
                     </c:if>
                     <c:choose>
+                        <c:when test="${not busquedaRealizada}">
+                            <p>Indicá una ciudad o un nombre para buscar hoteles.</p>
+                        </c:when>
                         <c:when test="${empty hoteles}">
-                            <p>Todavía no hay hoteles registrados.</p>
+                            <p>No encontramos hoteles con esos filtros.</p>
                         </c:when>
                         <c:otherwise>
                             <table>
@@ -71,6 +80,14 @@
                                     </c:forEach>
                                 </tbody>
                             </table>
+                            <form method="get" action="<c:url value='/hoteles'/>">
+                                <input type="hidden" name="ciudad" value="<c:out value='${ciudadBusqueda}'/>">
+                                <input type="hidden" name="nombre" value="<c:out value='${nombreBusqueda}'/>">
+                                <input type="hidden" name="orden" value="<c:out value='${orden}'/>">
+                                <c:if test="${hayAnterior}"><button name="pagina" value="${pagina - 1}">Anterior</button></c:if>
+                                <span>Página <c:out value="${pagina + 1}" /> de <c:out value="${totalPaginas}" /></span>
+                                <c:if test="${haySiguiente}"><button name="pagina" value="${pagina + 1}">Siguiente</button></c:if>
+                            </form>
                             <p>La capacidad total es el tamaño del hotel. Las plazas libres dependen de las fechas.</p>
                         </c:otherwise>
                     </c:choose>

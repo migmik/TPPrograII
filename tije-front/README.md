@@ -25,7 +25,8 @@ No usa JavaScript ni se conecta directamente a MySQL.
 - Consulta de las reservas del grupo familiar para clientes.
 - Mensajes para fechas inválidas, recursos inexistentes y problemas de conexión.
 
-Los catálogos son públicos. La administración de sucursales, hoteles, vuelos y
+Las búsquedas filtradas de hoteles y vuelos son públicas; solo el personal puede
+abrir sus listados completos. La administración de sucursales, hoteles, vuelos y
 usuarios requiere ingresar como administrador.
 El CSS actual solo facilita la lectura.
 
@@ -91,12 +92,12 @@ Navegador → controlador del frontend → cliente HTTP Java → API del backend
 Navegador ← HTML generado por JSP    ← datos recibidos en JSON
 ```
 
-Por ejemplo, al entrar a `/hoteles`:
+Por ejemplo, al buscar hoteles por ciudad:
 
-1. `HotelesControlador.listar()` recibe la solicitud del navegador.
-2. Llama a `HotelesApiCliente.listar()`, que hace un GET a `/api/v1/hoteles`.
+1. `HotelesControlador.listar()` recibe los filtros del navegador.
+2. Llama a `HotelesApiCliente.listarPagina()`, que hace un GET a `/api/v1/hoteles/pagina`.
 3. `RestClient` convierte el JSON en objetos `HotelRespuesta`.
-4. El controlador agrega la lista al `Model` con el nombre `hoteles`.
+4. El controlador agrega la página al `Model` con el nombre `hoteles` y los datos para avanzar o retroceder.
 5. Devuelve `"hoteles/lista"`. Spring busca `WEB-INF/vistas/hoteles/lista.jsp`.
 6. La JSP recorre la lista con `c:forEach` y genera las filas de la tabla HTML.
 
@@ -433,12 +434,12 @@ La edición de usuario sigue requiriendo una nueva contraseña, como antes.
 Ingresá y abrí **Reservas**. Administradores y vendedores pueden crear, editar
 y eliminar; los clientes solamente consultan las reservas de su grupo familiar.
 
-1. Elegí **Crear reserva**.
-2. Seleccioná el turista (se muestra su DNI), el vuelo y el hotel.
+1. Buscá un viaje en el inicio y elegí una combinación de vuelo y hotel.
+2. Seleccioná el turista (se muestra su DNI). El personal puede buscarlo por DNI.
 3. Elegí clase de vuelo y tipo de hospedaje.
 4. Ingresá llegada y partida. La llegada debe coincidir con la fecha del vuelo,
    el hotel debe estar en la ciudad de destino y la partida debe ser posterior.
-5. Guardá. La API confirma la disponibilidad y evita repetir turista y vuelo.
+5. Guardá. La API confirma la disponibilidad, evita repetir turista y vuelo y muestra el pago simulado.
 
 El listado muestra turista, DNI, vuelo, hotel y fechas. El detalle agrega nombres,
 destino, clase, hospedaje y sucursal de contratación. Editar conserva los datos
