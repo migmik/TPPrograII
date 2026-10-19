@@ -38,9 +38,43 @@
                                 <c:url var="urlGuardar" value="/reservas/${actual.codigo}/editar" />
                             </c:otherwise>
                         </c:choose>
-                        <c:if test="${empty turistas || empty hoteles || empty vuelos}">
-                            <p>Para guardar una reserva debe haber al menos un turista, un hotel y un vuelo disponibles.
+                        <c:choose>
+                            <c:when test="${empty reserva.numeroVuelo or empty reserva.codigoHotel}">
+                                <section class="card">
+                                    <h2>Primero elegí tu viaje</h2>
+                                    <p>Buscá una fecha y elegí una combinación de vuelo y hotel. Después vas a poder indicar quién viaja y confirmar la reserva.</p>
+                                    <a href="<c:url value='/'/>">Buscar vuelos y hoteles</a>
+                                </section>
+                            </c:when>
+                            <c:otherwise>
+                        <section class="card" aria-label="Viaje seleccionado">
+                            <h2>Tu viaje</h2>
+                            <p>Vuelo <strong><c:out value="${reserva.numeroVuelo}" /></strong>
+                                <c:if test="${not empty vueloSeleccionado}">:
+                                    <c:out value="${vueloSeleccionado.origen}" /> a
+                                    <c:out value="${vueloSeleccionado.destino}" />,
+                                    <c:out value="${vueloSeleccionado.fechaYHoraFormateada}" />
+                                </c:if>
                             </p>
+                            <p>Hotel <strong><c:out value="${hotelSeleccionado.nombre}" default="seleccionado" /></strong>
+                                <c:if test="${not empty hotelSeleccionado}">en <c:out value="${hotelSeleccionado.ciudad}" /></c:if>
+                            </p>
+                            <c:if test="${empty actual}"><a href="<c:url value='/'/>">Cambiar viaje</a></c:if>
+                        </section>
+                        <c:if test="${usuarioActual.rol != 'CLIENTE' and empty actual}">
+                            <form method="get" action="<c:url value='/reservas/nueva'/>">
+                                <input type="hidden" name="numeroVuelo" value="<c:out value='${reserva.numeroVuelo}'/>">
+                                <input type="hidden" name="codigoHotel" value="<c:out value='${reserva.codigoHotel}'/>">
+                                <input type="hidden" name="fechaLlegada" value="<c:out value='${reserva.fechaLlegada}'/>">
+                                <input type="hidden" name="fechaPartida" value="<c:out value='${reserva.fechaPartida}'/>">
+                                <label for="dniTurista">Buscar pasajero por DNI</label>
+                                <input id="dniTurista" name="dniTurista" inputmode="numeric" pattern="[0-9]{7,8}"
+                                    value="<c:out value='${dniTuristaBusqueda}'/>">
+                                <button type="submit">Buscar pasajero</button>
+                            </form>
+                        </c:if>
+                        <c:if test="${empty turistas}">
+                            <p>Elegí un pasajero para continuar. Si sos vendedor o administrador, buscalo por DNI.</p>
                         </c:if>
                         <form:form method="post" action="${urlGuardar}" modelAttribute="reserva" htmlEscape="true">
                             <form:hidden path="seleccionBuscador" />
@@ -60,33 +94,11 @@
                                 <form:errors path="codigoTurista" cssClass="error" />
                             </p>
                             <p>
-                                <form:label path="numeroVuelo">Vuelo</form:label>
-                                <form:select path="numeroVuelo" required="required">
-                                    <form:option value="" label="Seleccioná un vuelo" />
-                                    <c:forEach items="${vuelos}" var="vuelo">
-                                        <form:option value="${vuelo.numero}">
-                                            <c:out value="${vuelo.numero}" /> -
-                                            <c:out value="${vuelo.origen}" /> a
-                                            <c:out value="${vuelo.destino}" /> -
-                                            <c:out value="${vuelo.fechaYHoraFormateada}" />
-                                            - $<c:out value="${vuelo.precio}" /> por persona
-                                        </form:option>
-                                    </c:forEach>
-                                </form:select>
+                                <form:hidden path="numeroVuelo" />
                                 <form:errors path="numeroVuelo" cssClass="error" />
                             </p>
                             <p>
-                                <form:label path="codigoHotel">Hotel</form:label>
-                                <form:select path="codigoHotel" required="required">
-                                    <form:option value="" label="Seleccioná un hotel" />
-                                    <c:forEach items="${hoteles}" var="hotel">
-                                        <form:option value="${hotel.codigo}">
-                                            <c:out value="${hotel.nombre}" /> -
-                                            <c:out value="${hotel.ciudad}" />
-                                            - $<c:out value="${hotel.precioNochePersona}" /> por persona y noche
-                                        </form:option>
-                                    </c:forEach>
-                                </form:select>
+                                <form:hidden path="codigoHotel" />
                                 <form:errors path="codigoHotel" cssClass="error" />
                             </p>
                             <p>
@@ -121,6 +133,8 @@
                                 El total exacto se muestra antes del pago simulado.</p>
                             <button type="submit">${empty actual ? 'Continuar al pago' : 'Guardar reserva'}</button>
                         </form:form>
+                            </c:otherwise>
+                        </c:choose>
                         <p><a href="<c:url value='/reservas'/>">Cancelar y volver al listado</a></p>
                     </main>
             </body>

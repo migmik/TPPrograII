@@ -5,18 +5,41 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import com.tijetravel.tijefront.dto.DisponibilidadHotelRespuesta;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
+import com.tijetravel.tijefront.dto.PaginaHotelesRespuesta;
 
 @Service
 public class HotelesApiCliente {
     private final RestClient clienteBackend;
+    private final ConexionApiSesion conexion;
 
     public HotelesApiCliente(RestClient clienteBackend) {
+        this(clienteBackend, null);
+    }
+
+    @Autowired
+    public HotelesApiCliente(RestClient clienteBackend, ConexionApiSesion conexion) {
         this.clienteBackend = clienteBackend;
+        this.conexion = conexion;
+    }
+
+    public PaginaHotelesRespuesta listarPagina(String ciudad, String nombre, String orden,
+            int pagina, boolean personal) {
+        RestClient cliente = personal ? conexion.getCliente() : clienteBackend;
+        PaginaHotelesRespuesta resultado = cliente.get().uri(uri -> {
+            var ruta = uri.path("/api/v1/hoteles/pagina")
+                    .queryParam("pagina", pagina).queryParam("tamanio", 20).queryParam("orden", orden);
+            if (ciudad != null) ruta.queryParam("ciudad", ciudad);
+            if (nombre != null) ruta.queryParam("nombre", nombre);
+            return ruta.build();
+        }).retrieve().body(PaginaHotelesRespuesta.class);
+        if (resultado == null) throw new RestClientException("La API no devolvió la página de hoteles.");
+        return resultado;
     }
 
     public List<HotelRespuesta> listar() {

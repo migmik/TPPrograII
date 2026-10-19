@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -24,6 +25,8 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
 import com.tijetravel.tijefront.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;
+import com.tijetravel.tijefront.dto.PaginaVuelosRespuesta;
+import com.tijetravel.tijefront.dto.SesionRespuesta;
 
 @ExtendWith(MockitoExtension.class)
 class VuelosControladorTest {
@@ -40,12 +43,34 @@ class VuelosControladorTest {
     }
 
     @Test
-    void entregaElCatalogoALaVista() throws Exception {
+    void muestraSoloResultadosFiltradosAlVisitante() throws Exception {
         var vuelos = List.of(new VueloRespuesta());
-        when(vuelosApi.listar()).thenReturn(vuelos);
-        mvc.perform(get("/vuelos"))
+        when(vuelosApi.listarPagina("Cordoba", null, null, null, "numero", 0, false))
+                .thenReturn(new PaginaVuelosRespuesta(vuelos, 0, 1, false, false));
+        mvc.perform(get("/vuelos").param("origen", "Cordoba"))
                 .andExpect(status().isOk()).andExpect(view().name("vuelos/lista"))
                 .andExpect(model().attribute("vuelos", vuelos));
+    }
+
+    @Test
+    void noEntregaCatalogoCompletoAlVisitante() throws Exception {
+        mvc.perform(get("/vuelos"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeDoesNotExist("vuelos"));
+        verifyNoInteractions(vuelosApi);
+    }
+
+    @Test
+    void vendedorPuedeVerPrimeraPaginaSinFiltros() throws Exception {
+        SesionRespuesta usuario = new SesionRespuesta();
+        usuario.setRol("VENDEDOR");
+        MockHttpSession sesion = new MockHttpSession();
+        sesion.setAttribute("usuarioActual", usuario);
+        var vuelos = List.of(new VueloRespuesta());
+        when(vuelosApi.listarPagina(null, null, null, null, "numero", 0, true))
+                .thenReturn(new PaginaVuelosRespuesta(vuelos, 0, 1, false, false));
+        mvc.perform(get("/vuelos").session(sesion))
+                .andExpect(status().isOk()).andExpect(model().attribute("vuelos", vuelos));
     }
 
     @Test
@@ -84,8 +109,9 @@ class VuelosControladorTest {
 
     @Test
     void informaSiElBackendNoResponde() throws Exception {
-        when(vuelosApi.listar()).thenThrow(new ResourceAccessException("Conexion rechazada"));
-        mvc.perform(get("/vuelos"))
+        when(vuelosApi.listarPagina("Cordoba", null, null, null, "numero", 0, false))
+                .thenThrow(new ResourceAccessException("Conexion rechazada"));
+        mvc.perform(get("/vuelos").param("origen", "Cordoba"))
                 .andExpect(status().isServiceUnavailable()).andExpect(view().name("error"))
                 .andExpect(model().attribute("mensaje",
                         "No pudimos consultar los datos en este momento. Intentá nuevamente en unos minutos."));

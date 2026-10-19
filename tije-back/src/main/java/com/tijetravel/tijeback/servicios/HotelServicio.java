@@ -3,6 +3,8 @@ package com.tijetravel.tijeback.servicios;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 
@@ -63,6 +65,10 @@ public class HotelServicio {
 
     public List<Hotel> listar() {
         return hotelRepositorio.findAll();
+    }
+
+    public Page<Hotel> buscarPagina(String ciudad, String nombre, Pageable pagina) {
+        return hotelRepositorio.buscarPagina(ciudad, nombre, pagina);
     }
 
     public List<Hotel> buscarPorCiudad(String ciudad) {

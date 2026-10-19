@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClientException;
 
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
 import com.tijetravel.tijefront.dto.UsuarioRespuesta;
+import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
 import com.tijetravel.tijefront.formularios.CrearUsuarioFormulario;
 import com.tijetravel.tijefront.formularios.ModificarUsuarioFormulario;
 
@@ -21,6 +22,18 @@ public class UsuariosApiCliente {
 
     public List<UsuarioRespuesta> listar() {
         return listar(null);
+    }
+
+    public PaginaUsuariosRespuesta listarPagina(String rol, String nombre, int pagina) {
+        PaginaUsuariosRespuesta resultado = conexion.getCliente().get().uri(uri -> {
+            var ruta = uri.path("/api/v1/usuarios/pagina")
+                    .queryParam("pagina", pagina).queryParam("tamanio", 20);
+            if (rol != null && !rol.isBlank()) ruta.queryParam("rol", rol.trim());
+            if (nombre != null && !nombre.isBlank()) ruta.queryParam("nombre", nombre.trim());
+            return ruta.build();
+        }).retrieve().body(PaginaUsuariosRespuesta.class);
+        if (resultado == null) throw new RestClientException("La API no devolvió la página de usuarios.");
+        return resultado;
     }
 
     public List<UsuarioRespuesta> listar(String rol) {
