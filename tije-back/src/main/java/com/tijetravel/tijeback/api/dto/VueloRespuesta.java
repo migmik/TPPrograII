@@ -9,5 +9,6 @@ public record VueloRespuesta(
                 String destino,
                 int totalPlazas,
                 int plazasTurista,
-                int plazasPrimera) {
+                int plazasPrimera,
+                int precio) {
 }

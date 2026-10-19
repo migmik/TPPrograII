@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.GuardarReservaSolicitud;
+import com.tijetravel.tijeback.api.dto.BalanceRespuesta;
 import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.ReservaRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.ReservaMapeador;
@@ -84,6 +85,17 @@ public class ReservasRestControlador {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
                 return reservaMapeador.aRespuesta(
                                 reservaServicio.encontrarVisiblePara(actor, codigo));
+        }
+
+        @GetMapping("/balance")
+        public BalanceRespuesta balance(Authentication autenticacion) {
+                return reservaServicio.balance(usuarioActualServicio.obtener(autenticacion));
+        }
+
+        @PostMapping("/{codigo}/pagar")
+        public ReservaRespuesta pagar(@PathVariable @Positive Integer codigo, Authentication autenticacion) {
+                return reservaMapeador.aRespuesta(
+                                reservaServicio.confirmarPago(usuarioActualServicio.obtener(autenticacion), codigo));
         }
 
         @PostMapping
