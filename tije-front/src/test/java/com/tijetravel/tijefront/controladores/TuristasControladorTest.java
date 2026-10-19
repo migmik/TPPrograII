@@ -77,28 +77,30 @@ class TuristasControladorTest {
     void buscaTuristasPorDni() throws Exception {
         preparar("ADMINISTRADOR");
         List<TuristaRespuesta> resultado = List.of(turista(true));
-        when(turistasApi.listarDetalles("12345678", null)).thenReturn(resultado);
+        when(turistasApi.listarPagina("12345678", null, 0))
+                .thenReturn(new com.tijetravel.tijefront.dto.PaginaTuristasRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/turistas").param("dni", "12345678").session(sesion()))
                 .andExpect(view().name("turistas/lista"))
                 .andExpect(model().attribute("turistas", resultado))
                 .andExpect(model().attribute("dniBusqueda", "12345678"));
 
-        verify(turistasApi).listarDetalles("12345678", null);
+        verify(turistasApi).listarPagina("12345678", null, 0);
     }
 
     @Test
     void filtraTuristasFamiliares() throws Exception {
         preparar("ADMINISTRADOR");
         List<TuristaRespuesta> resultado = List.of(turista(false));
-        when(turistasApi.listarDetalles(null, false)).thenReturn(resultado);
+        when(turistasApi.listarPagina(null, false, 0))
+                .thenReturn(new com.tijetravel.tijefront.dto.PaginaTuristasRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/turistas").param("titular", "false").session(sesion()))
                 .andExpect(view().name("turistas/lista"))
                 .andExpect(model().attribute("turistas", resultado))
                 .andExpect(model().attribute("titularBusqueda", "false"));
 
-        verify(turistasApi).listarDetalles(null, false);
+        verify(turistasApi).listarPagina(null, false, 0);
     }
 
     @Test

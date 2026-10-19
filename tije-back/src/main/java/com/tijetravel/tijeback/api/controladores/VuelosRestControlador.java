@@ -4,6 +4,10 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,11 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tijetravel.tijeback.api.dto.CrearVueloSolicitud;
 import com.tijetravel.tijeback.api.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijeback.api.dto.ModificarVueloSolicitud;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.VueloRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.VueloMapeador;
 import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
 import com.tijetravel.tijeback.servicios.VueloServicio;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
+import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
@@ -53,7 +59,9 @@ public class VuelosRestControlador {
 
     @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
-    public List<VueloRespuesta> listar(@RequestParam(defaultValue = "numero") String orden) {
+    public List<VueloRespuesta> listar(@RequestParam(defaultValue = "numero") String orden,
+            Authentication autenticacion) {
+        exigirPersonal(autenticacion);
         Comparator<VueloRespuesta> comparador = switch (orden) {
             case "precioAsc" -> Comparator.comparingInt(VueloRespuesta::precio);
             case "precioDesc" -> Comparator.comparingInt(VueloRespuesta::precio).reversed();
@@ -64,6 +72,50 @@ public class VuelosRestControlador {
                 .map(vueloMapeador::aRespuesta)
                 .sorted(comparador.thenComparing(VueloRespuesta::numero))
                 .toList();
+    }
+
+    @GetMapping("/pagina")
+    public PaginaRespuesta<VueloRespuesta> listarPagina(
+            @RequestParam(required = false) String origen, @RequestParam(required = false) String destino,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta,
+            @RequestParam(defaultValue = "numero") String orden,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanio,
+            Authentication autenticacion) {
+        origen = limpiar(origen);
+        destino = limpiar(destino);
+        if (origen == null && destino == null && fechaDesde == null && fechaHasta == null)
+            exigirPersonal(autenticacion);
+        if (pagina < 0 || tamanio < 1 || tamanio > 100)
+            throw new IllegalArgumentException("Pagina o tamanio no valido");
+        if (fechaDesde != null && fechaHasta != null && fechaHasta.isBefore(fechaDesde))
+            throw new IllegalArgumentException("La fecha final no puede ser anterior a la inicial");
+        Sort ordenamiento = switch (orden) {
+            case "numero" -> Sort.by("numero");
+            case "precioAsc" -> Sort.by("precio").ascending().and(Sort.by("numero"));
+            case "precioDesc" -> Sort.by("precio").descending().and(Sort.by("numero"));
+            default -> throw new IllegalArgumentException("Orden no valido");
+        };
+        Page<Vuelo> resultado = vueloServicio.buscarPagina(origen, destino, fechaDesde, fechaHasta,
+                PageRequest.of(pagina, tamanio, ordenamiento));
+        return new PaginaRespuesta<>(resultado.map(vueloMapeador::aRespuesta).getContent(),
+                resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(), resultado.hasNext());
+    }
+
+    private String limpiar(String valor) {
+        if (valor == null || valor.isBlank()) return null;
+        if (valor.contains("%") || valor.contains("_"))
+            throw new IllegalArgumentException("El filtro contiene caracteres no permitidos");
+        return valor.trim();
+    }
+
+    private void exigirPersonal(Authentication autenticacion) {
+        if (autenticacion == null || !autenticacion.isAuthenticated())
+            throw new OperacionNoPermitidaException("Solo el personal puede consultar el catalogo completo");
+        RolUsuario rol = usuarioActualServicio.obtener(autenticacion).getRol();
+        if (rol != RolUsuario.ADMINISTRADOR && rol != RolUsuario.VENDEDOR)
+            throw new OperacionNoPermitidaException("Solo el personal puede consultar el catalogo completo");
     }
 
     @GetMapping("/buscar")

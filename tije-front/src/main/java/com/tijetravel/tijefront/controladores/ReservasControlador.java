@@ -144,6 +144,7 @@ public class ReservasControlador {
     @GetMapping("/nueva")
     public String nueva(@RequestParam(required = false) Integer numeroVuelo,
             @RequestParam(required = false) Integer codigoHotel,
+            @RequestParam(required = false) String dniTurista,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaLlegada,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaPartida,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
@@ -158,6 +159,7 @@ public class ReservasControlador {
         formulario.setClaseVuelo("TURISTA");
         formulario.setSeleccionBuscador(numeroVuelo != null && codigoHotel != null);
         modelo.addAttribute("reserva", formulario);
+        modelo.addAttribute("dniTuristaBusqueda", dniTurista);
         cargarOpciones(modelo, formulario);
         return "reservas/formulario";
     }
@@ -265,14 +267,26 @@ public class ReservasControlador {
     }
 
     private void cargarOpciones(Model modelo, GuardarReservaFormulario formulario) {
-        modelo.addAttribute("turistas", turistasApi.listar());
-        if (formulario.isSeleccionBuscador()
-                && formulario.getCodigoHotel() != null && formulario.getNumeroVuelo() != null) {
-            modelo.addAttribute("hoteles", List.of(hotelesApi.buscar(formulario.getCodigoHotel())));
-            modelo.addAttribute("vuelos", List.of(vuelosApi.buscar(formulario.getNumeroVuelo())));
+        modelo.addAttribute("hoteles", List.of());
+        modelo.addAttribute("vuelos", List.of());
+        SesionRespuesta usuario = (SesionRespuesta) modelo.asMap().get("usuarioActual");
+        boolean cliente = usuario != null && "CLIENTE".equals(usuario.getRol());
+        String dni = (String) modelo.asMap().get("dniTuristaBusqueda");
+        if (cliente) {
+            modelo.addAttribute("turistas", turistasApi.listar());
+        } else if (dni != null && !dni.isBlank()) {
+            modelo.addAttribute("turistas", turistasApi.listarDetalles(dni.trim()));
+        } else if (formulario.getCodigoTurista() != null) {
+            var turista = turistasApi.buscar(formulario.getCodigoTurista());
+            modelo.addAttribute("turistas", turista == null ? List.of() : List.of(turista));
         } else {
-            modelo.addAttribute("hoteles", hotelesApi.listar());
-            modelo.addAttribute("vuelos", vuelosApi.listar());
+            modelo.addAttribute("turistas", List.of());
+        }
+        if (formulario.getNumeroVuelo() != null) {
+            modelo.addAttribute("vueloSeleccionado", vuelosApi.buscar(formulario.getNumeroVuelo()));
+        }
+        if (formulario.getCodigoHotel() != null) {
+            modelo.addAttribute("hotelSeleccionado", hotelesApi.buscar(formulario.getCodigoHotel()));
         }
     }
 

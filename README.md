@@ -10,7 +10,8 @@ vendedor, gestionar reservas y consultar el grupo familiar y sus reservas como c
 
 ## Funcionalidades
 
-- Consulta de hoteles, vuelos, sucursales y disponibilidad.
+- Búsqueda de vuelos y hoteles con filtros, orden por precio y resultados paginados.
+- Combinaciones de vuelo y hotel disponibles desde la página de inicio.
 - Alta, modificación y eliminación de datos según los permisos del usuario.
 - Reservas con control de fechas, destino y plazas disponibles.
 - Gestión de turistas titulares y sus familiares.
@@ -23,7 +24,8 @@ vendedor, gestionar reservas y consultar el grupo familiar y sus reservas como c
 | Vendedor | Administrar turistas y reservas. |
 | Cliente | Consultar su grupo familiar y sus reservas. |
 
-Los catálogos de hoteles, vuelos y sucursales pueden consultarse sin iniciar sesión.
+Las búsquedas de hoteles y vuelos pueden consultarse sin iniciar sesión. El listado
+completo queda reservado a vendedores y administradores. Las sucursales son públicas.
 
 ## Tecnologías
 
@@ -66,7 +68,8 @@ $env:SPRING_PROFILES_ACTIVE = "dev"
 ```
 
 El perfil `dev` carga datos de demostración. El backend atiende por defecto en
-`http://localhost:8080`; por ejemplo, `GET /api/v1/hoteles` devuelve los hoteles.
+`http://localhost:8080`; por ejemplo, `GET /api/v1/hoteles/pagina?ciudad=Salta`
+devuelve hoteles filtrados. El listado completo requiere una sesión de personal.
 
 La [guía de base de datos](database/README.md) explica la configuración y cómo
 crear el primer administrador. Las credenciales locales no deben subirse a Git.

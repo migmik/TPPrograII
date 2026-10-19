@@ -1,10 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -50,16 +47,21 @@ public class UsuariosControlador {
 
     @GetMapping
     public String listar(@RequestParam(required = false) String rol,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(defaultValue = "0") int pagina,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
         if (salida != null) {
             return salida;
         }
-        List<UsuarioRespuesta> usuarios = rol == null || rol.isBlank()
-                ? usuariosApi.listar()
-                : usuariosApi.listar(rol);
-        modelo.addAttribute("usuarios", usuarios);
+        var resultado = usuariosApi.listarPagina(rol, nombre, Math.max(0, pagina));
+        modelo.addAttribute("usuarios", resultado.elementos());
+        modelo.addAttribute("pagina", resultado.pagina());
+        modelo.addAttribute("totalPaginas", resultado.totalPaginas());
+        modelo.addAttribute("hayAnterior", resultado.hayAnterior());
+        modelo.addAttribute("haySiguiente", resultado.haySiguiente());
         modelo.addAttribute("rolBusqueda", rol == null ? "" : rol.trim());
+        modelo.addAttribute("nombreBusqueda", nombre == null ? "" : nombre.trim());
         return "usuarios/lista";
     }
 
@@ -258,19 +260,7 @@ public class UsuariosControlador {
     }
 
     private List<TuristaResumen> turistasSinCuenta() {
-        Set<Integer> ocupados = new HashSet<>();
-        for (UsuarioRespuesta usuario : usuariosApi.listar("CLIENTE")) {
-            if (usuario.getCodigoTurista() != null) {
-                ocupados.add(usuario.getCodigoTurista());
-            }
-        }
-        List<TuristaResumen> disponibles = new ArrayList<>();
-        for (TuristaResumen turista : turistasApi.listar(true)) {
-            if (turista.getDni() != null && !ocupados.contains(turista.getCodigo())) {
-                disponibles.add(turista);
-            }
-        }
-        return disponibles;
+        return turistasApi.listarTitularesSinCuenta();
     }
 
     private void validarFormulario(CrearUsuarioFormulario formulario, BindingResult errores,

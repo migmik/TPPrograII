@@ -88,6 +88,15 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                                <c:if test="${puedeGestionar and totalPaginas > 1}">
+                                    <form method="get" action="<c:url value='/turistas'/>">
+                                        <input type="hidden" name="dni" value="<c:out value='${dniBusqueda}'/>">
+                                        <input type="hidden" name="titular" value="<c:out value='${titularBusqueda}'/>">
+                                        <c:if test="${hayAnterior}"><button name="pagina" value="${pagina - 1}">Anterior</button></c:if>
+                                        <span>Página <c:out value="${pagina + 1}" /> de <c:out value="${totalPaginas}" /></span>
+                                        <c:if test="${haySiguiente}"><button name="pagina" value="${pagina + 1}">Siguiente</button></c:if>
+                                    </form>
+                                </c:if>
                             </c:otherwise>
                         </c:choose>
                     </main>

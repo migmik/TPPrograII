@@ -14,9 +14,19 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Vuelos</h1>
-                    <form method="get" action="<c:url value='/vuelos'/>"><label for="orden">Ordenar por</label>
+                    <form method="get" action="<c:url value='/vuelos'/>">
+                        <label for="origen">Origen</label>
+                        <input id="origen" name="origen" value="<c:out value='${origen}'/>" placeholder="Ej.: Buenos Aires">
+                        <label for="destino">Destino</label>
+                        <input id="destino" name="destino" value="<c:out value='${destino}'/>" placeholder="Ej.: Bariloche">
+                        <label for="fechaDesde">Desde</label>
+                        <input id="fechaDesde" name="fechaDesde" type="date" value="<c:out value='${fechaDesde}'/>">
+                        <label for="fechaHasta">Hasta</label>
+                        <input id="fechaHasta" name="fechaHasta" type="date" value="<c:out value='${fechaHasta}'/>">
+                        <label for="orden">Ordenar por</label>
                         <select id="orden" name="orden"><option value="numero">Número</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select>
-                        <button type="submit">Ordenar</button></form>
+                        <button type="submit">Buscar</button>
+                    </form>
                     <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                         <p><a href="<c:url value='/vuelos/nuevo'/>">Agregar vuelo</a></p>
                     </c:if>
@@ -26,8 +36,14 @@
                         </p>
                     </c:if>
                     <c:choose>
+                        <c:when test="${not busquedaRealizada}">
+                            <p>Indicá un origen, destino o fecha para buscar vuelos.</p>
+                        </c:when>
+                        <c:when test="${not empty errorBusqueda}">
+                            <p class="error" role="alert"><c:out value="${errorBusqueda}" /></p>
+                        </c:when>
                         <c:when test="${empty vuelos}">
-                            <p>Todavía no hay vuelos registrados.</p>
+                            <p>No encontramos vuelos con esos filtros.</p>
                         </c:when>
                         <c:otherwise>
                             <table>
@@ -74,6 +90,16 @@
                                     </c:forEach>
                                 </tbody>
                             </table>
+                            <form method="get" action="<c:url value='/vuelos'/>">
+                                <input type="hidden" name="origen" value="<c:out value='${origen}'/>">
+                                <input type="hidden" name="destino" value="<c:out value='${destino}'/>">
+                                <input type="hidden" name="fechaDesde" value="<c:out value='${fechaDesde}'/>">
+                                <input type="hidden" name="fechaHasta" value="<c:out value='${fechaHasta}'/>">
+                                <input type="hidden" name="orden" value="<c:out value='${orden}'/>">
+                                <c:if test="${hayAnterior}"><button name="pagina" value="${pagina - 1}">Anterior</button></c:if>
+                                <span>Página <c:out value="${pagina + 1}" /> de <c:out value="${totalPaginas}" /></span>
+                                <c:if test="${haySiguiente}"><button name="pagina" value="${pagina + 1}">Siguiente</button></c:if>
+                            </form>
                         </c:otherwise>
                     </c:choose>
                 </main>

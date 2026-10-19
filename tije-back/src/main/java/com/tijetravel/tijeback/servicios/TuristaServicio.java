@@ -1,6 +1,8 @@
 package com.tijetravel.tijeback.servicios;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,6 +121,18 @@ public class TuristaServicio {
 
     public List<Turista> listar() {
         return turistaRepositorio.findAll();
+    }
+
+    public Page<Turista> buscarPaginaParaPersonal(Usuario actor, String dni, Boolean titular,
+            Pageable pagina) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        return turistaRepositorio.buscarPagina(dni == null || dni.isBlank() ? null : dni.trim(),
+                titular, pagina);
+    }
+
+    public List<Turista> listarTitularesSinCuentaPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
+        return turistaRepositorio.listarTitularesSinCuenta();
     }
 
     public List<Turista> listarPara(Usuario actor) {

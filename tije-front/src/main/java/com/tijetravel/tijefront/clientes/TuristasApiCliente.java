@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClientException;
 
 import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.dto.TuristaRespuesta;
+import com.tijetravel.tijefront.dto.PaginaTuristasRespuesta;
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarTuristaFormulario;
 
@@ -21,6 +22,25 @@ public class TuristasApiCliente {
 
     public List<TuristaRespuesta> listarDetalles() {
         return listarDetalles(null);
+    }
+
+    public PaginaTuristasRespuesta listarPagina(String dni, Boolean titular, int pagina) {
+        PaginaTuristasRespuesta resultado = conexion.getCliente().get().uri(uri -> {
+            var ruta = uri.path("/api/v1/turistas/pagina")
+                    .queryParam("pagina", pagina).queryParam("tamanio", 20);
+            if (dni != null && !dni.isBlank()) ruta.queryParam("dni", dni.trim());
+            if (titular != null) ruta.queryParam("titular", titular);
+            return ruta.build();
+        }).retrieve().body(PaginaTuristasRespuesta.class);
+        if (resultado == null) throw new RestClientException("La API no devolvió la página de turistas.");
+        return resultado;
+    }
+
+    public List<TuristaResumen> listarTitularesSinCuenta() {
+        TuristaResumen[] turistas = conexion.getCliente().get().uri("/api/v1/turistas/sin-cuenta")
+                .retrieve().body(TuristaResumen[].class);
+        if (turistas == null) throw new RestClientException("La API no devolvió titulares sin cuenta.");
+        return Arrays.asList(turistas);
     }
 
     public List<TuristaRespuesta> listarDetalles(String dni) {

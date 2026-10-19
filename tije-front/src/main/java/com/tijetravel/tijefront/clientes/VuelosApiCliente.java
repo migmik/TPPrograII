@@ -5,18 +5,43 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import com.tijetravel.tijefront.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;
+import com.tijetravel.tijefront.dto.PaginaVuelosRespuesta;
 
 @Service
 public class VuelosApiCliente {
     private final RestClient clienteBackend;
+    private final ConexionApiSesion conexion;
 
     public VuelosApiCliente(RestClient clienteBackend) {
+        this(clienteBackend, null);
+    }
+
+    @Autowired
+    public VuelosApiCliente(RestClient clienteBackend, ConexionApiSesion conexion) {
         this.clienteBackend = clienteBackend;
+        this.conexion = conexion;
+    }
+
+    public PaginaVuelosRespuesta listarPagina(String origen, String destino, LocalDate fechaDesde,
+            LocalDate fechaHasta, String orden, int pagina, boolean personal) {
+        RestClient cliente = personal ? conexion.getCliente() : clienteBackend;
+        PaginaVuelosRespuesta resultado = cliente.get().uri(uri -> {
+            var ruta = uri.path("/api/v1/vuelos/pagina")
+                    .queryParam("pagina", pagina).queryParam("tamanio", 20).queryParam("orden", orden);
+            if (origen != null) ruta.queryParam("origen", origen);
+            if (destino != null) ruta.queryParam("destino", destino);
+            if (fechaDesde != null) ruta.queryParam("fechaDesde", fechaDesde);
+            if (fechaHasta != null) ruta.queryParam("fechaHasta", fechaHasta);
+            return ruta.build();
+        }).retrieve().body(PaginaVuelosRespuesta.class);
+        if (resultado == null) throw new RestClientException("La API no devolvió la página de vuelos.");
+        return resultado;
     }
 
     public List<VueloRespuesta> listar() {

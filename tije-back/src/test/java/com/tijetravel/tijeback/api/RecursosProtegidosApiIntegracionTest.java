@@ -216,6 +216,11 @@ class RecursosProtegidosApiIntegracionTest {
         void clienteNoConsultaDatosDeOtroGrupoFamiliar() throws Exception {
                 MockHttpSession sesion = iniciarSesion(USUARIO_CLIENTE, CONTRASENIA_CLIENTE);
 
+                mockMvc.perform(get("/api/v1/turistas/pagina").session(sesion))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(get("/api/v1/turistas/sin-cuenta").session(sesion))
+                                .andExpect(status().isForbidden());
+
                 mockMvc.perform(get("/api/v1/turistas/{codigo}", 3).session(sesion))
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
@@ -227,6 +232,26 @@ class RecursosProtegidosApiIntegracionTest {
                 mockMvc.perform(get("/api/v1/usuarios").session(sesion))
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("ACCESO_DENEGADO"));
+        }
+
+        @Test
+        void personalConsultaTuristasYUsuariosPorPaginas() throws Exception {
+                MockHttpSession vendedor = iniciarSesion(USUARIO_VENDEDOR, CONTRASENIA_VENDEDOR);
+                mockMvc.perform(get("/api/v1/turistas/pagina").session(vendedor)
+                                .param("dni", turistaRepositorio.findById(1).orElseThrow().getDni())
+                                .param("tamanio", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.elementos.length()").value(1))
+                                .andExpect(jsonPath("$.elementos[0].codigo").value(1));
+
+                MockHttpSession admin = iniciarSesion(USUARIO_ADMIN, CONTRASENIA_ADMIN);
+                mockMvc.perform(get("/api/v1/turistas/sin-cuenta").session(admin))
+                                .andExpect(status().isOk());
+                mockMvc.perform(get("/api/v1/usuarios/pagina").session(admin)
+                                .param("rol", "VENDEDOR").param("tamanio", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.elementos.length()").value(1))
+                                .andExpect(jsonPath("$.elementos[0].rol").value("VENDEDOR"));
         }
 
         @Test
