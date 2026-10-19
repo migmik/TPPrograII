@@ -16,6 +16,7 @@ public class VueloMapeador {
                 vuelo.getDestino(),
                 vuelo.getTotalPlazas(),
                 vuelo.getPlazasTurista(),
-                vuelo.getPlazasPrimera());
+                vuelo.getPlazasPrimera(),
+                vuelo.getPrecio());
     }
 }

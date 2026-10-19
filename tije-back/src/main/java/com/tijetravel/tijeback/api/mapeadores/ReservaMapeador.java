@@ -18,6 +18,11 @@ public class ReservaMapeador {
                 reserva.getClaseVuelo(),
                 reserva.getTipoHospedaje(),
                 reserva.getFechaLlegada(),
-                reserva.getFechaPartida());
+                reserva.getFechaPartida(),
+                reserva.getPrecioVuelo(),
+                reserva.getPrecioHotel(),
+                reserva.getTotal(),
+                reserva.isPagada(),
+                reserva.getFechaPago());
     }
 }

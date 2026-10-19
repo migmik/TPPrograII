@@ -21,5 +21,6 @@ public record CrearVueloSolicitud(
 
                 @NotNull(message = "Las plazas turista son obligatorias") @PositiveOrZero(message = "Las plazas turista no pueden ser negativas") Integer plazasTurista,
 
-                @NotNull(message = "Las plazas de primera son obligatorias") @PositiveOrZero(message = "Las plazas de primera no pueden ser negativas") Integer plazasPrimera) {
+                @NotNull(message = "Las plazas de primera son obligatorias") @PositiveOrZero(message = "Las plazas de primera no pueden ser negativas") Integer plazasPrimera,
+                @NotNull(message = "El precio es obligatorio") @jakarta.validation.constraints.Min(150000) @jakarta.validation.constraints.Max(300000) Integer precio) {
 }

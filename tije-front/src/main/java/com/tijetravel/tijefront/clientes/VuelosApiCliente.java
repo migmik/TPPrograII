@@ -20,8 +20,16 @@ public class VuelosApiCliente {
     }
 
     public List<VueloRespuesta> listar() {
+        VueloRespuesta[] vuelos = clienteBackend.get().uri("/api/v1/vuelos")
+                .retrieve().body(VueloRespuesta[].class);
+        if (vuelos == null) throw new RestClientException("La API no devolvió el listado de vuelos.");
+        return Arrays.asList(vuelos);
+    }
+
+    public List<VueloRespuesta> listar(String orden) {
+        if ("numero".equals(orden)) return listar();
         VueloRespuesta[] vuelos = clienteBackend.get()
-                .uri("/api/v1/vuelos")
+                .uri(uri -> uri.path("/api/v1/vuelos").queryParam("orden", orden).build())
                 .retrieve()
                 .body(VueloRespuesta[].class);
         if (vuelos == null) {

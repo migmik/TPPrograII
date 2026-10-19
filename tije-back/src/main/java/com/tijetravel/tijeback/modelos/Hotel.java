@@ -31,11 +31,19 @@ public class Hotel {
     @Column(name = "capacidad_total", nullable = false)
     private int capacidadTotal;
 
+    @Column(name = "precio_noche_persona", nullable = false)
+    private int precioNochePersona;
+
     protected Hotel() {
     }
 
     public Hotel(String nombre, String direccion, String ciudad, String telefono, int capacidadTotal) {
-        actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal);
+        this(nombre, direccion, ciudad, telefono, capacidadTotal, 25000);
+    }
+
+    public Hotel(String nombre, String direccion, String ciudad, String telefono, int capacidadTotal,
+            int precioNochePersona) {
+        actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
     }
 
     public void actualizarDatos(
@@ -44,11 +52,20 @@ public class Hotel {
             String ciudad,
             String telefono,
             int capacidadTotal) {
+        actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
+    }
+
+    public void actualizarDatos(String nombre, String direccion, String ciudad, String telefono,
+            int capacidadTotal, int precioNochePersona) {
         this.nombre = ValidacionModelo.textoObligatorio(nombre, "nombre");
         this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
         this.ciudad = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
         this.telefono = ValidacionModelo.textoObligatorio(telefono, "telefono");
         this.capacidadTotal = ValidacionModelo.enteroNoNegativo(capacidadTotal, "capacidadTotal");
+        if (precioNochePersona < 25000 || precioNochePersona > 55000 || precioNochePersona % 1000 != 0) {
+            throw new IllegalArgumentException("El precio del hotel debe estar entre 25000 y 55000 y ser multiplo de 1000");
+        }
+        this.precioNochePersona = precioNochePersona;
     }
 
     public Integer getCodigo() {
@@ -73,6 +90,10 @@ public class Hotel {
 
     public int getCapacidadTotal() {
         return capacidadTotal;
+    }
+
+    public int getPrecioNochePersona() {
+        return precioNochePersona;
     }
 
     @Override

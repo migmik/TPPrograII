@@ -55,11 +55,29 @@ public class ReservasApiCliente {
         return reserva;
     }
 
-    public void crear(GuardarReservaFormulario formulario) {
+    public ReservaRespuesta crear(GuardarReservaFormulario formulario) {
         CsrfRespuesta csrf = conexion.obtenerCsrf();
-        conexion.getCliente().post().uri("/api/v1/reservas")
+        ReservaRespuesta reserva = conexion.getCliente().post().uri("/api/v1/reservas")
                 .header(csrf.getNombreEncabezado(), csrf.getToken())
-                .body(formulario).retrieve().toBodilessEntity();
+                .body(formulario).retrieve().body(ReservaRespuesta.class);
+        if (reserva == null) throw new RestClientException("La API no devolvio la reserva creada.");
+        return reserva;
+    }
+
+    public ReservaRespuesta pagar(Integer codigo) {
+        CsrfRespuesta csrf = conexion.obtenerCsrf();
+        ReservaRespuesta reserva = conexion.getCliente().post().uri("/api/v1/reservas/{codigo}/pagar", codigo)
+                .header(csrf.getNombreEncabezado(), csrf.getToken())
+                .retrieve().body(ReservaRespuesta.class);
+        if (reserva == null) throw new RestClientException("La API no confirmo el pago.");
+        return reserva;
+    }
+
+    public com.tijetravel.tijefront.dto.BalanceRespuesta balance() {
+        var balance = conexion.getCliente().get().uri("/api/v1/reservas/balance")
+                .retrieve().body(com.tijetravel.tijefront.dto.BalanceRespuesta.class);
+        if (balance == null) throw new RestClientException("La API no devolvio el balance.");
+        return balance;
     }
 
     public void modificar(Integer codigo, GuardarReservaFormulario formulario) {

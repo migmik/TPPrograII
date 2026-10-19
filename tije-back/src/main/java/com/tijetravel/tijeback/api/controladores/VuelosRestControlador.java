@@ -53,10 +53,16 @@ public class VuelosRestControlador {
 
     @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
-    public List<VueloRespuesta> listar() {
+    public List<VueloRespuesta> listar(@RequestParam(defaultValue = "numero") String orden) {
+        Comparator<VueloRespuesta> comparador = switch (orden) {
+            case "precioAsc" -> Comparator.comparingInt(VueloRespuesta::precio);
+            case "precioDesc" -> Comparator.comparingInt(VueloRespuesta::precio).reversed();
+            case "numero" -> Comparator.comparingInt(VueloRespuesta::numero);
+            default -> throw new IllegalArgumentException("Orden no valido");
+        };
         return vueloServicio.listar().stream()
                 .map(vueloMapeador::aRespuesta)
-                .sorted(Comparator.comparing(VueloRespuesta::numero))
+                .sorted(comparador.thenComparing(VueloRespuesta::numero))
                 .toList();
     }
 
@@ -97,7 +103,8 @@ public class VuelosRestControlador {
                 solicitud.destino(),
                 solicitud.totalPlazas(),
                 solicitud.plazasTurista(),
-                solicitud.plazasPrimera());
+                solicitud.plazasPrimera(),
+                solicitud.precio());
         VueloRespuesta respuesta = vueloMapeador.aRespuesta(vuelo);
         return ResponseEntity
                 .created(URI.create("/api/v1/vuelos/" + respuesta.numero()))
@@ -118,7 +125,8 @@ public class VuelosRestControlador {
                 solicitud.destino(),
                 solicitud.totalPlazas(),
                 solicitud.plazasTurista(),
-                solicitud.plazasPrimera()));
+                solicitud.plazasPrimera(),
+                solicitud.precio()));
     }
 
     @DeleteMapping("/{numero}")

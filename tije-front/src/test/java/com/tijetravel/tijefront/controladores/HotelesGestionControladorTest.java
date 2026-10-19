@@ -58,7 +58,7 @@ class HotelesGestionControladorTest {
         verify(gestionApi, never()).crear(any());
         mvc.perform(post("/hoteles").with(csrf()).session(sesion())
                 .param("nombre", "Hotel A").param("direccion", "Calle 1")
-                .param("ciudad", "Córdoba").param("telefono", "123").param("capacidadTotal", "0"))
+                .param("ciudad", "Córdoba").param("telefono", "123").param("capacidadTotal", "0").param("precioNochePersona", "35000"))
                 .andExpect(redirectedUrl("/hoteles"));
         verify(gestionApi).crear(any(GuardarHotelFormulario.class));
     }

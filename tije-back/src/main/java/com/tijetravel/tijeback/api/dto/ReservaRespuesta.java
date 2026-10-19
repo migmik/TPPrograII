@@ -14,5 +14,10 @@ public record ReservaRespuesta(
                 ClaseVuelo claseVuelo,
                 TipoHospedaje tipoHospedaje,
                 LocalDate fechaLlegada,
-                LocalDate fechaPartida) {
+                LocalDate fechaPartida,
+                int precioVuelo,
+                int precioHotel,
+                int total,
+                boolean pagada,
+                java.time.LocalDateTime fechaPago) {
 }

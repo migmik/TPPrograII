@@ -79,6 +79,9 @@
                                 <form:errors path="plazasPrimera" cssClass="error" />
                             </p>
                             <p>Las plazas de ambas clases no pueden sumar más que el total.</p>
+                            <p><form:label path="precio">Precio por persona ($)</form:label>
+                                <form:input path="precio" type="number" min="150000" max="300000" step="10000" required="required" />
+                                <form:errors path="precio" cssClass="error" /></p>
                             <button type="submit">Guardar vuelo</button>
                         </form:form>
                         <p><a href="<c:url value='/vuelos'/>">Cancelar y volver al listado</a></p>
