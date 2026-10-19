@@ -59,6 +59,14 @@
                                         <form:errors path="personas" cssClass="error" />
                                     </div>
                                     <div class="search-field search-field--button">
+                                        <form:label path="ordenPrecio">Ordenar precios</form:label>
+                                        <form:select path="ordenPrecio">
+                                            <form:option value="fecha" label="Fecha" />
+                                            <form:option value="precioAsc" label="Menor precio" />
+                                            <form:option value="precioDesc" label="Mayor precio" />
+                                        </form:select>
+                                    </div>
+                                    <div class="search-field search-field--button">
                                         <button type="submit">Buscar opciones</button>
                                     </div>
                                 </div>
@@ -114,6 +122,7 @@
                                                             <span>
                                                                 <c:out value="${vuelo.fechaYHoraFormateada}" />
                                                             </span>
+                                                            <span>$<c:out value="${vuelo.precio}" /> por persona</span>
                                                             <a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver
                                                                 vuelo</a>
                                                         </li>
@@ -137,6 +146,7 @@
                                                             <span>
                                                                 <c:out value="${hotel.direccion}" />
                                                             </span>
+                                                            <span>$<c:out value="${hotel.precioNochePersona}" /> por persona y noche</span>
                                                             <a href="<c:url value='/hoteles/${hotel.codigo}'/>">Ver
                                                                 hotel</a>
                                                         </li>
@@ -165,6 +175,7 @@
                                                             <c:param name="fechaPartida" value="${busqueda.fechaPartida}"/>
                                                         </c:url>
                                                         <li><strong>Vuelo <c:out value="${vuelo.numero}"/> + <c:out value="${hotel.nombre}"/></strong>
+                                                            <span>Desde $<c:out value="${vuelo.precio + hotel.precioNochePersona * cantidadNoches}" /> por persona</span>
                                                             <a class="search-results__reserve-link" href="${urlReserva}">Reservar</a></li>
                                                     </c:forEach>
                                                 </c:forEach>

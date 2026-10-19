@@ -75,7 +75,7 @@ class ReservasApiClienteTest {
                 .andExpect(method(HttpMethod.POST)).andExpect(header("X-CSRF-TOKEN", "token-prueba"))
                 .andExpect(content().json(json))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("seleccionBuscador"))))
-                .andRespond(withStatus(HttpStatus.CREATED));
+                .andRespond(withSuccess("{\"codigo\":1}", MediaType.APPLICATION_JSON));
         servidor.expect(requestTo("http://backend/api/v1/reservas/1"))
                 .andExpect(method(HttpMethod.PUT)).andExpect(header("X-CSRF-TOKEN", "token-prueba"))
                 .andExpect(content().json(json)).andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("codigoSucursal"))))

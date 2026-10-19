@@ -14,6 +14,9 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Hoteles</h1>
+                    <form method="get" action="<c:url value='/hoteles'/>"><label for="orden">Ordenar por</label>
+                        <select id="orden" name="orden"><option value="codigo">Código</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select>
+                        <button type="submit">Ordenar</button></form>
                     <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                         <p><a href="<c:url value='/hoteles/nuevo'/>">Agregar hotel</a></p>
                     </c:if>
@@ -34,6 +37,7 @@
                                         <th scope="col">Nombre</th>
                                         <th scope="col">Ciudad</th>
                                         <th scope="col">Capacidad total</th>
+                                        <th scope="col">Precio por persona y noche</th>
                                         <th scope="col">Consulta</th>
                                         <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
                                             <th scope="col">Administrar</th>
@@ -52,6 +56,7 @@
                                             <td>
                                                 <c:out value="${hotel.capacidadTotal}" />
                                             </td>
+                                            <td>$<c:out value="${hotel.precioNochePersona}" /></td>
                                             <td><a href="<c:url value='/hoteles/${hotel.codigo}'/>">Ver detalle y
                                                     disponibilidad</a></td>
                                             <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">

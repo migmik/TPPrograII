@@ -58,6 +58,9 @@
                                 <form:input path="capacidadTotal" type="number" min="0" required="required" />
                                 <form:errors path="capacidadTotal" cssClass="error" />
                             </p>
+                            <p><form:label path="precioNochePersona">Precio por persona y noche ($)</form:label>
+                                <form:input path="precioNochePersona" type="number" min="25000" max="55000" step="1000" required="required" />
+                                <form:errors path="precioNochePersona" cssClass="error" /></p>
                             <button type="submit">Guardar hotel</button>
                         </form:form>
                         <p><a href="<c:url value='/hoteles'/>">Cancelar y volver al listado</a></p>

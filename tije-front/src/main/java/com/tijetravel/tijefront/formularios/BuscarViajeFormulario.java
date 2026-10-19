@@ -27,6 +27,10 @@ public class BuscarViajeFormulario {
     @Min(value = 1, message = "Debe viajar al menos una persona.")
     @Max(value = 20, message = "Buscá para un máximo de 20 personas.")
     private int personas = 2;
+    private String ordenPrecio = "fecha";
+
+    public String getOrdenPrecio() { return ordenPrecio; }
+    public void setOrdenPrecio(String ordenPrecio) { this.ordenPrecio = ordenPrecio; }
 
     public String getOrigen() {
         return origen;

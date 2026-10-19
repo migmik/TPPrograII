@@ -51,10 +51,16 @@ public class HotelesRestControlador {
 
         @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
-        public List<HotelRespuesta> listar() {
+        public List<HotelRespuesta> listar(@RequestParam(defaultValue = "codigo") String orden) {
+                Comparator<HotelRespuesta> comparador = switch (orden) {
+                        case "precioAsc" -> Comparator.comparingInt(HotelRespuesta::precioNochePersona);
+                        case "precioDesc" -> Comparator.comparingInt(HotelRespuesta::precioNochePersona).reversed();
+                        case "codigo" -> Comparator.comparingInt(HotelRespuesta::codigo);
+                        default -> throw new IllegalArgumentException("Orden no valido");
+                };
                 return hotelServicio.listar().stream()
                                 .map(hotelMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(HotelRespuesta::codigo))
+                                .sorted(comparador.thenComparing(HotelRespuesta::codigo))
                                 .toList();
         }
 
@@ -100,7 +106,8 @@ public class HotelesRestControlador {
                                 solicitud.direccion(),
                                 solicitud.ciudad(),
                                 solicitud.telefono(),
-                                solicitud.capacidadTotal());
+                                solicitud.capacidadTotal(),
+                                solicitud.precioNochePersona());
                 HotelRespuesta respuesta = hotelMapeador.aRespuesta(hotel);
                 return ResponseEntity
                                 .created(URI.create("/api/v1/hoteles/" + respuesta.codigo()))
@@ -120,7 +127,8 @@ public class HotelesRestControlador {
                                 solicitud.direccion(),
                                 solicitud.ciudad(),
                                 solicitud.telefono(),
-                                solicitud.capacidadTotal()));
+                                solicitud.capacidadTotal(),
+                                solicitud.precioNochePersona()));
         }
 
         @DeleteMapping("/{codigo}")
