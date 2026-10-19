@@ -55,10 +55,9 @@ class ReservasControladorTest {
             assertEquals(2, datos.getCodigoTurista());
             assertEquals(100, datos.getNumeroVuelo());
             assertEquals(LocalDate.of(2027, 1, 10), datos.getFechaLlegada());
-            return null;
+            return reserva();
         }).when(reservasApi).crear(any());
-        mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas"))
-                .andExpect(flash().attribute("mensajeExito", "Reserva guardada correctamente."));
+        mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas/1/pago"));
         verify(reservasApi).crear(any());
         verifyNoInteractions(turistasApi, hotelesApi, vuelosApi);
     }
@@ -75,7 +74,8 @@ class ReservasControladorTest {
             .andExpect(model().attribute("totalPaginas", 1));
         mvc.perform(get("/reservas/nueva").session(sesion()))
                 .andExpect(view().name("reservas/formulario"));
-        mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas"));
+        when(reservasApi.crear(any())).thenReturn(reserva());
+        mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas/1/pago"));
         for (String ruta : List.of("/reservas/1/editar", "/reservas/1/eliminar")) {
             mvc.perform(get(ruta).session(sesion())).andExpect(status().isForbidden());
         }
@@ -85,6 +85,23 @@ class ReservasControladorTest {
         verify(reservasApi).crear(any());
         verify(reservasApi, never()).modificar(any(), any());
         verify(reservasApi, never()).eliminar(any());
+    }
+
+    @Test
+    void pagoSimuladoUsaTokenUnaSolaVez() throws Exception {
+        preparar("CLIENTE");
+        MockHttpSession sesion = sesion();
+        when(reservasApi.buscar(1)).thenReturn(reserva());
+        mvc.perform(get("/reservas/1/pago").session(sesion))
+                .andExpect(view().name("reservas/pago"));
+        String token = (String) sesion.getAttribute("pago:1");
+        assertNotNull(token);
+        mvc.perform(get("/reservas/1/pago/confirmar").session(sesion).param("token", token))
+                .andExpect(redirectedUrl("/reservas/1"));
+        verify(reservasApi).pagar(1);
+        mvc.perform(get("/reservas/1/pago/confirmar").session(sesion).param("token", token))
+                .andExpect(status().isForbidden());
+        verify(reservasApi, times(1)).pagar(1);
     }
 
     @Test

@@ -16,6 +16,11 @@ import com.tijetravel.tijeback.modelos.Reserva;
 
 public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
+        @Query("select new com.tijetravel.tijeback.api.dto.BalanceRespuesta(count(r), "
+                        + "coalesce(sum(r.precioVuelo), 0), coalesce(sum(r.precioHotel), 0), "
+                        + "coalesce(sum(r.total), 0)) from Reserva r where r.pagada = true")
+        com.tijetravel.tijeback.api.dto.BalanceRespuesta balancePagadas();
+
         @Override
         @EntityGraph("Reserva.completa")
         List<Reserva> findAll();

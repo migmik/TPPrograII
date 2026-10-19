@@ -13,6 +13,11 @@ public class ReservaRespuesta {
     private String tipoHospedaje;
     private LocalDate fechaLlegada;
     private LocalDate fechaPartida;
+    private int precioVuelo;
+    private int precioHotel;
+    private int total;
+    private boolean pagada;
+    private java.time.LocalDateTime fechaPago;
 
     public Integer getCodigo() {
         return codigo;
@@ -81,6 +86,17 @@ public class ReservaRespuesta {
     public LocalDate getFechaPartida() {
         return fechaPartida;
     }
+
+    public int getPrecioVuelo() { return precioVuelo; }
+    public void setPrecioVuelo(int precioVuelo) { this.precioVuelo = precioVuelo; }
+    public int getPrecioHotel() { return precioHotel; }
+    public void setPrecioHotel(int precioHotel) { this.precioHotel = precioHotel; }
+    public int getTotal() { return total; }
+    public void setTotal(int total) { this.total = total; }
+    public boolean isPagada() { return pagada; }
+    public void setPagada(boolean pagada) { this.pagada = pagada; }
+    public java.time.LocalDateTime getFechaPago() { return fechaPago; }
+    public void setFechaPago(java.time.LocalDateTime fechaPago) { this.fechaPago = fechaPago; }
 
     public void setFechaPartida(LocalDate fechaPartida) {
         this.fechaPartida = fechaPartida;

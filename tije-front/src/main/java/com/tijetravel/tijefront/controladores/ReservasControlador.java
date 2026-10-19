@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.time.LocalDate;
+import java.util.UUID;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -90,6 +91,56 @@ public class ReservasControlador {
         return "reservas/detalle";
     }
 
+    @GetMapping("/{codigo}/pago")
+    public String pago(@PathVariable Integer codigo, HttpServletRequest solicitud,
+            HttpServletResponse respuesta, Model modelo) {
+        String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
+        if (salida != null) return salida;
+        ReservaRespuesta reserva = reservasApi.buscar(codigo);
+        if (reserva.isPagada()) return "redirect:/reservas/" + codigo;
+        String token = UUID.randomUUID().toString();
+        solicitud.getSession().setAttribute("pago:" + codigo, token);
+        modelo.addAttribute("reserva", reserva);
+        modelo.addAttribute("tokenPago", token);
+        respuesta.setHeader("Cache-Control", "no-store");
+        return "reservas/pago";
+    }
+
+    @GetMapping("/{codigo}/pago/confirmar")
+    public String confirmarPago(@PathVariable Integer codigo, @RequestParam String token,
+            HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+        String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
+        if (salida != null) return salida;
+        var sesion = solicitud.getSession(false);
+        Object esperado = sesion == null ? null : sesion.getAttribute("pago:" + codigo);
+        if (!token.equals(esperado)) {
+            respuesta.setStatus(403);
+            modelo.addAttribute("mensaje", "El enlace de pago ya venció. Volvé al detalle de la reserva.");
+            return "error";
+        }
+        try {
+            reservasApi.pagar(codigo);
+            sesion.removeAttribute("pago:" + codigo);
+        } catch (ResourceAccessException error) {
+            return "redirect:/reservas/" + codigo;
+        }
+        return "redirect:/reservas/" + codigo;
+    }
+
+    @GetMapping("/balance")
+    public String balance(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+        String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
+        if (salida != null) return salida;
+        SesionRespuesta usuario = (SesionRespuesta) solicitud.getSession(false).getAttribute("usuarioActual");
+        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
+            respuesta.setStatus(403);
+            modelo.addAttribute("mensaje", "Solo administradores pueden ver el balance.");
+            return "error";
+        }
+        modelo.addAttribute("balance", reservasApi.balance());
+        return "reservas/balance";
+    }
+
     @GetMapping("/nueva")
     public String nueva(@RequestParam(required = false) Integer numeroVuelo,
             @RequestParam(required = false) Integer codigoHotel,
@@ -149,9 +200,10 @@ public class ReservasControlador {
             return "reservas/formulario";
         }
         try {
-            if (codigo == null)
-                reservasApi.crear(formulario);
-            else
+            if (codigo == null) {
+                ReservaRespuesta creada = reservasApi.crear(formulario);
+                return "redirect:/reservas/" + creada.getCodigo() + "/pago";
+            } else
                 reservasApi.modificar(codigo, formulario);
         } catch (RestClientResponseException error) {
             int estado = error.getStatusCode().value();

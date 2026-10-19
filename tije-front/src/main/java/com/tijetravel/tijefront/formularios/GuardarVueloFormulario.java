@@ -30,6 +30,10 @@ public class GuardarVueloFormulario {
     @NotNull(message = "Ingresá las plazas de primera.")
     @PositiveOrZero(message = "Las plazas no pueden ser negativas.")
     private Integer plazasPrimera;
+    @NotNull(message = "Ingresá el precio.")
+    @jakarta.validation.constraints.Min(150000)
+    @jakarta.validation.constraints.Max(300000)
+    private Integer precio;
 
     public Integer getNumero() {
         return numero;
@@ -82,6 +86,9 @@ public class GuardarVueloFormulario {
     public Integer getPlazasPrimera() {
         return plazasPrimera;
     }
+
+    public Integer getPrecio() { return precio; }
+    public void setPrecio(Integer precio) { this.precio = precio; }
 
     public void setPlazasPrimera(Integer plazasPrimera) {
         this.plazasPrimera = plazasPrimera;

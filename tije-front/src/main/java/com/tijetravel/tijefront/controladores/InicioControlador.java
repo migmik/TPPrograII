@@ -1,6 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
 import java.text.Normalizer;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -66,9 +67,19 @@ public class InicioControlador {
         List<HotelRespuesta> hoteles = hotelesApi.buscar(busqueda.getDestino(),
                 busqueda.getFechaLlegada(), busqueda.getFechaPartida(), busqueda.getPersonas());
 
+        if ("precioAsc".equals(busqueda.getOrdenPrecio())) {
+            vuelos = vuelos.stream().sorted(Comparator.comparingInt(VueloRespuesta::getPrecio)).toList();
+            hoteles = hoteles.stream().sorted(Comparator.comparingInt(HotelRespuesta::getPrecioNochePersona)).toList();
+        } else if ("precioDesc".equals(busqueda.getOrdenPrecio())) {
+            vuelos = vuelos.stream().sorted(Comparator.comparingInt(VueloRespuesta::getPrecio).reversed()).toList();
+            hoteles = hoteles.stream().sorted(Comparator.comparingInt(HotelRespuesta::getPrecioNochePersona).reversed()).toList();
+        }
+
         modelo.addAttribute("vuelosEncontrados", vuelos);
         modelo.addAttribute("vuelosSugeridos", vuelosSugeridos);
         modelo.addAttribute("hotelesEncontrados", hoteles);
+        modelo.addAttribute("cantidadNoches", java.time.temporal.ChronoUnit.DAYS.between(
+                busqueda.getFechaLlegada(), busqueda.getFechaPartida()));
         modelo.addAttribute("busquedaRealizada", true);
         return "inicio";
     }

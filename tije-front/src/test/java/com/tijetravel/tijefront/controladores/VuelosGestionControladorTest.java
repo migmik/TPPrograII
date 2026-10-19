@@ -63,13 +63,13 @@ class VuelosGestionControladorTest {
         mvc.perform(post("/vuelos").with(csrf()).session(sesion())
                 .param("numero", "20").param("fechaYHora", "2027-03-10T14:30")
                 .param("origen", "Buenos Aires").param("destino", "Córdoba")
-                .param("totalPlazas", "10").param("plazasTurista", "8").param("plazasPrimera", "2"))
+                .param("totalPlazas", "10").param("plazasTurista", "8").param("plazasPrimera", "2").param("precio", "200000"))
                 .andExpect(redirectedUrl("/vuelos"));
         verify(gestionApi).crear(any(GuardarVueloFormulario.class));
         mvc.perform(post("/vuelos/20/editar").with(csrf()).session(sesion())
                 .param("numero", "20").param("fechaYHora", "2027-03-11T14:30")
                 .param("origen", "Buenos Aires").param("destino", "Córdoba")
-                .param("totalPlazas", "10").param("plazasTurista", "8").param("plazasPrimera", "2"))
+                .param("totalPlazas", "10").param("plazasTurista", "8").param("plazasPrimera", "2").param("precio", "200000"))
                 .andExpect(redirectedUrl("/vuelos"));
         verify(gestionApi).modificar(org.mockito.ArgumentMatchers.eq(20), any());
     }

@@ -55,6 +55,7 @@ public class HotelesGestionControlador {
         if (salida != null)
             return salida;
         modelo.addAttribute("titulo", "Nuevo hotel");
+        validarPrecio(formulario, errores);
         if (errores.hasErrors())
             return "hoteles/formulario";
         try {
@@ -82,6 +83,7 @@ public class HotelesGestionControlador {
         formulario.setCiudad(actual.getCiudad());
         formulario.setTelefono(actual.getTelefono());
         formulario.setCapacidadTotal(actual.getCapacidadTotal());
+        formulario.setPrecioNochePersona(actual.getPrecioNochePersona());
         modelo.addAttribute("hotel", formulario);
         modelo.addAttribute("codigo", codigo);
         modelo.addAttribute("titulo", "Editar hotel");
@@ -97,6 +99,7 @@ public class HotelesGestionControlador {
             return salida;
         modelo.addAttribute("codigo", codigo);
         modelo.addAttribute("titulo", "Editar hotel");
+        validarPrecio(formulario, errores);
         if (errores.hasErrors())
             return "hoteles/formulario";
         try {
@@ -153,6 +156,12 @@ public class HotelesGestionControlador {
             return "error";
         }
         return null;
+    }
+
+    private void validarPrecio(GuardarHotelFormulario formulario, BindingResult errores) {
+        if (formulario.getPrecioNochePersona() != null && formulario.getPrecioNochePersona() % 1000 != 0) {
+            errores.rejectValue("precioNochePersona", "precio.invalido", "El precio debe ser múltiplo de $1.000.");
+        }
     }
 
     private String mostrarError(RestClientResponseException error, HttpServletResponse respuesta, Model modelo,

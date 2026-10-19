@@ -15,6 +15,7 @@ public class HotelMapeador {
                 hotel.getDireccion(),
                 hotel.getCiudad(),
                 hotel.getTelefono(),
-                hotel.getCapacidadTotal());
+                hotel.getCapacidadTotal(),
+                hotel.getPrecioNochePersona());
     }
 }

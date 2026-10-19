@@ -60,6 +60,8 @@
                                             <th scope="col">Hotel</th>
                                             <th scope="col">Llegada</th>
                                             <th scope="col">Partida</th>
+                                            <th scope="col">Total</th>
+                                            <th scope="col">Pago</th>
                                             <th scope="col">Acciones</th>
                                         </tr>
                                     </thead>
@@ -88,10 +90,12 @@
                                                 <td>
                                                     <c:out value="${reserva.fechaPartidaFormateada}" />
                                                 </td>
+                                                <td>$<c:out value="${reserva.total}" /></td>
+                                                <td>${reserva.pagada ? 'Pagado' : 'Pendiente'}</td>
                                                 <td>
                                                     <a href="<c:url value='/reservas/${reserva.codigo}'/>">Ver
                                                         detalle</a>
-                                                    <c:if test="${puedeGestionar}">
+                                                    <c:if test="${puedeGestionar and not reserva.pagada}">
                                                         | <a
                                                             href="<c:url value='/reservas/${reserva.codigo}/editar'/>">Editar</a>
                                                         | <a

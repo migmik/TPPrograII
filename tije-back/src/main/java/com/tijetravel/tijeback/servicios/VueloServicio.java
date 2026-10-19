@@ -50,13 +50,19 @@ public class VueloServicio {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
+        return crear(actor, numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, 150000);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Vuelo crear(Usuario actor, int numero, LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         bloqueoEscrituras.adquirir();
         if (vueloRepositorio.existsById(numero)) {
             throw new EntidadDuplicadaException("Ya existe el vuelo " + numero);
         }
         Vuelo vuelo = new Vuelo(
-                numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
+                numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
         return vueloRepositorio.save(vuelo);
     }
 
@@ -104,6 +110,13 @@ public class VueloServicio {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
+        return modificar(actor, numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera,
+                150000);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Vuelo modificar(Usuario actor, Integer numero, LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         bloqueoEscrituras.adquirir();
         Vuelo vuelo = encontrarPorId(numero);
@@ -123,7 +136,7 @@ public class VueloServicio {
             throw new OperacionNoPermitidaException("El cambio dejaría reservas incompatibles con su hotel o fecha");
         }
         vuelo.actualizarDatos(
-                fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera);
+                fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
         return vuelo;
     }
 

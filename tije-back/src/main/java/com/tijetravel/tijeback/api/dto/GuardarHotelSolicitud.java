@@ -14,5 +14,6 @@ public record GuardarHotelSolicitud(
 
                 @NotBlank(message = "El telefono es obligatorio") @Size(max = 255, message = "El telefono no puede superar 255 caracteres") String telefono,
 
-                @NotNull(message = "La capacidad total es obligatoria") @PositiveOrZero(message = "La capacidad total no puede ser negativa") Integer capacidadTotal) {
+                @NotNull(message = "La capacidad total es obligatoria") @PositiveOrZero(message = "La capacidad total no puede ser negativa") Integer capacidadTotal,
+                @NotNull(message = "El precio es obligatorio") @jakarta.validation.constraints.Min(25000) @jakarta.validation.constraints.Max(55000) Integer precioNochePersona) {
 }
