@@ -1,0 +1,13 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Botones de pagina para los listados que usan PaginaLista (atributo "paginacion").
+     Solo aparece si hay mas de una pagina. Sin action, el formulario vuelve a la misma ruta. --%>
+<c:if test="${paginacion.totalPaginas > 1}">
+    <form method="get">
+        <c:if test="${not empty ciudadBusqueda}">
+            <input type="hidden" name="ciudad" value="<c:out value='${ciudadBusqueda}'/>">
+        </c:if>
+        <c:if test="${paginacion.hayAnterior}"><button name="pagina" value="${paginacion.pagina - 1}">Anterior</button></c:if>
+        <span>Página <c:out value="${paginacion.pagina + 1}" /> de <c:out value="${paginacion.totalPaginas}" /></span>
+        <c:if test="${paginacion.haySiguiente}"><button name="pagina" value="${paginacion.pagina + 1}">Siguiente</button></c:if>
+    </form>
+</c:if>

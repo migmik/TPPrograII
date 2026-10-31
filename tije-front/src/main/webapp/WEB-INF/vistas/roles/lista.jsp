@@ -65,6 +65,7 @@
                             </c:forEach>
                         </tbody>
                     </table>
+                    <%@ include file="../fragmentos/paginacion.jspf" %>
                 </main>
         </body>
 

@@ -8,12 +8,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.RolesApiCliente;
+import com.tijetravel.tijefront.dto.PaginaLista;
 import com.tijetravel.tijefront.dto.RolRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarRolFormulario;
 
@@ -36,12 +38,15 @@ public class RolesControlador extends ControladorAdministracion {
     }
 
     @GetMapping
-    public String listar(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
+    public String listar(@RequestParam(defaultValue = "0") int pagina, HttpServletRequest solicitud,
+            HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
         if (salida != null) {
             return salida;
         }
-        modelo.addAttribute("roles", rolesApi.listar());
+        PaginaLista<RolRespuesta> paginacion = new PaginaLista<>(rolesApi.listar(), pagina);
+        modelo.addAttribute("roles", paginacion.getElementos());
+        modelo.addAttribute("paginacion", paginacion);
         modelo.addAttribute("permisos", rolesApi.listarPermisos());
         return "roles/lista";
     }

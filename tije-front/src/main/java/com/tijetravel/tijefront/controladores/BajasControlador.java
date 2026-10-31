@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -17,6 +18,7 @@ import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.BajasApiCliente;
 import com.tijetravel.tijefront.dto.ErrorApiRespuesta;
 import com.tijetravel.tijefront.dto.FilaBaja;
+import com.tijetravel.tijefront.dto.PaginaLista;
 import com.tijetravel.tijefront.dto.RegistroDadoDeBaja;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 
@@ -40,8 +42,8 @@ public class BajasControlador {
     }
 
     @GetMapping("/{ruta}")
-    public String listar(@PathVariable String ruta, HttpServletRequest solicitud, HttpServletResponse respuesta,
-            Model modelo) {
+    public String listar(@PathVariable String ruta, @RequestParam(defaultValue = "0") int pagina,
+            HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         ModuloBajas modulo = ModuloBajas.desdeRuta(ruta);
         String salida = comprobarAcceso(modulo, solicitud, respuesta, modelo);
         if (salida != null) {
@@ -53,8 +55,10 @@ public class BajasControlador {
                     ModuloBajas.formatear(registro.getFechaCreacion()),
                     ModuloBajas.formatear(registro.getFechaBaja())));
         }
+        PaginaLista<FilaBaja> paginacion = new PaginaLista<>(filas, pagina);
         modelo.addAttribute("modulo", modulo);
-        modelo.addAttribute("filas", filas);
+        modelo.addAttribute("filas", paginacion.getElementos());
+        modelo.addAttribute("paginacion", paginacion);
         return "bajas/lista";
     }
 

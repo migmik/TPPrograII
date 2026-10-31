@@ -18,10 +18,12 @@
                     <h1>
                         <c:out value="${modulo.titulo}" /> dados de baja
                     </h1>
-                    <nav class="filtro-estado" aria-label="Estado de los registros">
-                        <a href="<c:url value='/${modulo.ruta}'/>">Activos</a>
-                        <span aria-current="page">Dados de baja</span>
-                    </nav>
+                    <c:set var="rutaModulo" value="${modulo.ruta}" />
+                    <c:set var="estadoListado" value="bajas" />
+                    <c:set var="verBajas" value="true" />
+                    <c:set var="textoAgregar" value="" />
+                    <c:set var="urlAgregar" value="" />
+                    <%@ include file="../fragmentos/barra-listado.jspf" %>
                     <c:if test="${not empty mensajeExito}">
                         <p role="status">
                             <c:out value="${mensajeExito}" />
@@ -66,6 +68,7 @@
                                     </c:forEach>
                                 </tbody>
                             </table>
+                            <%@ include file="../fragmentos/paginacion.jspf" %>
                         </c:otherwise>
                     </c:choose>
                 </main>
