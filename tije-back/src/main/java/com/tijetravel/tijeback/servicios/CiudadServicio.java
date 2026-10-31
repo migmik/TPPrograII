@@ -1,11 +1,9 @@
 package com.tijetravel.tijeback.servicios;
 
-import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,21 +22,25 @@ public class CiudadServicio {
         this.vueloRepositorio = vueloRepositorio;
     }
 
+    /** Ciudades de hoteles y vuelos sin repetir, ordenadas alfabeticamente. */
     public List<String> listarDisponibles() {
+        // La clave normalizada evita repetir "Cordoba" y "Córdoba".
         Map<String, String> ciudades = new TreeMap<>();
-        Stream.of(
-                hotelRepositorio.listarCiudades(),
-                vueloRepositorio.listarOrigenes(),
-                vueloRepositorio.listarDestinos())
-                .flatMap(List::stream)
-                .filter(ciudad -> ciudad != null && !ciudad.isBlank())
-                .forEach(ciudad -> ciudades.putIfAbsent(normalizar(ciudad), ciudad.trim()));
-        return List.copyOf(ciudades.values());
+        agregar(ciudades, hotelRepositorio.listarCiudades());
+        agregar(ciudades, vueloRepositorio.listarOrigenes());
+        agregar(ciudades, vueloRepositorio.listarDestinos());
+        return new ArrayList<>(ciudades.values());
     }
 
-    private String normalizar(String ciudad) {
-        return Normalizer.normalize(ciudad.trim(), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT);
+    private void agregar(Map<String, String> ciudades, List<String> nombres) {
+        for (String ciudad : nombres) {
+            if (ciudad == null || ciudad.isBlank()) {
+                continue;
+            }
+            String clave = CiudadConsulta.normalizar(ciudad);
+            if (!ciudades.containsKey(clave)) {
+                ciudades.put(clave, ciudad.trim());
+            }
+        }
     }
 }

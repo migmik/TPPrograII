@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -119,27 +120,15 @@ public class TuristaServicio {
         return turistaRepositorio.save(familiar);
     }
 
-    public List<Turista> listar() {
-        return turistaRepositorio.findAll();
-    }
-
-    public Page<Turista> buscarPaginaParaPersonal(Usuario actor, String dni, Boolean titular,
-            Pageable pagina) {
+    public Page<Turista> buscarPaginaPara(Usuario actor, String dni, Boolean titular, int pagina, int tamanio) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
-        return turistaRepositorio.buscarPagina(limpiarDni(dni), titular, pagina);
+        Pageable paginado = FiltrosConsulta.pagina(pagina, tamanio, Sort.by("codigo"));
+        return turistaRepositorio.buscarPagina(limpiarDni(dni), titular, paginado);
     }
 
     public List<Turista> listarTitularesSinCuentaPara(Usuario actor) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         return turistaRepositorio.listarTitularesSinCuenta();
-    }
-
-    public List<Turista> listarPara(Usuario actor) {
-        return listarPara(actor, null);
-    }
-
-    public List<Turista> listarPara(Usuario actor, String dni) {
-        return listarPara(actor, dni, null);
     }
 
     public List<Turista> listarPara(Usuario actor, String dni, Boolean titular) {
@@ -150,7 +139,7 @@ public class TuristaServicio {
             return listarParaPersonal(dniBusqueda, titular);
         }
 
-        List<Turista> grupoFamiliar = turistaRepositorio.findByCodigoOrTitularCodigo(
+        List<Turista> grupoFamiliar = turistaRepositorio.findByCodigoOrTitularCodigoOrderByCodigo(
                 codigoGrupoFamiliar, codigoGrupoFamiliar);
         if (grupoFamiliar.isEmpty()) {
             throw new EntidadNoEncontradaException("No se encontro el turista " + codigoGrupoFamiliar);
@@ -169,11 +158,11 @@ public class TuristaServicio {
         if (dni != null) {
             turistas = turistaRepositorio.findByDni(dni);
         } else if (titular == null) {
-            return listar();
+            return turistaRepositorio.findAll(Sort.by("codigo"));
         } else if (titular) {
-            return turistaRepositorio.findByTitularIsNull();
+            return turistaRepositorio.findByTitularIsNullOrderByCodigo();
         } else {
-            return turistaRepositorio.findByTitularIsNotNull();
+            return turistaRepositorio.findByTitularIsNotNullOrderByCodigo();
         }
         List<Turista> resultado = new ArrayList<>();
         for (Turista turista : turistas) {
@@ -190,7 +179,7 @@ public class TuristaServicio {
         if (codigos == null || codigos.isEmpty()) {
             return resultado;
         }
-        for (Turista turista : turistaRepositorio.findByCodigoIn(codigos)) {
+        for (Turista turista : turistaRepositorio.findByCodigoInOrderByCodigo(codigos)) {
             if (actor.puedeVerTurista(turista)) {
                 resultado.add(turista);
             }
@@ -213,9 +202,12 @@ public class TuristaServicio {
         return dni.trim();
     }
 
-    public Turista encontrarPorId(Integer codigo) {
-        return turistaRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el turista " + codigo));
+    private Turista encontrarPorId(Integer codigo) {
+        Turista turista = turistaRepositorio.findById(codigo).orElse(null);
+        if (turista == null) {
+            throw new EntidadNoEncontradaException("No se encontro el turista " + codigo);
+        }
+        return turista;
     }
 
     public Turista encontrarVisiblePara(Usuario actor, Integer codigo) {
@@ -252,9 +244,11 @@ public class TuristaServicio {
         }
         turista.actualizarDatos(
                 dniValidado, nombre, apellido, direccion, emailNormalizado, telefonoFijo, telefonoCelular, sucursal);
+        // Los familiares siempre pertenecen a la misma sucursal que su titular.
         if (turista.isTitular()) {
-            turistaRepositorio.findByTitularCodigo(codigo)
-                    .forEach(familiar -> familiar.cambiarSucursal(sucursal));
+            for (Turista familiar : turistaRepositorio.findByTitularCodigo(codigo)) {
+                familiar.cambiarSucursal(sucursal);
+            }
         }
         return turista;
     }
@@ -277,8 +271,11 @@ public class TuristaServicio {
     }
 
     private Sucursal encontrarSucursal(Integer codigo) {
-        return sucursalRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la sucursal " + codigo));
+        Sucursal sucursal = sucursalRepositorio.findById(codigo).orElse(null);
+        if (sucursal == null) {
+            throw new EntidadNoEncontradaException("No se encontro la sucursal " + codigo);
+        }
+        return sucursal;
     }
 
     private void verificarDniDisponible(String dni) {

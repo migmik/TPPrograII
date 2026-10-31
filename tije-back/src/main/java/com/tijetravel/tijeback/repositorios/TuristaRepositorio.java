@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -33,7 +34,7 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     @Override
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findAll();
+    List<Turista> findAll(Sort orden);
 
     @Override
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
@@ -45,13 +46,13 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
     List<Turista> findByDni(String dni);
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByTitularIsNull();
+    List<Turista> findByTitularIsNullOrderByCodigo();
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByTitularIsNotNull();
+    List<Turista> findByTitularIsNotNullOrderByCodigo();
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByCodigoIn(List<Integer> codigos);
+    List<Turista> findByCodigoInOrderByCodigo(List<Integer> codigos);
 
     boolean existsByDni(String dni);
 
@@ -65,7 +66,7 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
     List<Turista> findByTitularCodigo(Integer codigoTitular);
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByCodigoOrTitularCodigo(Integer codigo, Integer codigoTitular);
+    List<Turista> findByCodigoOrTitularCodigoOrderByCodigo(Integer codigo, Integer codigoTitular);
 
     boolean existsByTitularCodigo(Integer codigoTitular);
 

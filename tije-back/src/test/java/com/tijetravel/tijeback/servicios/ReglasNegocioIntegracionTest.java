@@ -113,13 +113,13 @@ class ReglasNegocioIntegracionTest {
         Datos d = preparar(5, 10);
         reservar(d, d.titular());
         assertThrows(OperacionNoPermitidaException.class,
-                () -> hoteles.modificar(admin, d.hotel(), "Otro", "Calle", "Mendoza", "1", 5));
+                () -> hoteles.modificar(admin, d.hotel(), "Otro", "Calle", "Mendoza", "1", 5, 25000));
         assertThrows(OperacionNoPermitidaException.class, () -> vuelos.modificar(admin, d.vuelo(),
-                DIA.plusDays(1).atTime(10, 0), "Buenos Aires", "Cordoba", 10, 10, 0));
+                DIA.plusDays(1).atTime(10, 0), "Buenos Aires", "Cordoba", 10, 10, 0, 150000));
         assertThrows(OperacionNoPermitidaException.class,
-                () -> vuelos.modificar(admin, d.vuelo(), DIA.atTime(10, 0), "Buenos Aires", "Mendoza", 10, 10, 0));
-        hoteles.modificar(admin, d.hotel(), "Renombrado " + d.hotel(), "Nueva direccion", "Cordoba", "2", 5);
-        vuelos.modificar(admin, d.vuelo(), DIA.atTime(12, 0), "Buenos Aires", "Cordoba", 10, 10, 0);
+                () -> vuelos.modificar(admin, d.vuelo(), DIA.atTime(10, 0), "Buenos Aires", "Mendoza", 10, 10, 0, 150000));
+        hoteles.modificar(admin, d.hotel(), "Renombrado " + d.hotel(), "Nueva direccion", "Cordoba", "2", 5, 25000);
+        vuelos.modificar(admin, d.vuelo(), DIA.atTime(12, 0), "Buenos Aires", "Cordoba", 10, 10, 0, 150000);
         assertEquals("Cordoba", hotelRepo.findById(d.hotel()).orElseThrow().getCiudad());
         assertEquals("Renombrado " + d.hotel(), hotelRepo.findById(d.hotel()).orElseThrow().getNombre());
         assertEquals(DIA.atTime(12, 0), vueloRepo.findById(d.vuelo()).orElseThrow().getFechaYHora());
@@ -130,7 +130,7 @@ class ReglasNegocioIntegracionTest {
         Datos d = preparar(5, 10);
         Hotel original = hotelRepo.findById(d.hotel()).orElseThrow();
         assertThrows(IllegalArgumentException.class, () -> hoteles.modificar(
-                admin, d.hotel(), "Nombre cambiado", "Otra direccion", "Cordoba", " ", 8));
+                admin, d.hotel(), "Nombre cambiado", "Otra direccion", "Cordoba", " ", 8, 25000));
         Hotel guardado = hotelRepo.findById(d.hotel()).orElseThrow();
         assertEquals(original.getNombre(), guardado.getNombre());
         assertEquals(original.getDireccion(), guardado.getDireccion());
@@ -143,7 +143,7 @@ class ReglasNegocioIntegracionTest {
         Datos d = preparar(5, 10);
         preparar(5, 10);
         Cliente cliente = new Cliente("cliente", "hash", turistaRepo.findById(d.titular()).orElseThrow());
-        var codigos = turistas.listarPara(cliente).stream().map(Turista::getCodigo)
+        var codigos = turistas.listarPara(cliente, null, null).stream().map(Turista::getCodigo)
                 .collect(java.util.stream.Collectors.toSet());
         assertEquals(java.util.Set.of(d.titular(), d.familiar()), codigos);
     }
@@ -205,7 +205,7 @@ class ReglasNegocioIntegracionTest {
             assertTrue(guardada.await(10, TimeUnit.SECONDS));
             Future<?> modificacion = hilos.submit(() -> {
                 modificacionIniciada.countDown();
-                hoteles.modificar(admin, d.hotel(), "Hotel reducido " + d.hotel(), "Calle", "Cordoba", "1", 0);
+                hoteles.modificar(admin, d.hotel(), "Hotel reducido " + d.hotel(), "Calle", "Cordoba", "1", 0, 25000);
             });
             assertTrue(modificacionIniciada.await(10, TimeUnit.SECONDS));
             assertThrows(TimeoutException.class, () -> modificacion.get(200, TimeUnit.MILLISECONDS));

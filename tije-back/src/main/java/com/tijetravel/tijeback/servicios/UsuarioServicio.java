@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.ValidacionModelo;
@@ -75,9 +77,10 @@ public class UsuarioServicio {
             if (codigoTurista == null) {
                 throw new IllegalArgumentException("Un cliente debe asociarse a un turista");
             }
-            turista = turistaRepositorio.findById(codigoTurista)
-                    .orElseThrow(() -> new EntidadNoEncontradaException(
-                            "No se encontro el turista " + codigoTurista));
+            turista = turistaRepositorio.findById(codigoTurista).orElse(null);
+            if (turista == null) {
+                throw new EntidadNoEncontradaException("No se encontro el turista " + codigoTurista);
+            }
             if (usuarioRepositorio.contarClientesPorTurista(codigoTurista) > 0) {
                 throw new EntidadDuplicadaException("El turista ya tiene un usuario asociado");
             }
@@ -102,25 +105,22 @@ public class UsuarioServicio {
         return usuarioRepositorio.save(usuario);
     }
 
-    public List<Usuario> listar() {
-        return usuarioRepositorio.findAll();
-    }
-
     public Page<Usuario> buscarPaginaPara(Usuario actor, RolUsuario rol, Integer codigo, String nombre, String dni,
-            Pageable pagina) {
+            int pagina, int tamanio) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
-        return usuarioRepositorio.buscarPagina(rol, codigo, nombre == null || nombre.isBlank() ? null : nombre.trim(),
-                dni == null || dni.isBlank() ? null : dni.trim(),
-                pagina);
-    }
-
-    public List<Usuario> listarPara(Usuario actor) {
-        return listarPara(actor, null);
+        String nombreBuscado = FiltrosConsulta.texto(nombre);
+        String dniBuscado = FiltrosConsulta.dni(dni);
+        FiltrosConsulta.codigoPositivo(codigo);
+        Pageable paginado = FiltrosConsulta.pagina(pagina, tamanio, Sort.by("codigo"));
+        return usuarioRepositorio.buscarPagina(rol, codigo, nombreBuscado, dniBuscado, paginado);
     }
 
     public List<Usuario> listarPara(Usuario actor, RolUsuario rol) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
-        return rol == null ? listar() : usuarioRepositorio.findByRol(rol);
+        if (rol == null) {
+            return usuarioRepositorio.findAll();
+        }
+        return usuarioRepositorio.findByRol(rol);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -151,9 +151,10 @@ public class UsuarioServicio {
         if (codigoSucursal == null || codigoSucursal < 1) {
             throw new IllegalArgumentException("El codigo de sucursal debe ser positivo");
         }
-        var sucursal = sucursalRepositorio.findById(codigoSucursal)
-                .orElseThrow(() -> new EntidadNoEncontradaException(
-                        "No se encontro la sucursal " + codigoSucursal));
+        Sucursal sucursal = sucursalRepositorio.findById(codigoSucursal).orElse(null);
+        if (sucursal == null) {
+            throw new EntidadNoEncontradaException("No se encontro la sucursal " + codigoSucursal);
+        }
 
         Turista turista = turistaRepositorio.save(new Turista(
                 dniValidado, nombre, apellido, direccion, emailValidado,
@@ -167,9 +168,12 @@ public class UsuarioServicio {
         return usuarioRepositorio.save(cliente);
     }
 
-    public Usuario encontrarPorId(Integer codigo) {
-        return usuarioRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el usuario " + codigo));
+    private Usuario encontrarPorId(Integer codigo) {
+        Usuario usuario = usuarioRepositorio.findById(codigo).orElse(null);
+        if (usuario == null) {
+            throw new EntidadNoEncontradaException("No se encontro el usuario " + codigo);
+        }
+        return usuario;
     }
 
     public Usuario encontrarVisiblePara(Usuario actor, Integer codigo) {

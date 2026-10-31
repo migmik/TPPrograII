@@ -2,10 +2,6 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Comparator;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 
 import org.springframework.http.ResponseEntity;
@@ -48,7 +44,6 @@ public class TuristasRestControlador {
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
-        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
         public List<TuristaRespuesta> listar(
                         @RequestParam(required = false) String dni,
@@ -56,13 +51,13 @@ public class TuristasRestControlador {
                         @RequestParam(required = false) List<Integer> codigos,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                List<Turista> resultado = codigos == null
-                                ? turistaServicio.listarPara(actor, dni, titular)
-                                : turistaServicio.listarPorCodigosPara(actor, codigos);
-                return resultado.stream()
-                                .map(turistaMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(TuristaRespuesta::codigo))
-                                .toList();
+                List<Turista> resultado;
+                if (codigos == null) {
+                        resultado = turistaServicio.listarPara(actor, dni, titular);
+                } else {
+                        resultado = turistaServicio.listarPorCodigosPara(actor, codigos);
+                }
+                return turistaMapeador.aRespuestas(resultado);
         }
 
         @GetMapping("/pagina")
@@ -72,21 +67,14 @@ public class TuristasRestControlador {
                         @RequestParam(defaultValue = "0") int pagina,
                         @RequestParam(defaultValue = "20") int tamanio,
                         Authentication autenticacion) {
-                if (pagina < 0 || tamanio < 1 || tamanio > 100)
-                        throw new IllegalArgumentException("Pagina o tamanio no valido");
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                Page<Turista> resultado = turistaServicio.buscarPaginaParaPersonal(actor, dni, titular,
-                                PageRequest.of(pagina, tamanio, Sort.by("codigo")));
-                return new PaginaRespuesta<>(resultado.map(turistaMapeador::aRespuesta).getContent(),
-                                resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(),
-                                resultado.hasNext());
+                return turistaMapeador.aPagina(turistaServicio.buscarPaginaPara(actor, dni, titular, pagina, tamanio));
         }
 
         @GetMapping("/sin-cuenta")
         public List<TuristaRespuesta> listarTitularesSinCuenta(Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return turistaServicio.listarTitularesSinCuentaPara(actor).stream()
-                                .map(turistaMapeador::aRespuesta).toList();
+                return turistaMapeador.aRespuestas(turistaServicio.listarTitularesSinCuentaPara(actor));
         }
 
         @GetMapping("/{codigo}")

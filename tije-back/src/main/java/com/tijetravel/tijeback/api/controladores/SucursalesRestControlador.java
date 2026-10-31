@@ -1,7 +1,6 @@
 package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -43,17 +42,15 @@ public class SucursalesRestControlador {
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
-    @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
     public List<SucursalRespuesta> listar(@RequestParam(required = false) String ciudad) {
-        return sucursalServicio.listarPorCiudad(ciudad).stream()
-                .map(sucursalMapeador::aRespuesta)
-                .sorted(Comparator.comparing(SucursalRespuesta::codigo))
-                .toList();
+        return sucursalMapeador.aRespuestas(sucursalServicio.listar(ciudad));
     }
 
     @GetMapping("/ciudades")
-    public List<String> ciudades() { return sucursalServicio.listarCiudades(); }
+    public List<String> ciudades() {
+        return sucursalServicio.listarCiudades();
+    }
 
     @GetMapping("/{codigo}")
     public SucursalRespuesta encontrarPorId(

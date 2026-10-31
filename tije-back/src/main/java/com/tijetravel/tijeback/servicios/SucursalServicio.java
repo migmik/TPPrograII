@@ -2,6 +2,7 @@ package com.tijetravel.tijeback.servicios;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
@@ -50,20 +51,24 @@ public class SucursalServicio {
         return sucursalRepositorio.save(sucursal);
     }
 
-    public List<Sucursal> listar() {
-        return sucursalRepositorio.findAll();
+    /** Lista todas las sucursales o solo las de una ciudad, ordenadas por codigo. */
+    public List<Sucursal> listar(String ciudad) {
+        if (ciudad == null || ciudad.isBlank()) {
+            return sucursalRepositorio.findAll(Sort.by("codigo"));
+        }
+        return sucursalRepositorio.findByCiudadIgnoreCaseOrderByCodigo(ciudad.trim());
     }
 
-    public List<Sucursal> listarPorCiudad(String ciudad) {
-        return ciudad == null || ciudad.isBlank() ? listar()
-                : sucursalRepositorio.findByCiudadIgnoreCaseOrderByCodigo(ciudad.trim());
+    public List<String> listarCiudades() {
+        return sucursalRepositorio.listarCiudades();
     }
-
-    public List<String> listarCiudades() { return sucursalRepositorio.listarCiudades(); }
 
     public Sucursal encontrarPorId(Integer codigo) {
-        return sucursalRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la sucursal " + codigo));
+        Sucursal sucursal = sucursalRepositorio.findById(codigo).orElse(null);
+        if (sucursal == null) {
+            throw new EntidadNoEncontradaException("No se encontro la sucursal " + codigo);
+        }
+        return sucursal;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)

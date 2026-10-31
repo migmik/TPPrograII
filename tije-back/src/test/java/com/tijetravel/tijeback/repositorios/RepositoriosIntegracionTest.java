@@ -101,8 +101,8 @@ class RepositoriosIntegracionTest {
                 assertEquals(titular.getCodigo(), usuario.getCodigoTurista());
                 assertEquals(1, usuarioRepositorio.contarClientesPorTurista(titular.getCodigo()));
                 assertEquals(1, turistaRepositorio.findByTitularCodigo(titular.getCodigo()).size());
-                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNull().get(0).getCodigo());
-                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNull().get(0).getCodigo());
+                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNullOrderByCodigo().get(0).getCodigo());
+                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNullOrderByCodigo().get(0).getCodigo());
                 assertEquals(familiar.getCodigo(), turistaRepositorio.findByDni(familiar.getDni()).get(0).getCodigo());
                 assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.CLIENTE).size());
                 assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.VENDEDOR).size());

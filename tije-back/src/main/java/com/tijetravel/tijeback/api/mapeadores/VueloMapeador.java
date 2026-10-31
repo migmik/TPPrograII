@@ -6,8 +6,9 @@ import com.tijetravel.tijeback.api.dto.VueloRespuesta;
 import com.tijetravel.tijeback.modelos.Vuelo;
 
 @Component
-public class VueloMapeador {
+public class VueloMapeador extends MapeadorBase<Vuelo, VueloRespuesta> {
 
+    @Override
     public VueloRespuesta aRespuesta(Vuelo vuelo) {
         return new VueloRespuesta(
                 vuelo.getNumero(),

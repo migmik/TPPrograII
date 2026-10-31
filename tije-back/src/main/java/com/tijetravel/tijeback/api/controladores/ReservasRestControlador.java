@@ -2,7 +2,6 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -51,14 +50,10 @@ public class ReservasRestControlador {
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
-        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
         public List<ReservaRespuesta> listar(Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return reservaServicio.listarPara(actor).stream()
-                                .map(reservaMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(ReservaRespuesta::codigo))
-                                .toList();
+                return reservaMapeador.aRespuestas(reservaServicio.listarPara(actor));
         }
 
         @GetMapping("/pagina")
@@ -77,12 +72,7 @@ public class ReservasRestControlador {
                 Page<Reserva> resultado = reservaServicio.paginaPara(
                                 actor, codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta,
                                 pagada, pagina, tamanio);
-                return new PaginaRespuesta<>(
-                                resultado.getContent().stream().map(reservaMapeador::aRespuesta).toList(),
-                                resultado.getNumber(),
-                                resultado.getTotalPages(),
-                                resultado.hasPrevious(),
-                                resultado.hasNext());
+                return reservaMapeador.aPagina(resultado);
         }
 
         @GetMapping("/{codigo}")
@@ -102,8 +92,8 @@ public class ReservasRestControlador {
 
         @PostMapping("/{codigo}/pagar")
         public ReservaRespuesta pagar(@PathVariable @Positive Integer codigo, Authentication autenticacion) {
-                return reservaMapeador.aRespuesta(
-                                reservaServicio.confirmarPago(usuarioActualServicio.obtener(autenticacion), codigo));
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return reservaMapeador.aRespuesta(reservaServicio.confirmarPago(actor, codigo));
         }
 
         @PostMapping

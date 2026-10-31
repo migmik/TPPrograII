@@ -6,8 +6,9 @@ import com.tijetravel.tijeback.api.dto.SucursalRespuesta;
 import com.tijetravel.tijeback.modelos.Sucursal;
 
 @Component
-public class SucursalMapeador {
+public class SucursalMapeador extends MapeadorBase<Sucursal, SucursalRespuesta> {
 
+    @Override
     public SucursalRespuesta aRespuesta(Sucursal sucursal) {
         return new SucursalRespuesta(
                 sucursal.getCodigo(),

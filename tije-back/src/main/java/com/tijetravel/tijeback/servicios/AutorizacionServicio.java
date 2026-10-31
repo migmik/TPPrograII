@@ -20,8 +20,12 @@ public class AutorizacionServicio {
     }
 
     public void verificarPermiso(Usuario usuario, Permiso permiso) {
+        verificarPermiso(usuario, permiso, "El usuario no tiene permiso para realizar esta operacion");
+    }
+
+    public void verificarPermiso(Usuario usuario, Permiso permiso, String mensaje) {
         if (!tienePermiso(usuario, permiso)) {
-            throw new OperacionNoPermitidaException("El usuario no tiene permiso para realizar esta operacion");
+            throw new OperacionNoPermitidaException(mensaje);
         }
     }
 

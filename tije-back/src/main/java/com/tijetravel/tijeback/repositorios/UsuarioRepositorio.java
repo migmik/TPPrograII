@@ -36,10 +36,13 @@ public interface UsuarioRepositorio extends JpaRepository<Usuario, Integer> {
 
 
         @Override
-        @Query("select u from Usuario u left join fetch treat(u as Cliente).turista")
+        @Query("select u from Usuario u left join fetch treat(u as Cliente).turista order by u.codigo")
         List<Usuario> findAll();
 
-        @Query("select u from Usuario u left join fetch treat(u as Cliente).turista where u.rol = :rol")
+        @Query("""
+                        select u from Usuario u left join fetch treat(u as Cliente).turista
+                        where u.rol = :rol order by u.codigo
+                        """)
         List<Usuario> findByRol(@Param("rol") RolUsuario rol);
 
         @Override
