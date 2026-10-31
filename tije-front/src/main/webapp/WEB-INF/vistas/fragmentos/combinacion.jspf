@@ -1,0 +1,23 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Una combinacion de vuelo y hotel. Usa la variable "combinacion" del forEach que la incluye. --%>
+<li class="combinacion">
+    <div class="combinacion__datos">
+        <strong>Vuelo <c:out value="${combinacion.vuelo.numero}"/> + <c:out value="${combinacion.hotel.nombre}"/></strong>
+        <span><c:out value="${combinacion.vuelo.fechaYHoraFormateada}"/> · <c:out value="${cantidadNoches}"/> noche(s)</span>
+    </div>
+    <span class="combinacion__precio">$<c:out value="${combinacion.precioPorPersona}"/> <small>por persona</small></span>
+    <c:choose>
+        <c:when test="${empty usuarioActual}">
+            <a class="search-results__reserve-link" href="<c:url value='/login'/>">Iniciá sesión para reservar</a>
+        </c:when>
+        <c:otherwise>
+            <c:url var="urlReserva" value="/reservas/nueva">
+                <c:param name="numeroVuelo" value="${combinacion.vuelo.numero}"/>
+                <c:param name="codigoHotel" value="${combinacion.hotel.codigo}"/>
+                <c:param name="fechaLlegada" value="${busqueda.fechaLlegada}"/>
+                <c:param name="fechaPartida" value="${busqueda.fechaPartida}"/>
+            </c:url>
+            <a class="search-results__reserve-link" href="${urlReserva}">Reservar</a>
+        </c:otherwise>
+    </c:choose>
+</li>

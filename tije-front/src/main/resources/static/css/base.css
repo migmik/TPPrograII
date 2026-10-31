@@ -759,6 +759,50 @@ section[aria-label="Resultado de disponibilidad"] {
     background: #e5f3fa;
 }
 
+/* Inicio con resultados: el buscador queda arriba y compacto */
+.search-hero--compacta {
+    padding-top: 0;
+}
+
+.search-hero--compacta .search-panel {
+    margin-top: 0;
+}
+
+.combinaciones .combinacion {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: .4rem 1rem;
+}
+
+.combinacion__datos {
+    display: flex;
+    flex-direction: column;
+}
+
+.combinacion__precio {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f5b7d;
+    white-space: nowrap;
+}
+
+.combinacion__precio small {
+    font-size: .8rem;
+    font-weight: normal;
+    color: #5b7184;
+}
+
+.combinaciones-todas {
+    margin-top: .8rem;
+}
+
+.combinaciones-todas summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #316d91;
+}
+
 /* Activos / dados de baja */
 .filtro-estado {
     display: flex;
@@ -819,6 +863,10 @@ section[aria-label="Resultado de disponibilidad"] {
 }
 
 @media (max-width: 700px) {
+    .combinaciones .combinacion {
+        grid-template-columns: 1fr;
+    }
+
     .site-nav-gestion__inner {
         padding: .45rem 1rem;
     }

@@ -17,6 +17,7 @@ import org.springframework.web.client.RestClientException;
 import com.tijetravel.tijefront.clientes.CiudadesApiCliente;
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
+import com.tijetravel.tijefront.dto.CombinacionViaje;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;
 import com.tijetravel.tijefront.formularios.BuscarViajeFormulario;
@@ -25,6 +26,9 @@ import jakarta.validation.Valid;
 
 @Controller
 public class InicioControlador {
+    /** Cuantas combinaciones de vuelo y hotel se muestran como recomendadas. */
+    private static final int MAXIMO_RECOMENDADOS = 6;
+
     private final VuelosApiCliente vuelosApi;
     private final HotelesApiCliente hotelesApi;
     private final CiudadesApiCliente ciudadesApi;
@@ -80,13 +84,41 @@ public class InicioControlador {
             Collections.sort(hoteles, new ComparadorPrecioHotel(true));
         }
 
+        long noches = ChronoUnit.DAYS.between(busqueda.getFechaLlegada(), busqueda.getFechaPartida());
+        cargarCombinaciones(modelo, vuelos, hoteles, noches);
         modelo.addAttribute("vuelosEncontrados", vuelos);
         modelo.addAttribute("vuelosSugeridos", vuelosSugeridos);
         modelo.addAttribute("hotelesEncontrados", hoteles);
-        modelo.addAttribute("cantidadNoches", ChronoUnit.DAYS.between(
-                busqueda.getFechaLlegada(), busqueda.getFechaPartida()));
+        modelo.addAttribute("cantidadNoches", noches);
         modelo.addAttribute("busquedaRealizada", true);
         return "inicio";
+    }
+
+    /**
+     * Arma todas las combinaciones de vuelo y hotel ordenadas por precio. Las mas
+     * baratas se muestran primero como recomendadas y el resto queda aparte.
+     */
+    private void cargarCombinaciones(Model modelo, List<VueloRespuesta> vuelos, List<HotelRespuesta> hoteles,
+            long noches) {
+        List<CombinacionViaje> combinaciones = new ArrayList<>();
+        for (VueloRespuesta vuelo : vuelos) {
+            for (HotelRespuesta hotel : hoteles) {
+                combinaciones.add(new CombinacionViaje(vuelo, hotel, noches));
+            }
+        }
+        Collections.sort(combinaciones, new ComparadorPrecioCombinacion());
+
+        List<CombinacionViaje> recomendados = new ArrayList<>();
+        List<CombinacionViaje> otras = new ArrayList<>();
+        for (int i = 0; i < combinaciones.size(); i++) {
+            if (i < MAXIMO_RECOMENDADOS) {
+                recomendados.add(combinaciones.get(i));
+            } else {
+                otras.add(combinaciones.get(i));
+            }
+        }
+        modelo.addAttribute("recomendados", recomendados);
+        modelo.addAttribute("otrasCombinaciones", otras);
     }
 
     private void cargarCiudades(Model modelo) {

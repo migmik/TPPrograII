@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
     <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+    <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
         <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
             <!DOCTYPE html>
             <html lang="es">
@@ -14,13 +15,16 @@
             <body class="pagina-inicio">
                 <%@ include file="fragmentos/navegacion.jspf" %>
                     <main class="home-main">
-                        <section class="search-hero" aria-labelledby="tituloInicio">
-                            <div class="search-hero__intro">
-                                <p class="search-hero__eyebrow">Tu viaje empieza acá</p>
-                                <h1 id="tituloInicio">Encontrá vuelos y alojamiento para tu próxima escapada</h1>
-                                <p>Elegí las ciudades y las fechas. Te mostramos las opciones con plazas disponibles.
-                                </p>
-                            </div>
+                        <section class="search-hero${busquedaRealizada ? ' search-hero--compacta' : ''}"
+                            aria-label="Buscador de viajes">
+                            <c:if test="${not busquedaRealizada}">
+                                <div class="search-hero__intro">
+                                    <p class="search-hero__eyebrow">Tu viaje empieza acá</p>
+                                    <h1 id="tituloInicio">Encontrá vuelos y alojamiento para tu próxima escapada</h1>
+                                    <p>Elegí las ciudades y las fechas. Te mostramos las opciones con plazas
+                                        disponibles.</p>
+                                </div>
+                            </c:if>
                             <c:url var="urlBuscar" value="/buscar" />
                             <form:form method="get" action="${urlBuscar}" modelAttribute="busqueda"
                                 cssClass="search-panel" htmlEscape="true">
@@ -85,37 +89,31 @@
                                     </strong>, para
                                     <c:out value="${busqueda.personas}" /> persona(s).
                                 </p>
-                                <c:if test="${not empty vuelosEncontrados and not empty hotelesEncontrados}">
+                                <c:if test="${not empty recomendados}">
                                     <div class="search-results__booking">
-                                        <h3>Reservar vuelo y hotel</h3>
-                                        <p>Eleg&iacute; una combinaci&oacute;n. Cada reserva corresponde a una persona; las plazas se confirman al guardarla.</p>
-                                        <c:choose>
-                                        <c:when test="${empty usuarioActual}">
-                                            <p><a href="<c:url value='/login'/>">Inici&aacute; sesi&oacute;n para reservar</a></p>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <ul class="search-results__list">
-                                                <c:forEach items="${vuelosEncontrados}" var="vuelo">
-                                                    <c:forEach items="${hotelesEncontrados}" var="hotel">
-                                                        <c:url var="urlReserva" value="/reservas/nueva">
-                                                            <c:param name="numeroVuelo" value="${vuelo.numero}"/>
-                                                            <c:param name="codigoHotel" value="${hotel.codigo}"/>
-                                                            <c:param name="fechaLlegada" value="${busqueda.fechaLlegada}"/>
-                                                            <c:param name="fechaPartida" value="${busqueda.fechaPartida}"/>
-                                                        </c:url>
-                                                        <li><strong>Vuelo <c:out value="${vuelo.numero}"/> + <c:out value="${hotel.nombre}"/></strong>
-                                                            <span>Desde $<c:out value="${vuelo.precio + hotel.precioNochePersona * cantidadNoches}" /> por persona</span>
-                                                            <a class="search-results__reserve-link" href="${urlReserva}">Reservar</a></li>
+                                        <h3>Recomendados: vuelo + hotel</h3>
+                                        <p>Las combinaciones más baratas para tus fechas. Cada reserva corresponde a
+                                            una persona; las plazas se confirman al guardarla.</p>
+                                        <ul class="search-results__list combinaciones">
+                                            <c:forEach items="${recomendados}" var="combinacion">
+                                                <%@ include file="fragmentos/combinacion.jspf" %>
+                                            </c:forEach>
+                                        </ul>
+                                        <c:if test="${not empty otrasCombinaciones}">
+                                            <details class="combinaciones-todas">
+                                                <summary>Ver todas las combinaciones (<c:out value="${fn:length(otrasCombinaciones)}" /> más)</summary>
+                                                <ul class="search-results__list combinaciones">
+                                                    <c:forEach items="${otrasCombinaciones}" var="combinacion">
+                                                        <%@ include file="fragmentos/combinacion.jspf" %>
                                                     </c:forEach>
-                                                </c:forEach>
-                                            </ul>
-                                        </c:otherwise>
-                                        </c:choose>
+                                                </ul>
+                                            </details>
+                                        </c:if>
                                     </div>
                                 </c:if>
                                 <div class="search-results__columns">
                                     <div class="search-results__panel">
-                                        <h3>Vuelos de ida</h3>
+                                        <h3>Solo vuelos</h3>
                                         <c:choose>
                                             <c:when test="${empty vuelosEncontrados}">
                                                 <p>No hay vuelos con plazas suficientes para esa fecha.</p>
@@ -160,7 +158,7 @@
                                         </c:choose>
                                     </div>
                                     <div class="search-results__panel">
-                                        <h3>Alojamientos</h3>
+                                        <h3>Solo hoteles</h3>
                                         <c:choose>
                                             <c:when test="${empty hotelesEncontrados}">
                                                 <p>No hay hoteles con plazas suficientes para esas fechas.</p>
@@ -187,6 +185,7 @@
                             </section>
                         </c:if>
 
+                        <c:if test="${not busquedaRealizada}">
                         <div class="cards">
                             <section class="card">
                                 <h2>Vuelos</h2>
@@ -204,6 +203,7 @@
                                 <a href="<c:url value='/sucursales'/>">Ver sucursales</a>
                             </section>
                         </div>
+                        </c:if>
                     </main>
             </body>
 
