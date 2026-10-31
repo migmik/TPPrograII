@@ -5,6 +5,13 @@ public class BalanceRespuesta {
     private long ingresosVuelos;
     private long ingresosHoteles;
     private long ingresosTotales;
+    private long reservasPendientes;
+    private long importePendiente;
+
+    public long getReservasPendientes() { return reservasPendientes; }
+    public void setReservasPendientes(long reservasPendientes) { this.reservasPendientes = reservasPendientes; }
+    public long getImportePendiente() { return importePendiente; }
+    public void setImportePendiente(long importePendiente) { this.importePendiente = importePendiente; }
 
     public long getReservasPagadas() { return reservasPagadas; }
     public void setReservasPagadas(long reservasPagadas) { this.reservasPagadas = reservasPagadas; }

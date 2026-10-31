@@ -4,15 +4,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+
 import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClient;
+
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
 import com.tijetravel.tijefront.dto.PaginaReservasRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarReservaFormulario;
@@ -24,7 +27,7 @@ class ReservasApiClienteTest {
 
     @BeforeEach
     void preparar() {
-        var builder = RestClient.builder().baseUrl("http://backend");
+        RestClient.Builder builder = RestClient.builder().baseUrl("http://backend");
         servidor = MockRestServiceServer.bindTo(builder).build();
         conexion = mock(ConexionApiSesion.class);
         when(conexion.getCliente()).thenReturn(builder.build());
@@ -52,7 +55,7 @@ class ReservasApiClienteTest {
                         {"elementos":[],"pagina":2,"totalPaginas":3,"hayAnterior":true,"haySiguiente":false}
                         """, MediaType.APPLICATION_JSON));
 
-        PaginaReservasRespuesta pagina = cliente.listarPagina(4, null, null, null, null, 2, 20);
+        PaginaReservasRespuesta pagina = cliente.listarPagina(4, null, null, null, null, null, null, 2, 20);
 
         assertEquals(2, pagina.pagina());
         assertEquals(3, pagina.totalPaginas());
@@ -101,7 +104,12 @@ class ReservasApiClienteTest {
     @Test
     void conservaElRechazoDeAccesoDelBackend() {
         servidor.expect(requestTo("http://backend/api/v1/reservas/1")).andRespond(withStatus(HttpStatus.FORBIDDEN));
-        assertThrows(HttpClientErrorException.Forbidden.class, () -> cliente.buscar(1));
+        try {
+            cliente.buscar(1);
+            fail("Se esperaba HttpClientErrorException.Forbidden");
+        } catch (HttpClientErrorException.Forbidden esperada) {
+            // Es la excepcion que se esperaba.
+        }
         servidor.verify();
     }
 }

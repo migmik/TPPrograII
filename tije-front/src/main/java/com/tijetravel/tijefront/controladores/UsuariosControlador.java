@@ -1,20 +1,17 @@
 package com.tijetravel.tijefront.controladores;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -23,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
 import com.tijetravel.tijefront.clientes.UsuariosApiCliente;
+import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.dto.UsuarioRespuesta;
@@ -31,35 +29,42 @@ import com.tijetravel.tijefront.formularios.ModificarUsuarioFormulario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/usuarios")
-public class UsuariosControlador {
-    private final AutenticacionApiCliente autenticacionApi;
+public class UsuariosControlador extends ControladorAdministracion {
     private final UsuariosApiCliente usuariosApi;
     private final TuristasApiCliente turistasApi;
 
     public UsuariosControlador(AutenticacionApiCliente autenticacionApi,
             UsuariosApiCliente usuariosApi, TuristasApiCliente turistasApi) {
-        this.autenticacionApi = autenticacionApi;
+        super(autenticacionApi);
         this.usuariosApi = usuariosApi;
         this.turistasApi = turistasApi;
     }
 
     @GetMapping
     public String listar(@RequestParam(required = false) String rol,
+            @RequestParam(required = false) Integer codigo,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String dni,
+            @RequestParam(defaultValue = "0") int pagina,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
         if (salida != null) {
             return salida;
         }
-        List<UsuarioRespuesta> usuarios = rol == null || rol.isBlank()
-                ? usuariosApi.listar()
-                : usuariosApi.listar(rol);
-        modelo.addAttribute("usuarios", usuarios);
+        PaginaUsuariosRespuesta resultado = usuariosApi.listarPagina(rol, codigo, nombre, dni, Math.max(0, pagina));
+        modelo.addAttribute("usuarios", resultado.elementos());
+        modelo.addAttribute("pagina", resultado.pagina());
+        modelo.addAttribute("totalPaginas", resultado.totalPaginas());
+        modelo.addAttribute("hayAnterior", resultado.hayAnterior());
+        modelo.addAttribute("haySiguiente", resultado.haySiguiente());
         modelo.addAttribute("rolBusqueda", rol == null ? "" : rol.trim());
+        modelo.addAttribute("codigoBusqueda", codigo);
+        modelo.addAttribute("nombreBusqueda", nombre == null ? "" : nombre.trim());
+        modelo.addAttribute("dniBusqueda", dni == null ? "" : dni.trim());
         return "usuarios/lista";
     }
 
@@ -241,36 +246,8 @@ public class UsuariosControlador {
         return codigo.equals(usuario.getCodigo());
     }
 
-    private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null) {
-            return "redirect:/login";
-        }
-        SesionRespuesta usuario = autenticacionApi.obtenerSesion();
-        sesion.setAttribute("usuarioActual", usuario);
-        modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
-            respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar usuarios.");
-            return "error";
-        }
-        return null;
-    }
-
     private List<TuristaResumen> turistasSinCuenta() {
-        Set<Integer> ocupados = new HashSet<>();
-        for (UsuarioRespuesta usuario : usuariosApi.listar("CLIENTE")) {
-            if (usuario.getCodigoTurista() != null) {
-                ocupados.add(usuario.getCodigoTurista());
-            }
-        }
-        List<TuristaResumen> disponibles = new ArrayList<>();
-        for (TuristaResumen turista : turistasApi.listar(true)) {
-            if (turista.getDni() != null && !ocupados.contains(turista.getCodigo())) {
-                disponibles.add(turista);
-            }
-        }
-        return disponibles;
+        return turistasApi.listarTitularesSinCuenta();
     }
 
     private void validarFormulario(CrearUsuarioFormulario formulario, BindingResult errores,
@@ -314,5 +291,10 @@ public class UsuariosControlador {
             errores.rejectValue("contrasenia", "contrasenia.bytes",
                     "La contraseña es demasiado larga al codificarla. Usá menos caracteres.");
         }
+    }
+
+    @Override
+    protected String recursoGestionado() {
+        return "usuarios";
     }
 }

@@ -1,13 +1,16 @@
 package com.tijetravel.tijefront.clientes;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.time.LocalDate;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-import com.tijetravel.tijefront.dto.ReservaRespuesta;
-import com.tijetravel.tijefront.dto.PaginaReservasRespuesta;
+
+import com.tijetravel.tijefront.dto.BalanceRespuesta;
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
+import com.tijetravel.tijefront.dto.PaginaReservasRespuesta;
+import com.tijetravel.tijefront.dto.ReservaRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarReservaFormulario;
 
 @Service
@@ -27,23 +30,26 @@ public class ReservasApiCliente {
 
     public PaginaReservasRespuesta listarPagina(
             Integer codigoTurista,
+            String dni,
             Integer numeroVuelo,
             Integer codigoHotel,
             LocalDate fechaDesde,
             LocalDate fechaHasta,
+            Boolean pagada,
             int pagina,
             int tamanio) {
-        PaginaReservasRespuesta resultado = conexion.getCliente().get().uri(uriBuilder -> {
-            var ruta = uriBuilder.path("/api/v1/reservas/pagina")
-                    .queryParam("pagina", pagina)
-                    .queryParam("tamanio", tamanio);
-            if (codigoTurista != null) ruta.queryParam("codigoTurista", codigoTurista);
-            if (numeroVuelo != null) ruta.queryParam("numeroVuelo", numeroVuelo);
-            if (codigoHotel != null) ruta.queryParam("codigoHotel", codigoHotel);
-            if (fechaDesde != null) ruta.queryParam("fechaDesde", fechaDesde);
-            if (fechaHasta != null) ruta.queryParam("fechaHasta", fechaHasta);
-            return ruta.build();
-        }).retrieve().body(PaginaReservasRespuesta.class);
+        RutaConsulta ruta = new RutaConsulta("/api/v1/reservas/pagina")
+                .parametro("pagina", pagina)
+                .parametro("tamanio", tamanio)
+                .parametro("codigoTurista", codigoTurista)
+                .parametro("dni", dni)
+                .parametro("numeroVuelo", numeroVuelo)
+                .parametro("codigoHotel", codigoHotel)
+                .parametro("fechaDesde", fechaDesde)
+                .parametro("fechaHasta", fechaHasta)
+                .parametro("pagada", pagada);
+        PaginaReservasRespuesta resultado = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
+                .retrieve().body(PaginaReservasRespuesta.class);
         if (resultado == null) throw new RestClientException("La API no devolvio la pagina de reservas.");
         return resultado;
     }
@@ -73,9 +79,9 @@ public class ReservasApiCliente {
         return reserva;
     }
 
-    public com.tijetravel.tijefront.dto.BalanceRespuesta balance() {
-        var balance = conexion.getCliente().get().uri("/api/v1/reservas/balance")
-                .retrieve().body(com.tijetravel.tijefront.dto.BalanceRespuesta.class);
+    public BalanceRespuesta balance() {
+        BalanceRespuesta balance = conexion.getCliente().get().uri("/api/v1/reservas/balance")
+                .retrieve().body(BalanceRespuesta.class);
         if (balance == null) throw new RestClientException("La API no devolvio el balance.");
         return balance;
     }

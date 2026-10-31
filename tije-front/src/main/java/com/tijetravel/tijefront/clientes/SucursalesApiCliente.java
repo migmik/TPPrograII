@@ -2,10 +2,12 @@ package com.tijetravel.tijefront.clientes;
 
 import java.util.Arrays;
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-import com.tijetravel.tijefront.dto.SucursalResumen;
+
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
+import com.tijetravel.tijefront.dto.SucursalResumen;
 import com.tijetravel.tijefront.formularios.GuardarSucursalFormulario;
 
 @Service
@@ -17,12 +19,24 @@ public class SucursalesApiCliente {
     }
 
     public List<SucursalResumen> listar() {
-        SucursalResumen[] sucursales = conexion.getCliente().get().uri("/api/v1/sucursales")
+        return listar(null);
+    }
+
+    public List<SucursalResumen> listar(String ciudad) {
+        RutaConsulta ruta = new RutaConsulta("/api/v1/sucursales").parametro("ciudad", ciudad);
+        SucursalResumen[] sucursales = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve().body(SucursalResumen[].class);
         if (sucursales == null) {
             throw new RestClientException("La API no devolvió sucursales.");
         }
         return Arrays.asList(sucursales);
+    }
+
+    public List<String> listarCiudades() {
+        String[] ciudades = conexion.getCliente().get().uri("/api/v1/sucursales/ciudades")
+                .retrieve().body(String[].class);
+        if (ciudades == null) throw new RestClientException("La API no devolvio ciudades de sucursales.");
+        return Arrays.asList(ciudades);
     }
 
     public SucursalResumen buscar(Integer codigo) {

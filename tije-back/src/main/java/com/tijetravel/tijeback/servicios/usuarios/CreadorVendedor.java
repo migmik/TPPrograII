@@ -1,10 +1,11 @@
 package com.tijetravel.tijeback.servicios.usuarios;
 
 import org.springframework.stereotype.Component;
+
 import com.tijetravel.tijeback.enums.RolUsuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.modelos.Vendedor;
 
 @Component
 public class CreadorVendedor implements CreadorUsuario {

@@ -1,7 +1,5 @@
 package com.tijetravel.tijeback.repositorios;
 
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
@@ -10,17 +8,18 @@ import java.time.LocalDateTime;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
@@ -94,15 +93,15 @@ class RepositoriosIntegracionTest {
                                 LocalDate.of(2026, 10, 1),
                                 LocalDate.of(2026, 10, 3)));
 
-                Usuario usuario = usuarioRepositorio.findByNombreUsuarioIgnoreCase("ANA").orElseThrow();
+                Usuario usuario = usuarioRepositorio.findByNombreUsuarioIgnoreCase("ANA");
 
                 assertInstanceOf(Cliente.class, usuario);
                 assertEquals(RolUsuario.CLIENTE, usuario.getRol());
                 assertEquals(titular.getCodigo(), usuario.getCodigoTurista());
                 assertEquals(1, usuarioRepositorio.contarClientesPorTurista(titular.getCodigo()));
                 assertEquals(1, turistaRepositorio.findByTitularCodigo(titular.getCodigo()).size());
-                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNull().get(0).getCodigo());
-                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNull().get(0).getCodigo());
+                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNullOrderByCodigo().get(0).getCodigo());
+                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNullOrderByCodigo().get(0).getCodigo());
                 assertEquals(familiar.getCodigo(), turistaRepositorio.findByDni(familiar.getDni()).get(0).getCodigo());
                 assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.CLIENTE).size());
                 assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.VENDEDOR).size());
@@ -117,10 +116,26 @@ class RepositoriosIntegracionTest {
                                 LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3), PageRequest.of(0, 1))
                                 .getTotalElements());
                 assertEquals(1, reservaRepositorio.findAll(PageRequest.of(0, 1)).getTotalElements());
+                assertEquals(1, reservaRepositorio.buscarPagina(null, familiar.getCodigo(), familiar.getDni(),
+                                100, hotel.getCodigo(), null, null, false, PageRequest.of(0, 10))
+                                .getTotalElements());
+                assertEquals(0, reservaRepositorio.buscarPagina(null, null, titular.getDni(),
+                                null, null, null, null, null, PageRequest.of(0, 10))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.buscarPagina(titular.getCodigo(), null, null,
+                                null, null, null, null, null, PageRequest.of(0, 10))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.balancePagadas().getReservasPendientes());
+                assertEquals(0, reservaRepositorio.balancePagadas().getReservasPagadas());
+                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.CLIENTE, null, null,
+                                titular.getDni(), PageRequest.of(0, 10)).getTotalElements());
+                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.ADMINISTRADOR,
+                                usuarioRepositorio.findByRol(RolUsuario.ADMINISTRADOR).get(0).getCodigo(),
+                                null, null, PageRequest.of(0, 10)).getTotalElements());
         }
 
         @Test
         void aplicaLaMigracionInicialAntesDeValidarJpa() {
-                assertEquals("8", flyway.info().current().getVersion().getVersion());
+                assertEquals("9", flyway.info().current().getVersion().getVersion());
         }
 }

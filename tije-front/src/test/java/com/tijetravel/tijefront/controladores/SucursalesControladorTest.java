@@ -42,7 +42,7 @@ class SucursalesControladorTest {
     @Test
     void listadoEsPublicoYContieneDatosDelBackend() throws Exception {
         SucursalResumen sucursal = sucursal();
-        when(sucursalesApi.listar()).thenReturn(List.of(sucursal));
+        when(sucursalesApi.listar((String) null)).thenReturn(List.of(sucursal));
         mvc.perform(get("/sucursales"))
                 .andExpect(view().name("sucursales/lista"))
                 .andExpect(model().attribute("sucursales", List.of(sucursal)));
@@ -67,7 +67,7 @@ class SucursalesControladorTest {
                 .andExpect(view().name("sucursales/formulario")).andExpect(model().hasErrors());
         verify(sucursalesApi, never()).crear(any());
         mvc.perform(post("/sucursales").with(csrf()).session(sesion())
-                .param("direccion", "Calle 1").param("telefono", "123"))
+                .param("direccion", "Calle 1").param("telefono", "123").param("ciudad", "Salta"))
                 .andExpect(redirectedUrl("/sucursales"));
         verify(sucursalesApi).crear(any(GuardarSucursalFormulario.class));
     }
@@ -77,7 +77,7 @@ class SucursalesControladorTest {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuario("ADMINISTRADOR"));
         doThrow(new HttpClientErrorException(HttpStatus.CONFLICT)).when(sucursalesApi).crear(any());
         mvc.perform(post("/sucursales").with(csrf()).session(sesion())
-                .param("direccion", "Calle 1").param("telefono", "123"))
+                .param("direccion", "Calle 1").param("telefono", "123").param("ciudad", "Salta"))
                 .andExpect(status().isConflict()).andExpect(view().name("sucursales/formulario"))
                 .andExpect(model().attributeExists("errorGestion"));
     }
@@ -100,6 +100,7 @@ class SucursalesControladorTest {
         SucursalResumen sucursal = new SucursalResumen();
         sucursal.setCodigo(5);
         sucursal.setDireccion("Calle 1");
+        sucursal.setCiudad("Salta");
         sucursal.setTelefono("123");
         return sucursal;
     }

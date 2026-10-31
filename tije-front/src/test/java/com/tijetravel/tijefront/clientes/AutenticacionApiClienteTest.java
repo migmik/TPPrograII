@@ -1,7 +1,7 @@
 package com.tijetravel.tijefront.clientes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 class AutenticacionApiClienteTest {
@@ -31,8 +32,14 @@ class AutenticacionApiClienteTest {
     @BeforeEach
     void preparar() throws IOException {
         servidor = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        servidor.createContext("/api/v1/autenticacion", this::responder);
-        servidor.createContext("/api/v1/usuarios", this::responder);
+        HttpHandler manejador = new HttpHandler() {
+            @Override
+            public void handle(HttpExchange intercambio) throws IOException {
+                responder(intercambio);
+            }
+        };
+        servidor.createContext("/api/v1/autenticacion", manejador);
+        servidor.createContext("/api/v1/usuarios", manejador);
         servidor.start();
         String url = "http://127.0.0.1:" + servidor.getAddress().getPort();
         conexionAna = new ConexionApiSesion(url);
@@ -61,7 +68,12 @@ class AutenticacionApiClienteTest {
         assertEquals("ana", ana.obtenerSesion().getNombreUsuario());
         assertEquals("beto", beto.obtenerSesion().getNombreUsuario());
         ana.cerrarSesion();
-        assertThrows(HttpClientErrorException.Unauthorized.class, () -> ana.obtenerSesion());
+        try {
+            ana.obtenerSesion();
+            fail("Se esperaba HttpClientErrorException.Unauthorized");
+        } catch (HttpClientErrorException.Unauthorized esperada) {
+            // Es la excepcion que se esperaba.
+        }
         assertEquals("beto", beto.obtenerSesion().getNombreUsuario());
         assertEquals(1, salidas);
     }
@@ -78,14 +90,28 @@ class AutenticacionApiClienteTest {
     void elClienteDeUsuariosReutilizaLaSesionDelLogin() {
         ana.iniciarSesion("ana", "clave");
         assertEquals("ana", new UsuariosApiCliente(conexionAna).listar().get(0).getNombreUsuario());
-        assertThrows(HttpClientErrorException.Unauthorized.class,
-                () -> new UsuariosApiCliente(conexionBeto).listar());
+        try {
+            new UsuariosApiCliente(conexionBeto).listar();
+            fail("Se esperaba HttpClientErrorException.Unauthorized");
+        } catch (HttpClientErrorException.Unauthorized esperada) {
+            // Es la excepcion que se esperaba.
+        }
     }
 
     @Test
     void conservaEl401DeCredencialesIncorrectas() {
-        assertThrows(HttpClientErrorException.Unauthorized.class, () -> ana.iniciarSesion("ana", "incorrecta"));
-        assertThrows(HttpClientErrorException.Unauthorized.class, () -> ana.obtenerSesion());
+        try {
+            ana.iniciarSesion("ana", "incorrecta");
+            fail("Se esperaba HttpClientErrorException.Unauthorized");
+        } catch (HttpClientErrorException.Unauthorized esperada) {
+            // Es la excepcion que se esperaba.
+        }
+        try {
+            ana.obtenerSesion();
+            fail("Se esperaba HttpClientErrorException.Unauthorized");
+        } catch (HttpClientErrorException.Unauthorized esperada) {
+            // Es la excepcion que se esperaba.
+        }
     }
 
     private void responder(HttpExchange intercambio) throws IOException {

@@ -33,6 +33,10 @@
                             </c:otherwise>
                         </c:choose>
                         <form:form method="post" action="${urlGuardar}" modelAttribute="sucursal" htmlEscape="true">
+                            <p><form:label path="ciudad">Ciudad</form:label>
+                                <form:input path="ciudad" list="ciudades-sucursal" required="required" maxlength="100" />
+                                <datalist id="ciudades-sucursal"><option value="Buenos Aires"></option><option value="Córdoba"></option><option value="Bariloche"></option><option value="Salta"></option></datalist>
+                                <form:errors path="ciudad" cssClass="error" /></p>
                             <p>
                                 <form:label path="direccion">Dirección</form:label>
                                 <form:input path="direccion" required="required" maxlength="255" />

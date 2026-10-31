@@ -1,7 +1,9 @@
 package com.tijetravel.tijefront.controladores;
 
 import java.text.Normalizer;
-import java.util.Comparator;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -58,7 +60,7 @@ public class InicioControlador {
 
         List<VueloRespuesta> vuelos = vuelosApi.buscar(busqueda.getOrigen(), busqueda.getDestino(),
                 busqueda.getFechaLlegada(), busqueda.getPersonas(), false);
-        List<VueloRespuesta> vuelosSugeridos = List.of();
+        List<VueloRespuesta> vuelosSugeridos = new ArrayList<>();
         if (vuelos.isEmpty()) {
             vuelosSugeridos = vuelosApi.buscar(busqueda.getOrigen(), busqueda.getDestino(),
                     busqueda.getFechaLlegada(), busqueda.getPersonas(), true);
@@ -67,18 +69,21 @@ public class InicioControlador {
         List<HotelRespuesta> hoteles = hotelesApi.buscar(busqueda.getDestino(),
                 busqueda.getFechaLlegada(), busqueda.getFechaPartida(), busqueda.getPersonas());
 
+        // Se copian las listas porque las que devuelve el cliente no se pueden ordenar.
+        vuelos = new ArrayList<>(vuelos);
+        hoteles = new ArrayList<>(hoteles);
         if ("precioAsc".equals(busqueda.getOrdenPrecio())) {
-            vuelos = vuelos.stream().sorted(Comparator.comparingInt(VueloRespuesta::getPrecio)).toList();
-            hoteles = hoteles.stream().sorted(Comparator.comparingInt(HotelRespuesta::getPrecioNochePersona)).toList();
+            Collections.sort(vuelos, new ComparadorPrecioVuelo(false));
+            Collections.sort(hoteles, new ComparadorPrecioHotel(false));
         } else if ("precioDesc".equals(busqueda.getOrdenPrecio())) {
-            vuelos = vuelos.stream().sorted(Comparator.comparingInt(VueloRespuesta::getPrecio).reversed()).toList();
-            hoteles = hoteles.stream().sorted(Comparator.comparingInt(HotelRespuesta::getPrecioNochePersona).reversed()).toList();
+            Collections.sort(vuelos, new ComparadorPrecioVuelo(true));
+            Collections.sort(hoteles, new ComparadorPrecioHotel(true));
         }
 
         modelo.addAttribute("vuelosEncontrados", vuelos);
         modelo.addAttribute("vuelosSugeridos", vuelosSugeridos);
         modelo.addAttribute("hotelesEncontrados", hoteles);
-        modelo.addAttribute("cantidadNoches", java.time.temporal.ChronoUnit.DAYS.between(
+        modelo.addAttribute("cantidadNoches", ChronoUnit.DAYS.between(
                 busqueda.getFechaLlegada(), busqueda.getFechaPartida()));
         modelo.addAttribute("busquedaRealizada", true);
         return "inicio";
@@ -88,7 +93,7 @@ public class InicioControlador {
         try {
             modelo.addAttribute("ciudades", ciudadesApi.listar());
         } catch (RestClientException error) {
-            modelo.addAttribute("ciudades", List.of());
+            modelo.addAttribute("ciudades", new ArrayList<String>());
         }
     }
 

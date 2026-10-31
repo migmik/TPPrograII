@@ -15,18 +15,29 @@ package "com.tijetravel.tijeback.enums" {
 
 package "com.tijetravel.tijeback.modelos" {
     abstract class Usuario {
-        - dni: String
-        + getDni(): String
         - codigo: Integer
         - nombreUsuario: String
         - contrasenia: String
+        - dni: String
         - rol: RolUsuario
         + actualizarCredenciales(nombreUsuario, contrasenia): void
+        + {abstract} tienePermiso(permiso): boolean
+        + puedeVerTurista(turista): boolean
+        + getCodigoGrupoFamiliar(): Integer
+        + tieneDniPropio(): boolean
+    }
+    class Administrador {
         + tienePermiso(permiso): boolean
     }
-    class Administrador
-    class Vendedor
-    class Cliente
+    class Vendedor {
+        + tienePermiso(permiso): boolean
+    }
+    class Cliente {
+        + tienePermiso(permiso): boolean
+        + puedeVerTurista(turista): boolean
+        + getCodigoGrupoFamiliar(): Integer
+        + tieneDniPropio(): boolean
+    }
     class Turista {
         - dni: String
         - codigo: Integer
@@ -102,20 +113,44 @@ UsuarioFactory --> CreadorUsuario : registro por rol
 CreadorUsuario <|.. CreadorAdministrador
 CreadorUsuario <|.. CreadorVendedor
 CreadorUsuario <|.. CreadorCliente
-UsuarioServicio --> UsuarioFactory
+UsuarioServicioImpl --> UsuarioFactory
 
 package "servicios" {
-    class SucursalServicio
-    class HotelServicio
-    class VueloServicio
-    class TuristaServicio
-    class ReservaServicio
-    class UsuarioServicio
+    interface SucursalServicio
+    interface HotelServicio
+    interface VueloServicio
+    interface TuristaServicio
+    interface ReservaServicio
+    interface UsuarioServicio
+    interface DisponibilidadServicio
+    interface CiudadServicio
     class BloqueoEscrituras
-    class OcupacionHotel
-    class DisponibilidadServicio
     class AutorizacionServicio
 }
+
+package "servicios.impl" {
+    class SucursalServicioImpl
+    class HotelServicioImpl
+    class VueloServicioImpl
+    class TuristaServicioImpl
+    class ReservaServicioImpl
+    class UsuarioServicioImpl
+    class DisponibilidadServicioImpl
+    class CiudadServicioImpl
+    class FiltrosConsulta
+    class OcupacionHotel
+    class CiudadConsulta
+    class ComparadorCercaniaFecha
+}
+
+SucursalServicio <|.. SucursalServicioImpl
+HotelServicio <|.. HotelServicioImpl
+VueloServicio <|.. VueloServicioImpl
+TuristaServicio <|.. TuristaServicioImpl
+ReservaServicio <|.. ReservaServicioImpl
+UsuarioServicio <|.. UsuarioServicioImpl
+DisponibilidadServicio <|.. DisponibilidadServicioImpl
+CiudadServicio <|.. CiudadServicioImpl
 
 package "repositorios" {
     interface JpaRepository
@@ -179,24 +214,28 @@ UsuarioDetallesServicio --> UsuarioRepositorio
 UsuarioDetallesServicio --> UsuarioAutenticado
 AdministradorInicializador --> UsuarioRepositorio
 
-SucursalServicio --> SucursalRepositorio
-HotelServicio --> HotelRepositorio
-VueloServicio --> VueloRepositorio
-TuristaServicio --> TuristaRepositorio
-ReservaServicio --> BloqueoEscrituras
-    HotelServicio --> BloqueoEscrituras
-    VueloServicio --> BloqueoEscrituras
-    TuristaServicio --> BloqueoEscrituras
-    UsuarioServicio --> BloqueoEscrituras
-    SucursalServicio --> BloqueoEscrituras
-    HotelServicio --> OcupacionHotel
-    DisponibilidadServicio --> OcupacionHotel
-    ReservaServicio --> DisponibilidadServicio
-DisponibilidadServicio --> ReservaRepositorio
-DisponibilidadServicio --> VueloRepositorio
-DisponibilidadServicio --> HotelRepositorio
-ReservaServicio --> ReservaRepositorio
-UsuarioServicio --> UsuarioRepositorio
+SucursalServicioImpl --> SucursalRepositorio
+HotelServicioImpl --> HotelRepositorio
+VueloServicioImpl --> VueloRepositorio
+TuristaServicioImpl --> TuristaRepositorio
+ReservaServicioImpl --> ReservaRepositorio
+UsuarioServicioImpl --> UsuarioRepositorio
+ReservaServicioImpl --> BloqueoEscrituras
+HotelServicioImpl --> BloqueoEscrituras
+VueloServicioImpl --> BloqueoEscrituras
+TuristaServicioImpl --> BloqueoEscrituras
+UsuarioServicioImpl --> BloqueoEscrituras
+SucursalServicioImpl --> BloqueoEscrituras
+ReservaServicioImpl --> AutorizacionServicio
+HotelServicioImpl --> OcupacionHotel
+HotelServicioImpl --> FiltrosConsulta
+VueloServicioImpl --> ComparadorCercaniaFecha
+DisponibilidadServicioImpl --> OcupacionHotel
+ReservaServicioImpl --> DisponibilidadServicio
+HotelServicioImpl --> DisponibilidadServicio
+DisponibilidadServicioImpl --> ReservaRepositorio
+DisponibilidadServicioImpl --> VueloRepositorio
+DisponibilidadServicioImpl --> HotelRepositorio
 
 JpaRepository <|-- SucursalRepositorio
 JpaRepository <|-- HotelRepositorio

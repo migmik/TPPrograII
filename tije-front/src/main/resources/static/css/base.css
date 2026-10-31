@@ -537,6 +537,26 @@ form:not(.logout-form) {
     border-radius: 9px;
 }
 
+form.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: .75rem 1rem;
+    max-width: none;
+    width: 100%;
+    padding: 1rem;
+    margin: 0 0 1.25rem;
+}
+
+.filter-form .filter-field {
+    flex: 1 1 145px;
+    min-width: 135px;
+}
+
+.filter-form .filter-field label { margin-bottom: .3rem; }
+.filter-form button, .filter-form > a { flex: 0 0 auto; }
+.filter-form > a { padding: .55rem 0; }
+
 form p {
     margin: 0 0 1.1rem;
 }

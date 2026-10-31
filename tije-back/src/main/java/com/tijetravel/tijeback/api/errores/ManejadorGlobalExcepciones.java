@@ -11,7 +11,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -19,8 +22,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
@@ -30,6 +31,7 @@ import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
@@ -129,14 +131,15 @@ public class ManejadorGlobalExcepciones {
                         HandlerMethodValidationException excepcion,
                         HttpServletRequest solicitud) {
                 Map<String, String> detalles = new LinkedHashMap<>();
-                excepcion.getParameterValidationResults().forEach(resultado -> {
+                for (ParameterValidationResult resultado : excepcion.getParameterValidationResults()) {
                         String parametro = resultado.getMethodParameter().getParameterName();
-                        for (MessageSourceResolvable error : resultado.getResolvableErrors()) {
-                                detalles.putIfAbsent(
-                                                parametro == null ? "parametro" : parametro,
-                                                mensaje(error));
+                        if (parametro == null) {
+                                parametro = "parametro";
                         }
-                });
+                        for (MessageSourceResolvable error : resultado.getResolvableErrors()) {
+                                detalles.putIfAbsent(parametro, mensaje(error));
+                        }
+                }
                 return responder(
                                 HttpStatus.BAD_REQUEST,
                                 "PARAMETROS_INVALIDOS",
@@ -150,9 +153,9 @@ public class ManejadorGlobalExcepciones {
                         ConstraintViolationException excepcion,
                         HttpServletRequest solicitud) {
                 Map<String, String> detalles = new LinkedHashMap<>();
-                excepcion.getConstraintViolations().forEach(violacion -> detalles.putIfAbsent(
-                                violacion.getPropertyPath().toString(),
-                                violacion.getMessage()));
+                for (ConstraintViolation<?> violacion : excepcion.getConstraintViolations()) {
+                        detalles.putIfAbsent(violacion.getPropertyPath().toString(), violacion.getMessage());
+                }
                 return responder(
                                 HttpStatus.BAD_REQUEST,
                                 "PARAMETROS_INVALIDOS",

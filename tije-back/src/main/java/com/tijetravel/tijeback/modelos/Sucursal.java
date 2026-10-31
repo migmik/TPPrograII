@@ -11,12 +11,16 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(name = "sucursales", uniqueConstraints = @UniqueConstraint(name = "uk_sucursal_direccion", columnNames = "direccion"))
 public class Sucursal {
+    public static final String CIUDAD_SIN_ESPECIFICAR = "Sin especificar";
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
 
     @Column(nullable = false)
     private String direccion;
+
+    @Column(nullable = false, length = 100)
+    private String ciudad;
 
     @Column(nullable = false)
     private String telefono;
@@ -25,12 +29,20 @@ public class Sucursal {
     }
 
     public Sucursal(String direccion, String telefono) {
-        actualizarDatos(direccion, telefono);
+        this(direccion, telefono, CIUDAD_SIN_ESPECIFICAR);
     }
 
-    public void actualizarDatos(String direccion, String telefono) {
-        this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
-        this.telefono = ValidacionModelo.textoObligatorio(telefono, "telefono");
+    public Sucursal(String direccion, String telefono, String ciudad) {
+        actualizarDatos(direccion, telefono, ciudad);
+    }
+
+    public void actualizarDatos(String direccion, String telefono, String ciudad) {
+        String direccionValidada = ValidacionModelo.textoObligatorio(direccion, "direccion");
+        String telefonoValidado = ValidacionModelo.textoObligatorio(telefono, "telefono");
+        String ciudadValidada = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
+        this.direccion = direccionValidada;
+        this.telefono = telefonoValidado;
+        this.ciudad = ciudadValidada;
     }
 
     public Integer getCodigo() {
@@ -41,12 +53,17 @@ public class Sucursal {
         return direccion;
     }
 
+    public String getCiudad() {
+        return ciudad;
+    }
+
     public String getTelefono() {
         return telefono;
     }
 
     @Override
     public String toString() {
-        return "Sucursal | codigo=" + codigo + ", direccion=" + direccion + ", telefono=" + telefono;
+        return "Sucursal | codigo=" + codigo + ", ciudad=" + ciudad
+                + ", direccion=" + direccion + ", telefono=" + telefono;
     }
 }
