@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
@@ -72,10 +71,8 @@ public class ReservaServicio {
         disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
 
         Turista turista = encontrarTurista(codigoTurista);
-        if (actor.getRol() == RolUsuario.CLIENTE
-                && !autorizacion.perteneceAlGrupoFamiliar(actor, turista)) {
-            throw new OperacionNoPermitidaException("El cliente solo puede reservar para su grupo familiar");
-        }
+        autorizacion.verificarAccesoATurista(actor, turista,
+                "El cliente solo puede reservar para su grupo familiar");
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
 
@@ -103,8 +100,9 @@ public class ReservaServicio {
 
     public List<Reserva> listarPara(Usuario actor) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        if (actor.getRol() == RolUsuario.CLIENTE) {
-            return listarPorTitularYFamiliares(autorizacion.codigoTitular(actor));
+        Integer codigoGrupoFamiliar = actor.getCodigoGrupoFamiliar();
+        if (codigoGrupoFamiliar != null) {
+            return listarPorTitularYFamiliares(codigoGrupoFamiliar);
         }
         return listar();
     }
@@ -124,7 +122,7 @@ public class ReservaServicio {
         validarConsultaPaginada(codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
         Pageable pageable = PageRequest.of(pagina, tamanio, Sort.by("codigo"));
         String dniBuscado = dni == null || dni.isBlank() ? null : dni.trim();
-        Integer titular = actor.getRol() == RolUsuario.CLIENTE ? autorizacion.codigoTitular(actor) : null;
+        Integer titular = actor.getCodigoGrupoFamiliar();
         return reservaRepositorio.buscarPagina(titular, codigoTurista, dniBuscado, numeroVuelo,
                 codigoHotel, fechaDesde, fechaHasta, pagada, pageable);
     }
@@ -161,11 +159,8 @@ public class ReservaServicio {
     public Reserva encontrarVisiblePara(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         Reserva reserva = encontrarPorId(codigo);
-        if (actor.getRol() == RolUsuario.CLIENTE
-                && !autorizacion.perteneceAlGrupoFamiliar(actor, reserva.getTurista())) {
-            throw new OperacionNoPermitidaException(
-                    "El cliente no puede consultar reservas de otro grupo familiar");
-        }
+        autorizacion.verificarAccesoATurista(actor, reserva.getTurista(),
+                "El cliente no puede consultar reservas de otro grupo familiar");
         return reserva;
     }
 
@@ -179,9 +174,7 @@ public class ReservaServicio {
     }
 
     public BalanceVentas balance(Usuario actor) {
-        if (actor.getRol() != RolUsuario.ADMINISTRADOR) {
-            throw new OperacionNoPermitidaException("Solo un administrador puede consultar el balance");
-        }
+        autorizacion.verificarPermiso(actor, Permiso.VER_BALANCE);
         return reservaRepositorio.balancePagadas();
     }
 

@@ -30,7 +30,7 @@ import com.tijetravel.tijeback.api.mapeadores.VueloMapeador;
 import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
 import com.tijetravel.tijeback.servicios.VueloServicio;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.enums.RolUsuario;
+import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
@@ -117,10 +117,8 @@ public class VuelosRestControlador {
     }
 
     private void exigirPersonal(Authentication autenticacion) {
-        if (autenticacion == null || !autenticacion.isAuthenticated())
-            throw new OperacionNoPermitidaException("Solo el personal puede consultar el catalogo completo");
-        RolUsuario rol = usuarioActualServicio.obtener(autenticacion).getRol();
-        if (rol != RolUsuario.ADMINISTRADOR && rol != RolUsuario.VENDEDOR)
+        Usuario actor = usuarioActualServicio.buscar(autenticacion);
+        if (actor == null || !actor.tienePermiso(Permiso.VER_CATALOGO_COMPLETO))
             throw new OperacionNoPermitidaException("Solo el personal puede consultar el catalogo completo");
     }
 

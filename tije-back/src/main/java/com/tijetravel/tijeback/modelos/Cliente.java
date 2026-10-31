@@ -20,7 +20,7 @@ public class Cliente extends Usuario {
     }
 
     public Cliente(String nombreUsuario, String contrasenia, Turista turista) {
-        super(nombreUsuario, contrasenia, RolUsuario.CLIENTE, null);
+        super(nombreUsuario, contrasenia, RolUsuario.CLIENTE);
         if (!ValidacionModelo.obligatorio(turista, "turista").isTitular()) {
             throw new IllegalArgumentException("Un cliente solo puede asociarse a un turista titular");
         }
@@ -30,6 +30,31 @@ public class Cliente extends Usuario {
     @Override
     public Turista getTurista() {
         return turista;
+    }
+
+    @Override
+    public String getDni() {
+        if (turista == null) {
+            return null;
+        }
+        return turista.getDni();
+    }
+
+    @Override
+    public boolean tieneDniPropio() {
+        return false;
+    }
+
+    /** El cliente solo ve a su turista titular y a los familiares de ese titular. */
+    @Override
+    public boolean puedeVerTurista(Turista otro) {
+        Integer codigoTitular = turista.getCodigo();
+        return codigoTitular.equals(otro.getCodigo()) || codigoTitular.equals(otro.getCodigoTitular());
+    }
+
+    @Override
+    public Integer getCodigoGrupoFamiliar() {
+        return turista.getCodigo();
     }
 
     @Override
