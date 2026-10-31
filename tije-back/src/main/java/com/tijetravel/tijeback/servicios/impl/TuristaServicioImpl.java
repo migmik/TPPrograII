@@ -1,5 +1,6 @@
 package com.tijetravel.tijeback.servicios.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,9 @@ import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.Cliente;
+import com.tijetravel.tijeback.modelos.EntidadBase;
+import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
@@ -24,6 +28,7 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.servicios.AutorizacionServicio;
 import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
+import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
 import com.tijetravel.tijeback.servicios.TuristaServicio;
 
 @Service
@@ -35,6 +40,7 @@ public class TuristaServicioImpl implements TuristaServicio {
     private final ReservaRepositorio reservaRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final AutorizacionServicio autorizacion;
+    private final DisponibilidadServicio disponibilidadServicio;
 
     public TuristaServicioImpl(
             TuristaRepositorio turistaRepositorio,
@@ -42,13 +48,15 @@ public class TuristaServicioImpl implements TuristaServicio {
             ReservaRepositorio reservaRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             AutorizacionServicio autorizacion,
-            BloqueoEscrituras bloqueoEscrituras) {
+            BloqueoEscrituras bloqueoEscrituras,
+            DisponibilidadServicio disponibilidadServicio) {
         this.bloqueoEscrituras = bloqueoEscrituras;
         this.turistaRepositorio = turistaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
         this.reservaRepositorio = reservaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.autorizacion = autorizacion;
+        this.disponibilidadServicio = disponibilidadServicio;
     }
 
     @Override
@@ -87,8 +95,8 @@ public class TuristaServicioImpl implements TuristaServicio {
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = new Turista(
                 dni, nombre, apellido, direccion, email, telefonoFijo, telefonoCelular, sucursal);
-        verificarDniDisponible(turista.getDni());
-        verificarEmailDisponible(turista.getEmail());
+        verificarDniDisponible(turista.getDni(), null);
+        verificarEmailDisponible(turista.getEmail(), null);
         return turistaRepositorio.save(turista);
     }
 
@@ -121,8 +129,8 @@ public class TuristaServicioImpl implements TuristaServicio {
                 telefonoCelular,
                 titular.getSucursalContratacion(),
                 titular);
-        verificarDniDisponible(familiar.getDni());
-        verificarEmailDisponible(familiar.getEmail());
+        verificarDniDisponible(familiar.getDni(), null);
+        verificarEmailDisponible(familiar.getEmail(), null);
         return turistaRepositorio.save(familiar);
     }
 
@@ -148,8 +156,7 @@ public class TuristaServicioImpl implements TuristaServicio {
             return listarParaPersonal(dniBusqueda, titular);
         }
 
-        List<Turista> grupoFamiliar = turistaRepositorio.findByCodigoOrTitularCodigoOrderByCodigo(
-                codigoGrupoFamiliar, codigoGrupoFamiliar);
+        List<Turista> grupoFamiliar = turistaRepositorio.listarGrupoFamiliar(codigoGrupoFamiliar);
         if (grupoFamiliar.isEmpty()) {
             throw new EntidadNoEncontradaException("No se encontro el turista " + codigoGrupoFamiliar);
         }
@@ -165,13 +172,13 @@ public class TuristaServicioImpl implements TuristaServicio {
     private List<Turista> listarParaPersonal(String dni, Boolean titular) {
         List<Turista> turistas;
         if (dni != null) {
-            turistas = turistaRepositorio.findByDni(dni);
+            turistas = turistaRepositorio.findByDniAndFechaBajaIsNull(dni);
         } else if (titular == null) {
-            return turistaRepositorio.findAll(Sort.by("codigo"));
+            return turistaRepositorio.findByFechaBajaIsNull(Sort.by("codigo"));
         } else if (titular) {
-            return turistaRepositorio.findByTitularIsNullOrderByCodigo();
+            return turistaRepositorio.findByTitularIsNullAndFechaBajaIsNullOrderByCodigo();
         } else {
-            return turistaRepositorio.findByTitularIsNotNullOrderByCodigo();
+            return turistaRepositorio.findByTitularIsNotNullAndFechaBajaIsNullOrderByCodigo();
         }
         List<Turista> resultado = new ArrayList<>();
         for (Turista turista : turistas) {
@@ -189,7 +196,7 @@ public class TuristaServicioImpl implements TuristaServicio {
         if (codigos == null || codigos.isEmpty()) {
             return resultado;
         }
-        for (Turista turista : turistaRepositorio.findByCodigoInOrderByCodigo(codigos)) {
+        for (Turista turista : turistaRepositorio.findByCodigoInAndFechaBajaIsNullOrderByCodigo(codigos)) {
             if (actor.puedeVerTurista(turista)) {
                 resultado.add(turista);
             }
@@ -214,7 +221,7 @@ public class TuristaServicioImpl implements TuristaServicio {
 
     private Turista encontrarPorId(Integer codigo) {
         Turista turista = turistaRepositorio.findById(codigo).orElse(null);
-        if (turista == null) {
+        if (turista == null || !turista.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el turista " + codigo);
         }
         return turista;
@@ -247,18 +254,14 @@ public class TuristaServicioImpl implements TuristaServicio {
         Sucursal sucursal = encontrarSucursal(codigoSucursal);
         Turista turista = encontrarPorId(codigo);
         String dniValidado = ValidacionModelo.dni(dni);
-        if (turistaRepositorio.existsByDniAndCodigoNot(dniValidado, codigo)) {
-            throw new EntidadDuplicadaException("Ya existe un turista con ese DNI");
-        }
+        verificarDniDisponible(dniValidado, codigo);
         String emailNormalizado = ValidacionModelo.email(email);
-        if (turistaRepositorio.existsByEmailIgnoreCaseAndCodigoNot(emailNormalizado, codigo)) {
-            throw new EntidadDuplicadaException("Ya existe un turista con ese email");
-        }
+        verificarEmailDisponible(emailNormalizado, codigo);
         turista.actualizarDatos(
                 dniValidado, nombre, apellido, direccion, emailNormalizado, telefonoFijo, telefonoCelular, sucursal);
         // Los familiares siempre pertenecen a la misma sucursal que su titular.
         if (turista.isTitular()) {
-            for (Turista familiar : turistaRepositorio.findByTitularCodigo(codigo)) {
+            for (Turista familiar : turistaRepositorio.findByTitularCodigoAndFechaBajaIsNull(codigo)) {
                 familiar.cambiarSucursal(sucursal);
             }
         }
@@ -267,40 +270,147 @@ public class TuristaServicioImpl implements TuristaServicio {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer codigo) {
+    public void darDeBaja(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
         bloqueoEscrituras.adquirir();
         Turista turista = encontrarPorId(codigo);
-        if (reservaRepositorio.existsByTuristaCodigo(codigo)) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un turista que tiene reservas");
+
+        // Todo el grupo se da de baja con la misma fecha; asi despues se sabe que reactivar junto.
+        LocalDateTime fechaBaja = EntidadBase.ahora();
+        List<Turista> grupo = new ArrayList<>();
+        grupo.add(turista);
+        if (turista.isTitular()) {
+            grupo.addAll(turistaRepositorio.findByTitularCodigoAndFechaBajaIsNull(codigo));
+            for (Cliente cliente : usuarioRepositorio.buscarClientesDeTurista(codigo)) {
+                if (cliente.estaActivo()) {
+                    cliente.darDeBaja(fechaBaja);
+                }
+            }
         }
-        if (turistaRepositorio.existsByTitularCodigo(codigo)) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un titular que tiene familiares");
+        for (Turista integrante : grupo) {
+            // Las reservas pagadas quedan como historial; las pendientes liberan su lugar.
+            for (Reserva reserva : reservaRepositorio.findByTuristaCodigoAndPagadaFalseAndFechaBajaIsNull(
+                    integrante.getCodigo())) {
+                reserva.darDeBaja(fechaBaja);
+            }
+            integrante.darDeBaja(fechaBaja);
         }
-        if (usuarioRepositorio.contarClientesPorTurista(codigo) > 0) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un turista asociado a un usuario");
+    }
+
+    @Override
+    public List<Turista> listarBajasPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        return turistaRepositorio.findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Turista reactivar(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
+        bloqueoEscrituras.adquirir();
+        Turista turista = turistaRepositorio.findById(codigo).orElse(null);
+        if (turista == null || turista.estaActivo()) {
+            throw new EntidadNoEncontradaException("No hay un turista dado de baja con el codigo " + codigo);
         }
-        turistaRepositorio.delete(turista);
+        if (!turista.isTitular() && !turista.getTitular().estaActivo()) {
+            throw new OperacionNoPermitidaException("Primero hay que reactivar al titular del grupo familiar");
+        }
+        if (!turista.getSucursalContratacion().estaActivo()) {
+            throw new OperacionNoPermitidaException("La sucursal del turista esta dada de baja");
+        }
+
+        // Se arma la lista antes de reactivar, porque se compara la fecha de baja.
+        List<Turista> grupo = new ArrayList<>();
+        grupo.add(turista);
+        List<Cliente> cuentas = new ArrayList<>();
+        if (turista.isTitular()) {
+            for (Turista familiar : turistaRepositorio.findByTitularCodigo(codigo)) {
+                if (familiar.seDioDeBajaJuntoCon(turista)) {
+                    grupo.add(familiar);
+                }
+            }
+            for (Cliente cliente : usuarioRepositorio.buscarClientesDeTurista(codigo)) {
+                if (cliente.seDioDeBajaJuntoCon(turista)) {
+                    cuentas.add(cliente);
+                }
+            }
+        }
+        List<Reserva> reservas = new ArrayList<>();
+        for (Turista integrante : grupo) {
+            verificarDniDisponible(integrante.getDni(), integrante.getCodigo());
+            verificarEmailDisponible(integrante.getEmail(), integrante.getCodigo());
+            for (Reserva reserva : reservaRepositorio.findByTuristaCodigo(integrante.getCodigo())) {
+                if (reserva.seDioDeBajaJuntoCon(integrante)) {
+                    reservas.add(reserva);
+                }
+            }
+        }
+
+        for (Turista integrante : grupo) {
+            integrante.reactivar();
+        }
+        for (Cliente cliente : cuentas) {
+            if (!usuarioRepositorio.existsByNombreUsuarioIgnoreCaseAndFechaBajaIsNull(cliente.getNombreUsuario())) {
+                cliente.reactivar();
+            }
+        }
+        // Una reserva vuelve solo si todavia hay lugar; si no, queda en los dados de baja.
+        for (Reserva reserva : reservas) {
+            if (puedeVolver(reserva)) {
+                reserva.reactivar();
+            }
+        }
+        return turista;
+    }
+
+    private boolean puedeVolver(Reserva reserva) {
+        if (!reserva.getVuelo().estaActivo() || !reserva.getHotel().estaActivo()) {
+            return false;
+        }
+        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNull(
+                reserva.getTurista().getCodigo(), reserva.getVuelo().getNumero())) {
+            return false;
+        }
+        int plazasVuelo = disponibilidadServicio.plazasDisponiblesVuelo(
+                reserva.getVuelo().getNumero(), reserva.getClaseVuelo());
+        int plazasHotel = disponibilidadServicio.plazasDisponiblesHotel(
+                reserva.getHotel(), reserva.getFechaLlegada(), reserva.getFechaPartida());
+        return plazasVuelo > 0 && plazasHotel > 0;
     }
 
     private Sucursal encontrarSucursal(Integer codigo) {
         Sucursal sucursal = sucursalRepositorio.findById(codigo).orElse(null);
-        if (sucursal == null) {
+        if (sucursal == null || !sucursal.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro la sucursal " + codigo);
         }
         return sucursal;
     }
 
-    private void verificarDniDisponible(String dni) {
-        if (turistaRepositorio.existsByDni(dni)) {
+    private void verificarDniDisponible(String dni, Integer codigoPropio) {
+        if (dni == null) {
+            // Turistas cargados antes de que el DNI fuera obligatorio.
+            return;
+        }
+        boolean ocupado;
+        if (codigoPropio == null) {
+            ocupado = turistaRepositorio.existsByDniAndFechaBajaIsNull(dni);
+        } else {
+            ocupado = turistaRepositorio.existsByDniAndFechaBajaIsNullAndCodigoNot(dni, codigoPropio);
+        }
+        if (ocupado) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese DNI");
         }
     }
 
-    private void verificarEmailDisponible(String email) {
-        if (turistaRepositorio.existsByEmailIgnoreCase(email)) {
+    private void verificarEmailDisponible(String email, Integer codigoPropio) {
+        boolean ocupado;
+        if (codigoPropio == null) {
+            ocupado = turistaRepositorio.existsByEmailIgnoreCaseAndFechaBajaIsNull(email);
+        } else {
+            ocupado = turistaRepositorio.existsByEmailIgnoreCaseAndFechaBajaIsNullAndCodigoNot(email, codigoPropio);
+        }
+        if (ocupado) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese email");
         }
     }
-
 }

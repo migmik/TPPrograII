@@ -40,8 +40,7 @@ public class HotelesControlador {
         if (pagina < 0) pagina = 0;
         SesionRespuesta usuario = solicitud.getSession(false) == null ? null
                 : (SesionRespuesta) solicitud.getSession(false).getAttribute("usuarioActual");
-        boolean personal = usuario != null && ("VENDEDOR".equals(usuario.getRol())
-                || "ADMINISTRADOR".equals(usuario.getRol()));
+        boolean personal = usuario != null && usuario.tienePermiso("VER_CATALOGO_COMPLETO");
         boolean busqueda = ciudad != null || nombre != null;
         modelo.addAttribute("puedeVerCatalogo", personal);
         modelo.addAttribute("busquedaRealizada", busqueda || personal);

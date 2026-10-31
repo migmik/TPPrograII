@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
@@ -37,7 +38,7 @@ import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
@@ -103,7 +104,7 @@ class ReservaServicioTest {
                                 .then(returnsFirstArg());
 
                 Reserva reserva = servicio.crear(
-                                new Vendedor("vendedor", "clave", DnisPrueba.siguiente()),
+                                new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor()),
                                 1,
                                 100,
                                 1,
@@ -120,12 +121,12 @@ class ReservaServicioTest {
         @Test
         void rechazaReservaCuandoLaClaseDelVueloEstaCompleta() {
                 prepararBusquedas();
-                when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.TURISTA))
+                when(reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(100, ClaseVuelo.TURISTA))
                                 .thenReturn(1L);
 
                 try {
                         servicio.crear(
-                                new Vendedor("vendedor", "clave", DnisPrueba.siguiente()),
+                                new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor()),
                                 1,
                                 100,
                                 1,
@@ -144,11 +145,11 @@ class ReservaServicioTest {
                 when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
                 when(vueloRepositorio.findById(100)).thenReturn(Optional.of(vuelo));
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
-                when(reservaRepositorio.existsByTuristaCodigoAndVueloNumero(1, 100))
+                when(reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNull(1, 100))
                                 .thenReturn(true);
 
                 try {
-                        ingresarReservaValida(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                        ingresarReservaValida(new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor()));
                         fail("Se esperaba EntidadDuplicadaException");
                 } catch (EntidadDuplicadaException esperada) {
                         // Es la excepcion que se esperaba.
@@ -161,7 +162,7 @@ class ReservaServicioTest {
                 prepararBusquedas();
 
                 try {
-                        ingresarReservaValida(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                        ingresarReservaValida(new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor()));
                         fail("Se esperaba OperacionNoPermitidaException");
                 } catch (OperacionNoPermitidaException esperada) {
                         // Es la excepcion que se esperaba.
@@ -178,7 +179,7 @@ class ReservaServicioTest {
                                                                 LocalDate.of(2026, 10, 3))));
 
                 try {
-                        ingresarReservaValida(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                        ingresarReservaValida(new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor()));
                         fail("Se esperaba CapacidadExcedidaException");
                 } catch (CapacidadExcedidaException esperada) {
                         // Es la excepcion que se esperaba.
@@ -190,7 +191,7 @@ class ReservaServicioTest {
                 prepararBusquedas();
                 when(reservaRepositorio.save(any(Reserva.class)))
                                 .then(returnsFirstArg());
-                Reserva reserva = ingresarReservaValida(new Cliente("cliente", "clave", turista));
+                Reserva reserva = ingresarReservaValida(new Cliente("cliente", "clave", turista, RolesPrueba.cliente()));
                 assertSame(turista, reserva.getTurista());
         }
 
@@ -200,7 +201,7 @@ class ReservaServicioTest {
                                 "Direccion", "juan@example.com", "123", "456", sucursal), "codigo", 2);
                 when(turistaRepositorio.findById(2)).thenReturn(Optional.of(ajeno));
                 try {
-                        servicio.crear(new Cliente("cliente", "clave", turista), 2, 100, 1,
+                        servicio.crear(new Cliente("cliente", "clave", turista, RolesPrueba.cliente()), 2, 100, 1,
                                 ClaseVuelo.TURISTA, TipoHospedaje.MEDIA_PENSION,
                                 LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3));
                         fail("Se esperaba OperacionNoPermitidaException");
@@ -217,7 +218,7 @@ class ReservaServicioTest {
 
         @Test
         void buscaUnaPaginaPorTuristaSinConsultarTodasLasReservas() {
-                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+                Empleado vendedor = new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor());
                 Page<Reserva> pagina = new PageImpl<>(java.util.List.of(), PageRequest.of(0, 20), 0);
                 when(reservaRepositorio.buscarPagina(eq(null), eq(1), eq(null), eq(null), eq(null),
                                 eq(null), eq(null), eq(null), any(Pageable.class))).thenReturn(pagina);
@@ -233,7 +234,7 @@ class ReservaServicioTest {
 
         @Test
         void aceptaFiltrosCombinadosYFechasIncompletas() {
-                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+                Empleado vendedor = new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor());
                 servicio.paginaPara(vendedor, 1, null, 100, null, null, null, null, 0, 20);
                 servicio.paginaPara(vendedor, null, null, null, null,
                                 LocalDate.of(2026, 10, 1), null, null, 0, 20);

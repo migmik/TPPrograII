@@ -191,7 +191,7 @@ public class TuristasControlador {
                     "No pudimos confirmar la eliminación. Consultá el listado antes de volver a intentarlo.");
             return "turistas/eliminar";
         }
-        redireccion.addFlashAttribute("mensajeExito", "Turista eliminado correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Turista dado de baja correctamente.");
         return "redirect:/turistas";
     }
 
@@ -211,11 +211,11 @@ public class TuristasControlador {
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();
         sesion.setAttribute("usuarioActual", usuario);
         modelo.addAttribute("usuarioActual", usuario);
-        boolean puedeGestionar = "ADMINISTRADOR".equals(usuario.getRol()) || "VENDEDOR".equals(usuario.getRol());
+        boolean puedeGestionar = usuario.tienePermiso("ADMINISTRAR_TURISTAS");
         modelo.addAttribute("puedeGestionar", puedeGestionar);
         if (escritura && !puedeGestionar) {
             respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo administradores y vendedores pueden gestionar turistas.");
+            modelo.addAttribute("mensaje", "No tenés permiso para gestionar turistas.");
             return "error";
         }
         return null;

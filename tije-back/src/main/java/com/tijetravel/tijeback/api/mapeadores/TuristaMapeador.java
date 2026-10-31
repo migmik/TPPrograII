@@ -21,6 +21,8 @@ public class TuristaMapeador extends MapeadorBase<Turista, TuristaRespuesta> {
                 turista.getTelefonoCelular(),
                 turista.getSucursalContratacion().getCodigo(),
                 turista.getCodigoTitular(),
-                turista.isTitular());
+                turista.isTitular(),
+                turista.getFechaCreacion(),
+                turista.getFechaBaja());
     }
 }

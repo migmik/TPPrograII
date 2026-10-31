@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
     <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+    <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
         <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
             <!DOCTYPE html>
             <html lang="es">
@@ -28,7 +29,7 @@
                                     maxlength="8" />
                                 <form:errors path="dni" cssClass="error" />
                             </p>
-                            <p>Obligatorio para administradores y vendedores. Para clientes dejalo vacío: se usa el DNI
+                            <p>Obligatorio para los empleados. Para clientes dejalo vacío: se usa el DNI
                                 del turista elegido, que debe estar completo.</p>
 
                             <p>
@@ -43,16 +44,22 @@
                                     autocomplete="new-password" showPassword="false" />
                                 <form:errors path="contrasenia" cssClass="error" />
                             </p>
-                            <p>
-                                <form:label path="rol">Rol</form:label>
-                                <form:select path="rol" required="required">
+                            <div class="campo">
+                                <div class="campo-con-ayuda">
+                                    <form:label path="codigoRol">Rol</form:label>
+                                    <%@ include file="roles.jspf" %>
+                                </div>
+                                <form:select path="codigoRol" required="required">
                                     <form:option value="" label="Elegí un rol" />
-                                    <form:option value="ADMINISTRADOR" label="Administrador" />
-                                    <form:option value="VENDEDOR" label="Vendedor" />
-                                    <form:option value="CLIENTE" label="Cliente" />
+                                    <c:forEach items="${roles}" var="rol">
+                                        <form:option value="${rol.codigo}">
+                                            <c:out value="${rol.nombre}" />
+                                            <c:if test="${rol.paraClientes}"> (cliente)</c:if>
+                                        </form:option>
+                                    </c:forEach>
                                 </form:select>
-                                <form:errors path="rol" cssClass="error" />
-                            </p>
+                                <form:errors path="codigoRol" cssClass="error" />
+                            </div>
                             <p>
                                 <form:label path="codigoTurista">Turista asociado</form:label>
                                 <form:select path="codigoTurista" aria-describedby="ayudaTurista">
@@ -68,11 +75,10 @@
                                 </form:select>
                                 <form:errors path="codigoTurista" cssClass="error" />
                             </p>
-                            <p id="ayudaTurista">Elegí un turista solamente para el rol Cliente. Para los otros roles
-                                dejá «Sin seleccionar».</p>
+                            <p id="ayudaTurista">Elegí un turista solamente para un rol de clientes. Para los
+                                empleados dejá «Sin seleccionar».</p>
                             <c:if test="${empty turistasDisponibles}">
-                                <p>No hay turistas titulares sin cuenta disponibles. Podés crear administradores y
-                                    vendedores.
+                                <p>No hay turistas titulares sin cuenta disponibles. Podés crear empleados.
                                     Para crear un cliente necesitás primero un turista titular sin cuenta.</p>
                             </c:if>
                             <p>Si hay un error, deberás volver a escribir la contraseña.</p>

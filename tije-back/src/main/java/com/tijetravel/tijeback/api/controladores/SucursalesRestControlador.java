@@ -93,7 +93,21 @@ public class SucursalesRestControlador {
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        sucursalServicio.eliminar(actor, codigo);
+        sucursalServicio.darDeBaja(actor, codigo);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/bajas")
+    public List<SucursalRespuesta> listarBajas(Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return sucursalMapeador.aRespuestas(sucursalServicio.listarBajasPara(actor));
+    }
+
+    @PostMapping("/{codigo}/reactivar")
+    public SucursalRespuesta reactivar(
+            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+            Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return sucursalMapeador.aRespuesta(sucursalServicio.reactivar(actor, codigo));
     }
 }

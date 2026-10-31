@@ -1,7 +1,6 @@
 package com.tijetravel.tijeback.modelos;
 
-import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.enums.RolUsuario;
+import com.tijetravel.tijeback.enums.TipoUsuario;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -13,18 +12,23 @@ import jakarta.persistence.OneToOne;
 @DiscriminatorValue("CLIENTE")
 public class Cliente extends Usuario {
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "turista_codigo", unique = true)
+    @JoinColumn(name = "turista_codigo")
     private Turista turista;
 
     protected Cliente() {
     }
 
-    public Cliente(String nombreUsuario, String contrasenia, Turista turista) {
-        super(nombreUsuario, contrasenia, RolUsuario.CLIENTE);
+    public Cliente(String nombreUsuario, String contrasenia, Turista turista, Rol rol) {
+        super(nombreUsuario, contrasenia, rol);
         if (!ValidacionModelo.obligatorio(turista, "turista").isTitular()) {
             throw new IllegalArgumentException("Un cliente solo puede asociarse a un turista titular");
         }
         this.turista = turista;
+    }
+
+    @Override
+    public TipoUsuario getTipoUsuario() {
+        return TipoUsuario.CLIENTE;
     }
 
     @Override
@@ -55,10 +59,5 @@ public class Cliente extends Usuario {
     @Override
     public Integer getCodigoGrupoFamiliar() {
         return turista.getCodigo();
-    }
-
-    @Override
-    public boolean tienePermiso(Permiso permiso) {
-        return permiso == Permiso.CONSULTAR || permiso == Permiso.CREAR_RESERVAS;
     }
 }

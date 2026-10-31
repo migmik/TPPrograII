@@ -13,11 +13,16 @@ import org.springframework.data.repository.query.Param;
 
 import com.tijetravel.tijeback.modelos.Turista;
 
+/**
+ * Las consultas que usa la aplicacion devuelven solo turistas activos (las que
+ * terminan en FechaBajaIsNull o filtran por fechaBaja). findById y findByTitularCodigo
+ * traen tambien los dados de baja: los usan las bajas y reactivaciones.
+ */
 public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     @Query("""
-            select t from Turista t where (:dni is null or t.dni = :dni)
+            select t from Turista t where t.fechaBaja is null and (:dni is null or t.dni = :dni)
             and (:titular is null or (:titular = true and t.titular is null)
                  or (:titular = false and t.titular is not null))
             """)
@@ -26,11 +31,19 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     @Query("""
-            select t from Turista t where t.titular is null and t.dni is not null
-            and not exists (select c from Cliente c where c.turista = t)
+            select t from Turista t where t.titular is null and t.dni is not null and t.fechaBaja is null
+            and not exists (select c from Cliente c where c.turista = t and c.fechaBaja is null)
             order by t.codigo
             """)
     List<Turista> listarTitularesSinCuenta();
+
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    @Query("""
+            select t from Turista t
+            where (t.codigo = :codigoTitular or t.titular.codigo = :codigoTitular) and t.fechaBaja is null
+            order by t.codigo
+            """)
+    List<Turista> listarGrupoFamiliar(@Param("codigoTitular") Integer codigoTitular);
 
     @Override
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
@@ -40,35 +53,40 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     Optional<Turista> findById(Integer codigo);
 
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    List<Turista> findByFechaBajaIsNull(Sort orden);
+
+    @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
+    List<Turista> findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+
     Turista findByEmailIgnoreCase(String email);
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByDni(String dni);
+    List<Turista> findByDniAndFechaBajaIsNull(String dni);
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByTitularIsNullOrderByCodigo();
+    List<Turista> findByTitularIsNullAndFechaBajaIsNullOrderByCodigo();
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByTitularIsNotNullOrderByCodigo();
+    List<Turista> findByTitularIsNotNullAndFechaBajaIsNullOrderByCodigo();
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByCodigoInOrderByCodigo(List<Integer> codigos);
+    List<Turista> findByCodigoInAndFechaBajaIsNullOrderByCodigo(List<Integer> codigos);
 
-    boolean existsByDni(String dni);
+    boolean existsByDniAndFechaBajaIsNull(String dni);
 
-    boolean existsByDniAndCodigoNot(String dni, Integer codigo);
+    boolean existsByDniAndFechaBajaIsNullAndCodigoNot(String dni, Integer codigo);
 
-    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCaseAndFechaBajaIsNull(String email);
 
-    boolean existsByEmailIgnoreCaseAndCodigoNot(String email, Integer codigo);
+    boolean existsByEmailIgnoreCaseAndFechaBajaIsNullAndCodigoNot(String email, Integer codigo);
 
+    /** Todos los familiares del titular, activos o dados de baja. */
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     List<Turista> findByTitularCodigo(Integer codigoTitular);
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
-    List<Turista> findByCodigoOrTitularCodigoOrderByCodigo(Integer codigo, Integer codigoTitular);
+    List<Turista> findByTitularCodigoAndFechaBajaIsNull(Integer codigoTitular);
 
-    boolean existsByTitularCodigo(Integer codigoTitular);
-
-    boolean existsBySucursalContratacionCodigo(Integer codigoSucursal);
+    boolean existsBySucursalContratacionCodigoAndFechaBajaIsNull(Integer codigoSucursal);
 }

@@ -7,33 +7,47 @@ skinparam packageStyle rectangle
 hide empty members
 
 package "com.tijetravel.tijeback.enums" {
-    enum RolUsuario
+    enum TipoUsuario
     enum Permiso
     enum ClaseVuelo
     enum TipoHospedaje
 }
 
 package "com.tijetravel.tijeback.modelos" {
+    abstract class EntidadBase {
+        - fechaCreacion: LocalDateTime
+        - fechaBaja: LocalDateTime
+        + darDeBaja(fecha): void
+        + reactivar(): void
+        + estaActivo(): boolean
+    }
+    class Rol {
+        - codigo: Integer
+        - nombre: String
+        - tipoUsuario: TipoUsuario
+        - permisos: Set<Permiso>
+        + actualizar(nombre, permisos): void
+        + tienePermiso(permiso): boolean
+    }
     abstract class Usuario {
         - codigo: Integer
         - nombreUsuario: String
         - contrasenia: String
         - dni: String
-        - rol: RolUsuario
+        - rol: Rol
+        + {abstract} getTipoUsuario(): TipoUsuario
+        + cambiarRol(rol): void
         + actualizarCredenciales(nombreUsuario, contrasenia): void
-        + {abstract} tienePermiso(permiso): boolean
+        + tienePermiso(permiso): boolean
         + puedeVerTurista(turista): boolean
         + getCodigoGrupoFamiliar(): Integer
         + tieneDniPropio(): boolean
     }
-    class Administrador {
-        + tienePermiso(permiso): boolean
-    }
-    class Vendedor {
-        + tienePermiso(permiso): boolean
+    class Empleado {
+        + getTipoUsuario(): TipoUsuario
     }
     class Cliente {
-        + tienePermiso(permiso): boolean
+        + getTipoUsuario(): TipoUsuario
         + puedeVerTurista(turista): boolean
         + getCodigoGrupoFamiliar(): Integer
         + tieneDniPropio(): boolean
@@ -56,8 +70,14 @@ package "com.tijetravel.tijeback.modelos" {
     class Reserva
 }
 
-Usuario <|-- Administrador
-Usuario <|-- Vendedor
+EntidadBase <|-- Usuario
+EntidadBase <|-- Rol
+EntidadBase <|-- Turista
+EntidadBase <|-- Sucursal
+EntidadBase <|-- Hotel
+EntidadBase <|-- Vuelo
+EntidadBase <|-- Reserva
+Usuario <|-- Empleado
 Usuario <|-- Cliente
 Cliente --> Turista
 Turista --> Sucursal : sucursalContratacion
@@ -68,8 +88,9 @@ Reserva --> Vuelo
 Reserva --> Hotel
 Reserva --> ClaseVuelo
 Reserva --> TipoHospedaje
-Usuario --> RolUsuario
-Usuario ..> Permiso
+Usuario --> Rol
+Rol --> TipoUsuario
+Rol --> Permiso
 
 @enduml
 
@@ -105,13 +126,11 @@ package "seguridad" {
 package "servicios.usuarios" {
     class UsuarioFactory
     interface CreadorUsuario
-    class CreadorAdministrador
-    class CreadorVendedor
+    class CreadorEmpleado
     class CreadorCliente
 }
-UsuarioFactory --> CreadorUsuario : registro por rol
-CreadorUsuario <|.. CreadorAdministrador
-CreadorUsuario <|.. CreadorVendedor
+UsuarioFactory --> CreadorUsuario : registro por tipo de usuario
+CreadorUsuario <|.. CreadorEmpleado
 CreadorUsuario <|.. CreadorCliente
 UsuarioServicioImpl --> UsuarioFactory
 

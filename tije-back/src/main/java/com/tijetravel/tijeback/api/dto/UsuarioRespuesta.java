@@ -1,11 +1,17 @@
 package com.tijetravel.tijeback.api.dto;
 
-import com.tijetravel.tijeback.enums.RolUsuario;
+import java.time.LocalDateTime;
+
+import com.tijetravel.tijeback.enums.TipoUsuario;
 
 public record UsuarioRespuesta(
                 Integer codigo,
                 String dni,
                 String nombreUsuario,
-                RolUsuario rol,
-                Integer codigoTurista) {
+                Integer codigoRol,
+                String rol,
+                TipoUsuario tipoUsuario,
+                Integer codigoTurista,
+                LocalDateTime fechaCreacion,
+                LocalDateTime fechaBaja) {
 }

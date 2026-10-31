@@ -10,5 +10,7 @@ public record VueloRespuesta(
                 int totalPlazas,
                 int plazasTurista,
                 int plazasPrimera,
-                int precio) {
+                int precio,
+                LocalDateTime fechaCreacion,
+                LocalDateTime fechaBaja) {
 }

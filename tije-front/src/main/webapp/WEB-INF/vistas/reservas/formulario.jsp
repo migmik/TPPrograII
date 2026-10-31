@@ -61,7 +61,7 @@
                             </p>
                             <c:if test="${empty actual}"><a href="<c:url value='/'/>">Cambiar viaje</a></c:if>
                         </section>
-                        <c:if test="${usuarioActual.rol != 'CLIENTE' and empty actual}">
+                        <c:if test="${not usuarioActual.cliente and empty actual}">
                             <form method="get" action="<c:url value='/reservas/nueva'/>">
                                 <input type="hidden" name="numeroVuelo" value="<c:out value='${reserva.numeroVuelo}'/>">
                                 <input type="hidden" name="codigoHotel" value="<c:out value='${reserva.codigoHotel}'/>">

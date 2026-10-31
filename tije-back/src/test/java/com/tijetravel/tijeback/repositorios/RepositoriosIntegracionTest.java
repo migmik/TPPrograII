@@ -2,6 +2,8 @@ package com.tijetravel.tijeback.repositorios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,22 +12,23 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.modelos.Vuelo;
 
 @SpringBootTest
@@ -49,6 +52,9 @@ class RepositoriosIntegracionTest {
 
         @Autowired
         private ReservaRepositorio reservaRepositorio;
+
+        @Autowired
+        private RolRepositorio rolRepositorio;
 
         @Autowired
         private UsuarioRepositorio usuarioRepositorio;
@@ -81,9 +87,9 @@ class RepositoriosIntegracionTest {
                                 20,
                                 15,
                                 5));
-                usuarioRepositorio.save(new Cliente("ana", "clave", titular));
-                usuarioRepositorio.save(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
-                usuarioRepositorio.save(new Administrador("admin", "clave", DnisPrueba.siguiente()));
+                usuarioRepositorio.save(new Cliente("ana", "clave", titular, rol("Cliente")));
+                usuarioRepositorio.save(new Empleado("vendedor", "clave", DnisPrueba.siguiente(), rol("Vendedor")));
+                usuarioRepositorio.save(new Empleado("admin", "clave", DnisPrueba.siguiente(), rol("Administrador")));
                 reservaRepositorio.saveAndFlush(new Reserva(
                                 familiar,
                                 vuelo,
@@ -93,28 +99,24 @@ class RepositoriosIntegracionTest {
                                 LocalDate.of(2026, 10, 1),
                                 LocalDate.of(2026, 10, 3)));
 
-                Usuario usuario = usuarioRepositorio.findByNombreUsuarioIgnoreCase("ANA");
+                Usuario usuario = usuarioRepositorio.buscarActivoPorNombre("ANA");
 
                 assertInstanceOf(Cliente.class, usuario);
-                assertEquals(RolUsuario.CLIENTE, usuario.getRol());
+                assertEquals("Cliente", usuario.getRol().getNombre());
                 assertEquals(titular.getCodigo(), usuario.getCodigoTurista());
                 assertEquals(1, usuarioRepositorio.contarClientesPorTurista(titular.getCodigo()));
                 assertEquals(1, turistaRepositorio.findByTitularCodigo(titular.getCodigo()).size());
-                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNullOrderByCodigo().get(0).getCodigo());
-                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNullOrderByCodigo().get(0).getCodigo());
-                assertEquals(familiar.getCodigo(), turistaRepositorio.findByDni(familiar.getDni()).get(0).getCodigo());
-                assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.CLIENTE).size());
-                assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.VENDEDOR).size());
-                assertEquals(1, usuarioRepositorio.findByRol(RolUsuario.ADMINISTRADOR).size());
+                assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNullAndFechaBajaIsNullOrderByCodigo().get(0).getCodigo());
+                assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNullAndFechaBajaIsNullOrderByCodigo().get(0).getCodigo());
+                assertEquals(familiar.getCodigo(), turistaRepositorio.findByDniAndFechaBajaIsNull(familiar.getDni()).get(0).getCodigo());
+                assertEquals(1, usuarioRepositorio.listarActivosPorRol(rol("Cliente").getCodigo()).size());
+                assertEquals(1, usuarioRepositorio.listarActivosPorRol(rol("Vendedor").getCodigo()).size());
+                assertEquals(1, usuarioRepositorio.listarActivosPorRol(rol("Administrador").getCodigo()).size());
                 assertEquals(1, reservaRepositorio.listarPorTitularYFamiliares(titular.getCodigo()).size());
-                assertEquals(1, reservaRepositorio.findByTuristaCodigo(familiar.getCodigo(), PageRequest.of(0, 1))
-                                .getTotalElements());
-                assertEquals(1, reservaRepositorio.findByVueloNumero(100, PageRequest.of(0, 1)).getTotalElements());
-                assertEquals(1, reservaRepositorio.findByHotelCodigo(hotel.getCodigo(), PageRequest.of(0, 1))
-                                .getTotalElements());
-                assertEquals(1, reservaRepositorio.findByFechaLlegadaBetween(
-                                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3), PageRequest.of(0, 1))
-                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.findByTuristaCodigo(familiar.getCodigo()).size());
+                assertEquals(1, reservaRepositorio.findByVueloNumeroAndFechaBajaIsNull(100).size());
+                assertEquals(1, reservaRepositorio.findByHotelCodigoAndFechaBajaIsNull(hotel.getCodigo()).size());
+                assertEquals(1, reservaRepositorio.findByFechaBajaIsNull(Sort.by("codigo")).size());
                 assertEquals(1, reservaRepositorio.findAll(PageRequest.of(0, 1)).getTotalElements());
                 assertEquals(1, reservaRepositorio.buscarPagina(null, familiar.getCodigo(), familiar.getDni(),
                                 100, hotel.getCodigo(), null, null, false, PageRequest.of(0, 10))
@@ -127,15 +129,43 @@ class RepositoriosIntegracionTest {
                                 .getTotalElements());
                 assertEquals(1, reservaRepositorio.balancePagadas().getReservasPendientes());
                 assertEquals(0, reservaRepositorio.balancePagadas().getReservasPagadas());
-                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.CLIENTE, null, null,
+                assertEquals(1, usuarioRepositorio.buscarPagina(rol("Cliente").getCodigo(), null, null,
                                 titular.getDni(), PageRequest.of(0, 10)).getTotalElements());
-                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.ADMINISTRADOR,
-                                usuarioRepositorio.findByRol(RolUsuario.ADMINISTRADOR).get(0).getCodigo(),
+                assertEquals(1, usuarioRepositorio.buscarPagina(rol("Administrador").getCodigo(),
+                                usuarioRepositorio.listarActivosPorRol(rol("Administrador").getCodigo()).get(0).getCodigo(),
                                 null, null, PageRequest.of(0, 10)).getTotalElements());
         }
 
         @Test
         void aplicaLaMigracionInicialAntesDeValidarJpa() {
-                assertEquals("9", flyway.info().current().getVersion().getVersion());
+                assertEquals("11", flyway.info().current().getVersion().getVersion());
+        }
+
+        @Test
+        void unDniDadoDeBajaSePuedeVolverAUsarPeroNoEntreActivos() {
+                Sucursal sucursal = sucursalRepositorio.save(new Sucursal("Av. Bajas 1", "351-1000"));
+                String dni = DnisPrueba.siguiente();
+                Turista anterior = turistaRepositorio.saveAndFlush(new Turista(dni, "Ana", "Lopez", "Calle 1",
+                                "repetido@example.com", "1", "2", sucursal));
+                anterior.darDeBaja(LocalDateTime.of(2026, 1, 1, 10, 0));
+                turistaRepositorio.saveAndFlush(anterior);
+
+                Turista nueva = turistaRepositorio.saveAndFlush(new Turista(dni, "Ana", "Lopez", "Calle 2",
+                                "repetido@example.com", "1", "2", sucursal));
+                assertTrue(nueva.estaActivo());
+                assertEquals(1, turistaRepositorio.findByDniAndFechaBajaIsNull(dni).size());
+
+                try {
+                        turistaRepositorio.saveAndFlush(new Turista(dni, "Otra", "Persona", "Calle 3",
+                                        "otro@example.com", "1", "2", sucursal));
+                        fail("La base tenia que rechazar dos turistas activos con el mismo DNI");
+                } catch (DataIntegrityViolationException esperada) {
+                        // El indice unico sobre dni_activo sigue controlando a los activos.
+                }
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

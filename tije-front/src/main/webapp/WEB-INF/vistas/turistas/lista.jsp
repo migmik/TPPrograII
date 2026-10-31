@@ -24,13 +24,16 @@
                             <p>Estos son los turistas de tu grupo familiar.</p>
                         </c:if>
                         <c:if test="${puedeGestionar}">
-                            <p><a href="<c:url value='/turistas/nuevo'/>">Crear turista</a></p>
+                            <c:set var="rutaModulo" value="turistas" />
+                            <c:set var="estadoListado" value="activos" />
+                            <c:set var="verBajas" value="true" />
+                            <c:set var="textoAgregar" value="Agregar turista" />
+                            <c:set var="urlAgregar" value="/turistas/nuevo" />
+                            <%@ include file="../fragmentos/barra-listado.jspf" %>
                             <form class="filter-form" method="get" action="<c:url value='/turistas'/>">
                                 <div class="filter-field"><label for="dni">Buscar por DNI</label>
                                 <input type="search" id="dni" name="dni" inputmode="numeric" minlength="7"
-                                    maxlength="8" pattern="[0-9]{7,8}" value="<c:out value='${dniBusqueda}'/>"
-                                    aria-describedby="dni-ayuda">
-                                <span id="dni-ayuda">Ingresá 7 u 8 dígitos.</span></div>
+                                    maxlength="8" pattern="[0-9]{7,8}" value="<c:out value='${dniBusqueda}'/>"></div>
                                 <div class="filter-field"><label for="titular">Tipo</label>
                                 <select id="titular" name="titular">
                                     <option value="" <c:if test="${empty titularBusqueda}">selected</c:if>>Todos</option>
@@ -81,7 +84,7 @@
                                                         | <a
                                                             href="<c:url value='/turistas/${turista.codigo}/editar'/>">Editar</a>
                                                         | <a
-                                                            href="<c:url value='/turistas/${turista.codigo}/eliminar'/>">Eliminar</a>
+                                                            href="<c:url value='/turistas/${turista.codigo}/eliminar'/>">Dar de baja</a>
                                                     </c:if>
                                                 </td>
                                             </tr>

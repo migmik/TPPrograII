@@ -18,6 +18,8 @@ public class VueloMapeador extends MapeadorBase<Vuelo, VueloRespuesta> {
                 vuelo.getTotalPlazas(),
                 vuelo.getPlazasTurista(),
                 vuelo.getPlazasPrimera(),
-                vuelo.getPrecio());
+                vuelo.getPrecio(),
+                vuelo.getFechaCreacion(),
+                vuelo.getFechaBaja());
     }
 }

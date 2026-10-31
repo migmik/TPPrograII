@@ -141,7 +141,21 @@ public class HotelesRestControlador {
             @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        hotelServicio.eliminar(actor, codigo);
+        hotelServicio.darDeBaja(actor, codigo);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/bajas")
+    public List<HotelRespuesta> listarBajas(Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return hotelMapeador.aRespuestas(hotelServicio.listarBajasPara(actor));
+    }
+
+    @PostMapping("/{codigo}/reactivar")
+    public HotelRespuesta reactivar(
+            @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+            Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return hotelMapeador.aRespuesta(hotelServicio.reactivar(actor, codigo));
     }
 }

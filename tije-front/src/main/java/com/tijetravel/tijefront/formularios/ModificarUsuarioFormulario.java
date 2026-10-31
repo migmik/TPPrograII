@@ -1,6 +1,8 @@
 package com.tijetravel.tijefront.formularios;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public class ModificarUsuarioFormulario {
@@ -19,9 +21,21 @@ public class ModificarUsuarioFormulario {
     @Size(max = 255, message = "El nombre no puede superar 255 caracteres.")
     private String nombreUsuario;
 
-    @NotBlank(message = "Ingresá la nueva contraseña.")
+    // Opcional: si se deja vacia se conserva la contrasenia actual.
     @Size(max = 72, message = "La contraseña no puede superar 72 caracteres.")
     private String contrasenia;
+
+    @NotNull(message = "Elegí un rol.")
+    @Positive(message = "Elegí un rol válido.")
+    private Integer codigoRol;
+
+    public Integer getCodigoRol() {
+        return codigoRol;
+    }
+
+    public void setCodigoRol(Integer codigoRol) {
+        this.codigoRol = codigoRol;
+    }
 
     public String getNombreUsuario() {
         return nombreUsuario;

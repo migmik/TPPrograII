@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
+import com.tijetravel.tijefront.SesionesPrueba;
 import com.tijetravel.tijefront.clientes.*;
 import com.tijetravel.tijefront.dto.*;
 import com.tijetravel.tijefront.dto.PaginaTuristasRespuesta;
@@ -225,7 +226,7 @@ class TuristasControladorTest {
     private void preparar(String rol) {
         SesionRespuesta usuario = new SesionRespuesta();
         usuario.setCodigo(1);
-        usuario.setRol(rol);
+        SesionesPrueba.asignar(usuario, rol);
         when(autenticacionApi.obtenerSesion()).thenReturn(usuario);
         when(sucursalesApi.listar()).thenReturn(List.of());
         when(turistasApi.listar()).thenReturn(List.of());

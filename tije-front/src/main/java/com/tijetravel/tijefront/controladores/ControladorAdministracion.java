@@ -11,9 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Base de las pantallas que solo usa el administrador (hoteles, vuelos,
- * sucursales y usuarios). Junta el control de acceso y el manejo de errores
- * de la API que antes estaba copiado en cada controlador.
+ * Base de las pantallas de gestion (hoteles, vuelos, sucursales, usuarios y
+ * roles). Junta el control de acceso y el manejo de errores de la API que antes
+ * estaba copiado en cada controlador. Cada pantalla dice que permiso pide.
  */
 public abstract class ControladorAdministracion {
     protected final AutenticacionApiCliente autenticacionApi;
@@ -25,6 +25,9 @@ public abstract class ControladorAdministracion {
     /** Nombre de lo que administra la pantalla, para los mensajes. Por ejemplo "hoteles". */
     protected abstract String recursoGestionado();
 
+    /** Permiso que hace falta para usar la pantalla. Por ejemplo "ADMINISTRAR_HOTELES". */
+    protected abstract String permisoRequerido();
+
     /** Mensaje cuando la API responde 403. Cada pantalla lo puede cambiar. */
     protected String mensajeOperacionNoPermitida() {
         return "La API no permite esta operación. Revisá tus permisos y las reservas relacionadas.";
@@ -32,7 +35,8 @@ public abstract class ControladorAdministracion {
 
     /**
      * Devuelve la vista a mostrar si el usuario no puede entrar (login o error),
-     * o null si es un administrador con la sesion vigente.
+     * o null si tiene el permiso y la sesion vigente. Los permisos se vuelven a
+     * pedir a la API para tomar los cambios de rol al instante.
      */
     protected String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta,
             Model modelo) {
@@ -43,9 +47,9 @@ public abstract class ControladorAdministracion {
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();
         sesion.setAttribute("usuarioActual", usuario);
         modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
+        if (!usuario.tienePermiso(permisoRequerido())) {
             respuesta.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar " + recursoGestionado() + ".");
+            modelo.addAttribute("mensaje", "No tenés permiso para gestionar " + recursoGestionado() + ".");
             return "error";
         }
         return null;

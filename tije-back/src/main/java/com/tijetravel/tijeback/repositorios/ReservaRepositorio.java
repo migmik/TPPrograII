@@ -16,6 +16,11 @@ import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.modelos.BalanceVentas;
 import com.tijetravel.tijeback.modelos.Reserva;
 
+/**
+ * Las consultas que usa la aplicacion cuentan solo reservas activas: una
+ * reserva dada de baja no ocupa plazas ni suma en el balance. findById y
+ * findByTuristaCodigo traen tambien las dadas de baja para poder reactivarlas.
+ */
 public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
         @Query("""
@@ -26,14 +31,14 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
                     coalesce(sum(case when r.pagada = true then r.total else 0 end), 0),
                     coalesce(sum(case when r.pagada = false then 1 else 0 end), 0),
                     coalesce(sum(case when r.pagada = false then r.total else 0 end), 0))
-                from Reserva r
+                from Reserva r where r.fechaBaja is null
                 """)
         BalanceVentas balancePagadas();
 
         @EntityGraph("Reserva.completa")
         @Query("""
-                select r from Reserva r where
-                    (:codigoTitular is null or r.turista.codigo = :codigoTitular
+                select r from Reserva r where r.fechaBaja is null
+                    and (:codigoTitular is null or r.turista.codigo = :codigoTitular
                         or r.turista.titular.codigo = :codigoTitular)
                     and (:codigoTurista is null or r.turista.codigo = :codigoTurista)
                     and (:dni is null or r.turista.dni = :dni)
@@ -55,62 +60,52 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
         @Override
         @EntityGraph("Reserva.completa")
-        List<Reserva> findAll(Sort orden);
-
-        @Override
-        @EntityGraph("Reserva.completa")
-        Page<Reserva> findAll(Pageable pageable);
-
-        @Override
-        @EntityGraph("Reserva.completa")
         Optional<Reserva> findById(Integer codigo);
 
-        long countByVueloNumeroAndClaseVuelo(Integer numeroVuelo, ClaseVuelo claseVuelo);
+        @EntityGraph("Reserva.completa")
+        List<Reserva> findByFechaBajaIsNull(Sort orden);
 
-        long countByVueloNumeroAndClaseVueloAndCodigoNot(
+        @EntityGraph("Reserva.completa")
+        List<Reserva> findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+
+        long countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(Integer numeroVuelo, ClaseVuelo claseVuelo);
+
+        long countByVueloNumeroAndClaseVueloAndFechaBajaIsNullAndCodigoNot(
                         Integer numeroVuelo,
                         ClaseVuelo claseVuelo,
                         Integer codigoReserva);
 
-        boolean existsByTuristaCodigoAndVueloNumero(Integer codigoTurista, Integer numeroVuelo);
+        boolean existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNull(Integer codigoTurista, Integer numeroVuelo);
 
-        boolean existsByTuristaCodigoAndVueloNumeroAndCodigoNot(
+        boolean existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNullAndCodigoNot(
                         Integer codigoTurista,
                         Integer numeroVuelo,
                         Integer codigoReserva);
 
-        boolean existsByTuristaCodigo(Integer codigoTurista);
+        /** Reservas activas del hotel que todavia no terminaron. */
+        boolean existsByHotelCodigoAndFechaBajaIsNullAndFechaPartidaAfter(Integer codigoHotel, LocalDate fecha);
 
-        boolean existsBySucursalContratacionCodigo(Integer codigoSucursal);
+        /** Reservas activas de un vuelo que todavia no salio. */
+        boolean existsByVueloNumeroAndFechaBajaIsNullAndFechaLlegadaGreaterThanEqual(
+                        Integer numeroVuelo, LocalDate fecha);
 
-        boolean existsByHotelCodigo(Integer codigoHotel);
-
-        boolean existsByVueloNumero(Integer numeroVuelo);
-
+        /** Todas las reservas del turista, activas o dadas de baja. */
         @EntityGraph("Reserva.completa")
         List<Reserva> findByTuristaCodigo(Integer codigoTurista);
 
         @EntityGraph("Reserva.completa")
-        Page<Reserva> findByTuristaCodigo(Integer codigoTurista, Pageable pageable);
+        List<Reserva> findByTuristaCodigoAndPagadaFalseAndFechaBajaIsNull(Integer codigoTurista);
 
         @EntityGraph(attributePaths = "hotel")
-        List<Reserva> findByVueloNumero(Integer numeroVuelo);
-
-        @EntityGraph("Reserva.completa")
-        Page<Reserva> findByVueloNumero(Integer numeroVuelo, Pageable pageable);
+        List<Reserva> findByVueloNumeroAndFechaBajaIsNull(Integer numeroVuelo);
 
         @EntityGraph(attributePaths = "vuelo")
-        List<Reserva> findByHotelCodigo(Integer codigoHotel);
-
-        @EntityGraph("Reserva.completa")
-        Page<Reserva> findByHotelCodigo(Integer codigoHotel, Pageable pageable);
-
-        @EntityGraph("Reserva.completa")
-        Page<Reserva> findByFechaLlegadaBetween(LocalDate desde, LocalDate hasta, Pageable pageable);
+        List<Reserva> findByHotelCodigoAndFechaBajaIsNull(Integer codigoHotel);
 
         @Query("""
                         select r from Reserva r
                         where r.hotel.codigo = :codigoHotel
+                          and r.fechaBaja is null
                           and r.fechaLlegada < :hasta
                           and r.fechaPartida > :desde
                         """)
@@ -123,8 +118,9 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
         @Query("""
                         select r
                         from Reserva r
-                        where r.turista.codigo = :codigoTitular
-                           or r.turista.titular.codigo = :codigoTitular
+                        where (r.turista.codigo = :codigoTitular
+                           or r.turista.titular.codigo = :codigoTitular)
+                          and r.fechaBaja is null
                         order by r.codigo
                         """)
         List<Reserva> listarPorTitularYFamiliares(@Param("codigoTitular") Integer codigoTitular);

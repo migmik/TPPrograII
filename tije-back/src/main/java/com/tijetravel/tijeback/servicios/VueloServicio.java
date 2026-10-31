@@ -12,12 +12,13 @@ import com.tijetravel.tijeback.modelos.Vuelo;
 /**
  * Operaciones sobre los vuelos.
  *
- * Las altas, bajas y modificaciones requieren el permiso ADMINISTRAR_VUELOS y
- * lanzan OperacionNoPermitidaException si el actor no lo tiene.
+ * Las altas, bajas, modificaciones y reactivaciones requieren el permiso
+ * ADMINISTRAR_VUELOS y lanzan OperacionNoPermitidaException si el actor no lo
+ * tiene. Las consultas solo devuelven vuelos activos.
  */
 public interface VueloServicio {
 
-    /** @throws EntidadDuplicadaException si ya existe un vuelo con ese numero */
+    /** @throws EntidadDuplicadaException si ya existe un vuelo con ese numero, aunque este dado de baja */
     Vuelo crear(Usuario actor, int numero, LocalDateTime fechaYHora, String origen, String destino,
             int totalPlazas, int plazasTurista, int plazasPrimera, int precio);
 
@@ -35,10 +36,13 @@ public interface VueloServicio {
     /** Vuelos de ese dia con lugar en clase turista para la cantidad de personas. */
     List<Vuelo> buscarEnFecha(String origen, String destino, LocalDate fecha, int personas);
 
-    /** Hasta cinco vuelos de otros dias, empezando por los mas cercanos a la fecha pedida. */
+    /** Hasta tres vuelos de otros dias, empezando por los mas cercanos a la fecha pedida. */
     List<Vuelo> sugerirOtrosDias(String origen, String destino, LocalDate fecha, int personas);
 
-    /** @throws EntidadNoEncontradaException si no existe el vuelo */
+    /** Hasta tres vuelos desde ahora, para cuando no se elige fecha. */
+    List<Vuelo> buscarProximos(String origen, String destino, int personas);
+
+    /** @throws EntidadNoEncontradaException si no existe el vuelo o esta dado de baja */
     Vuelo encontrarPorId(Integer numero);
 
     /**
@@ -48,6 +52,15 @@ public interface VueloServicio {
     Vuelo modificar(Usuario actor, Integer numero, LocalDateTime fechaYHora, String origen, String destino,
             int totalPlazas, int plazasTurista, int plazasPrimera, int precio);
 
-    /** @throws OperacionNoPermitidaException si el vuelo tiene reservas */
-    void eliminar(Usuario actor, Integer numero);
+    /**
+     * Baja logica. Las reservas de vuelos que ya salieron siguen mostrandolo.
+     *
+     * @throws OperacionNoPermitidaException si el vuelo todavia no salio y tiene reservas activas
+     */
+    void darDeBaja(Usuario actor, Integer numero);
+
+    /** Vuelos dados de baja, del mas reciente al mas antiguo. */
+    List<Vuelo> listarBajasPara(Usuario actor);
+
+    Vuelo reactivar(Usuario actor, Integer numero);
 }

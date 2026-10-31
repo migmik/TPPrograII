@@ -24,6 +24,8 @@ public class ReservaMapeador extends MapeadorBase<Reserva, ReservaRespuesta> {
                 reserva.getPrecioHotel(),
                 reserva.getTotal(),
                 reserva.isPagada(),
-                reserva.getFechaPago());
+                reserva.getFechaPago(),
+                reserva.getFechaCreacion(),
+                reserva.getFechaBaja());
     }
 }

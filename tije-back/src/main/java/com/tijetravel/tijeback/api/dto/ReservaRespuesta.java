@@ -1,6 +1,7 @@
 package com.tijetravel.tijeback.api.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -19,5 +20,7 @@ public record ReservaRespuesta(
                 int precioHotel,
                 int total,
                 boolean pagada,
-                java.time.LocalDateTime fechaPago) {
+                LocalDateTime fechaPago,
+                LocalDateTime fechaCreacion,
+                LocalDateTime fechaBaja) {
 }

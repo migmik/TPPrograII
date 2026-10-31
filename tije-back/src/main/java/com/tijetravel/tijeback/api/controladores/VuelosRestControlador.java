@@ -85,10 +85,13 @@ public class VuelosRestControlador {
 
     @GetMapping("/buscar")
     public List<VueloRespuesta> buscar(@RequestParam String origen, @RequestParam String destino,
-            @RequestParam LocalDate fecha, @RequestParam int personas,
+            @RequestParam(required = false) LocalDate fecha, @RequestParam int personas,
             @RequestParam(defaultValue = "false") boolean sugerencias) {
         List<Vuelo> vuelos;
-        if (sugerencias) {
+        if (fecha == null) {
+            // Sin fecha se muestran los proximos vuelos que salen
+            vuelos = vueloServicio.buscarProximos(origen, destino, personas);
+        } else if (sugerencias) {
             vuelos = vueloServicio.sugerirOtrosDias(origen, destino, fecha, personas);
         } else {
             vuelos = vueloServicio.buscarEnFecha(origen, destino, fecha, personas);
@@ -153,7 +156,21 @@ public class VuelosRestControlador {
             @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        vueloServicio.eliminar(actor, numero);
+        vueloServicio.darDeBaja(actor, numero);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/bajas")
+    public List<VueloRespuesta> listarBajas(Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return vueloMapeador.aRespuestas(vueloServicio.listarBajasPara(actor));
+    }
+
+    @PostMapping("/{numero}/reactivar")
+    public VueloRespuesta reactivar(
+            @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero,
+            Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return vueloMapeador.aRespuesta(vueloServicio.reactivar(actor, numero));
     }
 }

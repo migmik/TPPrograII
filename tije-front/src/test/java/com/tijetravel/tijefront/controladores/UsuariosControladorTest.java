@@ -40,7 +40,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
+import com.tijetravel.tijefront.SesionesPrueba;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
+import com.tijetravel.tijefront.clientes.RolesApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
 import com.tijetravel.tijefront.clientes.UsuariosApiCliente;
 import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
@@ -61,6 +63,8 @@ class UsuariosControladorTest {
     private UsuariosApiCliente usuariosApi;
     @MockitoBean
     private TuristasApiCliente turistasApi;
+    @MockitoBean
+    private RolesApiCliente rolesApi;
 
     @Test
     void sinSesionNoPermiteVerNiCrearUsuarios() throws Exception {
@@ -92,6 +96,7 @@ class UsuariosControladorTest {
         List<UsuarioRespuesta> usuarios = List.of(new UsuarioRespuesta());
         when(usuariosApi.listarPagina(null, null, null, null, 0))
                 .thenReturn(new PaginaUsuariosRespuesta(usuarios, 0, 1, false, false));
+        when(rolesApi.listar()).thenReturn(SesionesPrueba.roles());
         mvc.perform(get("/usuarios").session(sesion()))
                 .andExpect(view().name("usuarios/lista")).andExpect(model().attribute("usuarios", usuarios));
     }
@@ -100,15 +105,16 @@ class UsuariosControladorTest {
     void filtraUsuariosPorRol() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         List<UsuarioRespuesta> resultado = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listarPagina("VENDEDOR", null, null, null, 0))
+        when(usuariosApi.listarPagina(2, null, null, null, 0))
                 .thenReturn(new PaginaUsuariosRespuesta(resultado, 0, 1, false, false));
+        when(rolesApi.listar()).thenReturn(SesionesPrueba.roles());
 
-        mvc.perform(get("/usuarios").param("rol", "VENDEDOR").session(sesion()))
+        mvc.perform(get("/usuarios").param("codigoRol", "2").session(sesion()))
                 .andExpect(view().name("usuarios/lista"))
                 .andExpect(model().attribute("usuarios", resultado))
-                .andExpect(model().attribute("rolBusqueda", "VENDEDOR"));
+                .andExpect(model().attribute("rolBusqueda", 2));
 
-        verify(usuariosApi).listarPagina("VENDEDOR", null, null, null, 0);
+        verify(usuariosApi).listarPagina(2, null, null, null, 0);
     }
 
     @Test
@@ -133,7 +139,7 @@ class UsuariosControladorTest {
                 CrearUsuarioFormulario formulario = invocacion.getArgument(0);
                 assertEquals("nuevo", formulario.getNombreUsuario());
                 assertEquals("clave-elegida", formulario.getContrasenia());
-                assertEquals(rol, formulario.getRol());
+                assertEquals(SesionesPrueba.codigoRol(rol), formulario.getCodigoRol());
                 if ("CLIENTE".equals(rol)) {
                     assertEquals(1, formulario.getCodigoTurista());
                 } else {
@@ -170,11 +176,11 @@ class UsuariosControladorTest {
     @Test
     void validaRolCodigoYLongitudDeContraseniaEnBytes() throws Exception {
         prepararFormulario();
-        mvc.perform(alta("OTRO")).andExpect(model().attributeHasFieldErrors("usuario", "rol"));
+        mvc.perform(alta("OTRO")).andExpect(model().attributeHasFieldErrors("usuario", "codigoRol"));
         mvc.perform(alta("CLIENTE").param("codigoTurista", "abc"))
                 .andExpect(model().attributeHasFieldErrors("usuario", "codigoTurista"));
         mvc.perform(post("/usuarios").session(sesion()).with(csrf()).param("nombreUsuario", "nuevo")
-                .param("rol", "VENDEDOR").param("contrasenia", "á".repeat(40)))
+                .param("codigoRol", "2").param("dni", "74567890").param("contrasenia", "á".repeat(40)))
                 .andExpect(model().attributeHasFieldErrors("usuario", "contrasenia"));
         verify(usuariosApi, never()).crear(any());
     }
@@ -188,7 +194,7 @@ class UsuariosControladorTest {
                 .andExpect(model().attributeExists("errorCreacion", "turistasDisponibles")).andReturn();
         CrearUsuarioFormulario formulario = (CrearUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
         assertEquals("nuevo", formulario.getNombreUsuario());
-        assertEquals("CLIENTE", formulario.getRol());
+        assertEquals(3, formulario.getCodigoRol());
         assertEquals(1, formulario.getCodigoTurista());
         assertEquals("", formulario.getContrasenia());
     }
@@ -247,13 +253,46 @@ class UsuariosControladorTest {
     }
 
     @Test
-    void noModificaSinContraseniaNiConMasDe72Bytes() throws Exception {
+    void noModificaConUnaContraseniaDeMasDe72Bytes() throws Exception {
         prepararEdicion();
-        for (String clave : List.of("", "á".repeat(40))) {
-            mvc.perform(edicion(2, clave)).andExpect(view().name("usuarios/editar"))
-                    .andExpect(model().attributeHasFieldErrors("usuario", "contrasenia"));
-        }
+        mvc.perform(edicion(2, "á".repeat(40))).andExpect(view().name("usuarios/editar"))
+                .andExpect(model().attributeHasFieldErrors("usuario", "contrasenia"));
         verify(usuariosApi, never()).modificar(any(), any());
+    }
+
+    @Test
+    void cambiaElRolSinTenerQueEscribirOtraContrasenia() throws Exception {
+        prepararEdicion();
+        doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocacion) {
+                ModificarUsuarioFormulario formulario = invocacion.getArgument(1);
+                assertEquals(1, formulario.getCodigoRol());
+                assertEquals("", formulario.getContrasenia());
+                return null;
+            }
+        }).when(usuariosApi).modificar(eq(2), any());
+        mvc.perform(edicion(2, "").with(new CambiarParametro("codigoRol", "1")))
+                .andExpect(redirectedUrl("/usuarios"));
+        verify(usuariosApi).modificar(eq(2), any());
+    }
+
+    @Test
+    void unEmpleadoNoPuedeRecibirUnRolDeClientes() throws Exception {
+        prepararEdicion();
+        mvc.perform(edicion(2, "").with(new CambiarParametro("codigoRol", "3")))
+                .andExpect(view().name("usuarios/editar"))
+                .andExpect(model().attributeHasFieldErrors("usuario", "codigoRol"));
+        verify(usuariosApi, never()).modificar(any(), any());
+    }
+
+    @Test
+    void laEdicionMuestraSoloLosRolesDelMismoTipo() throws Exception {
+        prepararEdicion();
+        MvcResult resultado = mvc.perform(get("/usuarios/2/editar").session(sesion()))
+                .andExpect(view().name("usuarios/editar")).andReturn();
+        List<?> roles = (List<?>) resultado.getModelAndView().getModel().get("roles");
+        assertEquals(2, roles.size());
     }
 
     @Test
@@ -357,29 +396,35 @@ class UsuariosControladorTest {
         UsuarioRespuesta cuenta = new UsuarioRespuesta();
         cuenta.setCodigo(2);
         cuenta.setNombreUsuario("anterior");
-        cuenta.setRol("VENDEDOR");
+        cuenta.setRol("Vendedor");
+        cuenta.setCodigoRol(2);
+        cuenta.setTipoUsuario("EMPLEADO");
         when(usuariosApi.buscar(any())).thenReturn(cuenta);
+        when(rolesApi.listar()).thenReturn(SesionesPrueba.roles());
     }
 
     private MockHttpServletRequestBuilder edicion(int codigo, String clave) {
         return post("/usuarios/" + codigo + "/editar").session(sesion()).with(csrf())
-                .param("nombreUsuario", " nuevo ").param("contrasenia", clave).param("dni", "74567890");
+                .param("nombreUsuario", " nuevo ").param("contrasenia", clave).param("dni", "74567890")
+                .param("codigoRol", "2");
     }
 
     private void prepararFormulario() {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         when(turistasApi.listarTitularesSinCuenta()).thenReturn(List.of(turista(1)));
+        when(rolesApi.listar()).thenReturn(SesionesPrueba.roles());
     }
 
     private MockHttpServletRequestBuilder alta(String rol) {
         return post("/usuarios").session(sesion()).with(csrf()).param("nombreUsuario", " nuevo ")
-                .param("contrasenia", "clave-elegida").param("rol", rol).param("dni", "CLIENTE".equals(rol) ? "" : "74567890");
+                .param("contrasenia", "clave-elegida").param("codigoRol", String.valueOf(SesionesPrueba.codigoRol(rol)))
+                .param("dni", "CLIENTE".equals(rol) ? "" : "74567890");
     }
 
     private SesionRespuesta usuarioActual(String rol) {
         SesionRespuesta usuario = new SesionRespuesta();
         usuario.setCodigo(1);
-        usuario.setRol(rol);
+        SesionesPrueba.asignar(usuario, rol);
         usuario.setNombreUsuario("administrador");
         return usuario;
     }

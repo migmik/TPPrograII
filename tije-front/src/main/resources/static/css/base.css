@@ -475,6 +475,25 @@ table {
     background: #fff;
 }
 
+/* En pantallas anchas la tabla ocupa todo el ancho y el texto se parte en vez de cortarse.
+   En el celular sigue con desplazamiento horizontal. */
+@media (min-width: 701px) {
+    table {
+        display: table;
+        white-space: normal;
+    }
+
+    /* Si las acciones no entran en una linea, bajan alineadas a la izquierda */
+    td a {
+        white-space: nowrap;
+        margin: .1rem .5rem .1rem 0;
+    }
+
+    td a + a {
+        margin-left: 0;
+    }
+}
+
 caption {
     text-align: left;
     font-weight: 700;
@@ -717,7 +736,258 @@ section[aria-label="Resultado de disponibilidad"] {
     background: #edf7f1;
 }
 
+/* Boton de la cuenta, de otro color para que se distinga del menu */
+.site-auth-actions__cuenta {
+    color: #193044;
+    background: #ffd166;
+    border-color: #ffd166 !important;
+}
+
+.site-auth-actions__cuenta:hover {
+    color: #193044;
+    background: #f5c04a;
+}
+
+/* Segunda fila del encabezado: opciones segun el rol */
+.site-nav-gestion {
+    background: #2d6385;
+    border-top: 1px solid #ffffff2e;
+}
+
+.site-nav-gestion__inner {
+    max-width: 1180px;
+    margin: auto;
+    padding: .45rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .6rem;
+}
+
+.site-nav-gestion a {
+    color: #e9f5fa;
+    padding: .25rem .5rem;
+    border-radius: 5px;
+    font-size: .92rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.site-nav-gestion a:hover,
+.site-nav-gestion a:focus-visible {
+    color: #173e59;
+    background: #e5f3fa;
+}
+
+/* Inicio con resultados: el buscador queda arriba y compacto */
+/* Con resultados el buscador queda centrado en el fondo azul: mismo espacio arriba y abajo */
+.search-hero--compacta {
+    padding-block: clamp(1.25rem, 3vw, 2rem);
+}
+
+.search-hero--compacta .search-panel {
+    margin: 0;
+}
+
+.combinaciones .combinacion {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: .4rem 1rem;
+}
+
+.combinacion__datos {
+    display: flex;
+    flex-direction: column;
+}
+
+.combinacion__precio {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f5b7d;
+    white-space: nowrap;
+}
+
+.combinacion__precio small {
+    font-size: .8rem;
+    font-weight: normal;
+    color: #5b7184;
+}
+
+.combinaciones-todas {
+    margin-top: .8rem;
+}
+
+.combinaciones-todas summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #316d91;
+}
+
+/* Barra de los listados: Activos / Dados de baja y el boton para agregar */
+.barra-listado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 0 0 1.25rem;
+}
+
+.filtro-estado {
+    display: inline-flex;
+    border: 1px solid #316d91;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.filtro-estado a {
+    padding: .5rem 1rem;
+    color: #316d91;
+    background: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.filtro-estado a + a {
+    border-left: 1px solid #316d91;
+}
+
+.filtro-estado a:hover {
+    background: #eaf4f9;
+}
+
+.filtro-estado a[aria-current] {
+    color: #fff;
+    background: #316d91;
+}
+
+/* Casillas y opciones: no usan el ancho completo de los otros campos */
+input[type="checkbox"],
+input[type="radio"] {
+    display: inline-block;
+    width: 1.1rem;
+    height: 1.1rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 auto;
+    accent-color: #316d91;
+}
+
+fieldset {
+    margin: 0 0 1.1rem;
+    padding: .8rem 1rem;
+    border: 1px solid #c8dbe6;
+    border-radius: 8px;
+}
+
+legend {
+    padding: 0 .3rem;
+    font-weight: 600;
+}
+
+fieldset label {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: .35rem 0;
+    font-weight: normal;
+}
+
+/* Roles y permisos */
+.permisos-lista {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.permisos-casillas small {
+    color: #5b7184;
+}
+
+/* Campo con un signo de pregunta que abre una ayuda chica */
+.campo {
+    margin: 0 0 1.1rem;
+}
+
+.campo-con-ayuda {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-bottom: .35rem;
+}
+
+.campo-con-ayuda label {
+    margin: 0;
+}
+
+.ayuda {
+    position: relative;
+}
+
+.ayuda summary {
+    display: grid;
+    place-items: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background: #316d91;
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+}
+
+.ayuda summary::-webkit-details-marker {
+    display: none;
+}
+
+.ayuda__texto {
+    position: absolute;
+    z-index: 5;
+    top: 1.6rem;
+    left: 0;
+    width: min(320px, 80vw);
+    padding: .6rem .8rem;
+    background: #fff;
+    border: 1px solid #c8dbe6;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(20, 50, 70, .15);
+    font-size: .85rem;
+}
+
+.ayuda__texto p {
+    margin: 0 0 .4rem;
+}
+
+/* Resultados de la busqueda del inicio */
+.search-results__aviso {
+    margin: 0 0 .5rem;
+    color: #526b7c;
+    font-size: .92rem;
+}
+
+.search-results__booking + .search-results__columns {
+    margin-top: 1.5rem;
+}
+
+.search-results__booking .combinaciones li {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.combinaciones .search-results__reserve-link {
+    justify-self: start;
+}
+
 @media (max-width: 700px) {
+    .combinaciones .combinacion {
+        grid-template-columns: 1fr;
+    }
+
+    .site-nav-gestion__inner {
+        padding: .45rem 1rem;
+    }
+
     .site-header__inner {
         padding: .85rem 1rem;
         gap: .6rem;

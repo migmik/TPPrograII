@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.SucursalesApiCliente;
+import com.tijetravel.tijefront.dto.PaginaLista;
 import com.tijetravel.tijefront.dto.SucursalResumen;
 import com.tijetravel.tijefront.formularios.GuardarSucursalFormulario;
 
@@ -33,10 +34,13 @@ public class SucursalesControlador extends ControladorAdministracion {
     }
 
     @GetMapping
-    public String listar(@RequestParam(required = false) String ciudad, Model modelo) {
+    public String listar(@RequestParam(required = false) String ciudad,
+            @RequestParam(defaultValue = "0") int pagina, Model modelo) {
         modelo.addAttribute("ciudadBusqueda", ciudad);
         modelo.addAttribute("ciudades", sucursalesApi.listarCiudades());
-        modelo.addAttribute("sucursales", sucursalesApi.listar(ciudad));
+        PaginaLista<SucursalResumen> paginacion = new PaginaLista<>(sucursalesApi.listar(ciudad), pagina);
+        modelo.addAttribute("sucursales", paginacion.getElementos());
+        modelo.addAttribute("paginacion", paginacion);
         return "sucursales/lista";
     }
 
@@ -142,7 +146,7 @@ public class SucursalesControlador extends ControladorAdministracion {
         } catch (ResourceAccessException error) {
             return mostrarConexionIncierta(respuesta, modelo, "sucursales/eliminar");
         }
-        redireccion.addFlashAttribute("mensajeExito", "Sucursal eliminada correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Sucursal dada de baja correctamente.");
         return "redirect:/sucursales";
     }
 
@@ -154,5 +158,10 @@ public class SucursalesControlador extends ControladorAdministracion {
     @Override
     protected String mensajeOperacionNoPermitida() {
         return "La API no permite esta operación. Revisá tus permisos y los datos relacionados.";
+    }
+
+    @Override
+    protected String permisoRequerido() {
+        return "ADMINISTRAR_SUCURSALES";
     }
 }
