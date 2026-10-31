@@ -717,6 +717,48 @@ section[aria-label="Resultado de disponibilidad"] {
     background: #edf7f1;
 }
 
+/* Boton de la cuenta, de otro color para que se distinga del menu */
+.site-auth-actions__cuenta {
+    color: #193044;
+    background: #ffd166;
+    border-color: #ffd166 !important;
+}
+
+.site-auth-actions__cuenta:hover {
+    color: #193044;
+    background: #f5c04a;
+}
+
+/* Segunda fila del encabezado: opciones segun el rol */
+.site-nav-gestion {
+    background: #2d6385;
+    border-top: 1px solid #ffffff2e;
+}
+
+.site-nav-gestion__inner {
+    max-width: 1180px;
+    margin: auto;
+    padding: .45rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .6rem;
+}
+
+.site-nav-gestion a {
+    color: #e9f5fa;
+    padding: .25rem .5rem;
+    border-radius: 5px;
+    font-size: .92rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.site-nav-gestion a:hover,
+.site-nav-gestion a:focus-visible {
+    color: #173e59;
+    background: #e5f3fa;
+}
+
 /* Activos / dados de baja */
 .filtro-estado {
     display: flex;
@@ -777,6 +819,10 @@ section[aria-label="Resultado de disponibilidad"] {
 }
 
 @media (max-width: 700px) {
+    .site-nav-gestion__inner {
+        padding: .45rem 1rem;
+    }
+
     .site-header__inner {
         padding: .85rem 1rem;
         gap: .6rem;
