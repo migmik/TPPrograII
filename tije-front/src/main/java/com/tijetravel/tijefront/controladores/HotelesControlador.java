@@ -1,5 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -8,13 +10,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
-import com.tijetravel.tijefront.dto.SesionRespuesta;
 
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
+import com.tijetravel.tijefront.dto.PaginaHotelesRespuesta;
+import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.formularios.ConsultaDisponibilidad;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @Controller
@@ -46,8 +48,10 @@ public class HotelesControlador {
         modelo.addAttribute("ciudadBusqueda", ciudad);
         modelo.addAttribute("nombreBusqueda", nombre);
         modelo.addAttribute("orden", orden);
+        modelo.addAttribute("ciudades", hotelesApi.listarCiudades());
+        modelo.addAttribute("nombresHoteles", hotelesApi.listarNombres());
         if (busqueda || personal) {
-            var resultado = hotelesApi.listarPagina(ciudad, nombre, orden, pagina, personal);
+            PaginaHotelesRespuesta resultado = hotelesApi.listarPagina(ciudad, nombre, orden, pagina, personal);
             modelo.addAttribute("hoteles", resultado.elementos());
             modelo.addAttribute("pagina", resultado.pagina());
             modelo.addAttribute("totalPaginas", resultado.totalPaginas());

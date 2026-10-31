@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -28,16 +28,27 @@ public class HotelesApiCliente {
         this.conexion = conexion;
     }
 
+    public List<String> listarCiudades() { return opciones("/api/v1/hoteles/ciudades"); }
+
+    public List<String> listarNombres() { return opciones("/api/v1/hoteles/nombres"); }
+
+    private List<String> opciones(String ruta) {
+        String[] valores = clienteBackend.get().uri(ruta).retrieve().body(String[].class);
+        if (valores == null) throw new RestClientException("La API no devolvio las opciones de hoteles.");
+        return Arrays.asList(valores);
+    }
+
     public PaginaHotelesRespuesta listarPagina(String ciudad, String nombre, String orden,
             int pagina, boolean personal) {
-        RestClient cliente = personal ? conexion.getCliente() : clienteBackend;
-        PaginaHotelesRespuesta resultado = cliente.get().uri(uri -> {
-            var ruta = uri.path("/api/v1/hoteles/pagina")
-                    .queryParam("pagina", pagina).queryParam("tamanio", 20).queryParam("orden", orden);
-            if (ciudad != null) ruta.queryParam("ciudad", ciudad);
-            if (nombre != null) ruta.queryParam("nombre", nombre);
-            return ruta.build();
-        }).retrieve().body(PaginaHotelesRespuesta.class);
+        RestClient cliente = clienteBackend;
+        if (personal) {
+            cliente = conexion.getCliente();
+        }
+        RutaConsulta ruta = new RutaConsulta("/api/v1/hoteles/pagina")
+                .parametro("pagina", pagina).parametro("tamanio", 20).parametro("orden", orden)
+                .parametro("ciudad", ciudad).parametro("nombre", nombre);
+        PaginaHotelesRespuesta resultado = cliente.get().uri(ruta.getPlantilla(), ruta.getValores())
+                .retrieve().body(PaginaHotelesRespuesta.class);
         if (resultado == null) throw new RestClientException("La API no devolvió la página de hoteles.");
         return resultado;
     }
@@ -51,8 +62,8 @@ public class HotelesApiCliente {
 
     public List<HotelRespuesta> listar(String orden) {
         if ("codigo".equals(orden)) return listar();
-        HotelRespuesta[] hoteles = clienteBackend.get()
-                .uri(uri -> uri.path("/api/v1/hoteles").queryParam("orden", orden).build())
+        RutaConsulta ruta = new RutaConsulta("/api/v1/hoteles").parametro("orden", orden);
+        HotelRespuesta[] hoteles = clienteBackend.get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve()
                 .body(HotelRespuesta[].class);
         if (hoteles == null) {
@@ -63,10 +74,10 @@ public class HotelesApiCliente {
 
     public List<HotelRespuesta> buscar(String ciudad, LocalDate llegada, LocalDate partida,
             int personas) {
-        HotelRespuesta[] hoteles = clienteBackend.get()
-                .uri(uri -> uri.path("/api/v1/hoteles/buscar")
-                        .queryParam("ciudad", ciudad).queryParam("fechaLlegada", llegada)
-                        .queryParam("fechaPartida", partida).queryParam("personas", personas).build())
+        RutaConsulta ruta = new RutaConsulta("/api/v1/hoteles/buscar")
+                .parametro("ciudad", ciudad).parametro("fechaLlegada", llegada)
+                .parametro("fechaPartida", partida).parametro("personas", personas);
+        HotelRespuesta[] hoteles = clienteBackend.get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve().body(HotelRespuesta[].class);
         if (hoteles == null) {
             throw new RestClientException("La API no devolvio los resultados de hoteles.");
@@ -87,11 +98,12 @@ public class HotelesApiCliente {
 
     public DisponibilidadHotelRespuesta consultarDisponibilidad(
             Integer codigo, LocalDate llegada, LocalDate partida) {
+        RutaConsulta ruta = new RutaConsulta("/api/v1/hoteles/{codigo}/disponibilidad")
+                .variable("codigo", codigo)
+                .parametro("fechaLlegada", llegada)
+                .parametro("fechaPartida", partida);
         DisponibilidadHotelRespuesta disponibilidad = clienteBackend.get()
-                .uri(uri -> uri.path("/api/v1/hoteles/{codigo}/disponibilidad")
-                        .queryParam("fechaLlegada", llegada)
-                        .queryParam("fechaPartida", partida)
-                        .build(codigo))
+                .uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve()
                 .body(DisponibilidadHotelRespuesta.class);
         if (disponibilidad == null) {

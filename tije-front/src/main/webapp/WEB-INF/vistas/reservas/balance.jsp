@@ -13,8 +13,12 @@
             <dt>Ingresos por vuelos</dt><dd>$<c:out value="${balance.ingresosVuelos}" /></dd>
             <dt>Ingresos por hoteles</dt><dd>$<c:out value="${balance.ingresosHoteles}" /></dd>
             <dt>Total vendido</dt><dd><strong>$<c:out value="${balance.ingresosTotales}" /></strong></dd>
+            <dt>Reservas pendientes de pago</dt><dd><c:out value="${balance.reservasPendientes}" /></dd>
+            <dt>Importe pendiente de cobro</dt><dd>$<c:out value="${balance.importePendiente}" /></dd>
+            <dt>Reservas totales</dt><dd><c:out value="${balance.reservasPagadas + balance.reservasPendientes}" /></dd>
         </dl>
-        <p><a href="<c:url value='/reservas'/>">Ver reservas</a></p>
+        <p>Los importes pendientes son reservas creadas que todavía no están pagadas; no se suman a lo vendido.</p>
+        <p><a href="<c:url value='/reservas?pagada=false'/>">Ver reservas pendientes</a> · <a href="<c:url value='/reservas'/>">Ver todas</a></p>
     </main>
 </body>
 </html>

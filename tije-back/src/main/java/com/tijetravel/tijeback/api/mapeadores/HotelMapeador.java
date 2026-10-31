@@ -6,8 +6,9 @@ import com.tijetravel.tijeback.api.dto.HotelRespuesta;
 import com.tijetravel.tijeback.modelos.Hotel;
 
 @Component
-public class HotelMapeador {
+public class HotelMapeador extends MapeadorBase<Hotel, HotelRespuesta> {
 
+    @Override
     public HotelRespuesta aRespuesta(Hotel hotel) {
         return new HotelRespuesta(
                 hotel.getCodigo(),

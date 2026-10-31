@@ -1,6 +1,7 @@
 package com.tijetravel.tijeback.repositorios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.tijetravel.tijeback.modelos.BalanceVentas;
+import com.tijetravel.tijeback.modelos.Reserva;
 
 @SpringBootTest(properties = "spring.datasource.url=${TEST_DB_URL_DEV:jdbc:h2:mem:tijetravel-dev;MODE=MySQL;DB_CLOSE_DELAY=-1}")
 @ActiveProfiles({ "test", "dev" })
@@ -36,7 +39,7 @@ class DatosDesarrolloMigracionTest {
 
     @Test
     void cargaLosDatosDeDemostracionSinContraseniasEnTextoPlano() {
-        assertEquals("8", flyway.info().current().getVersion().getVersion());
+        assertEquals("9", flyway.info().current().getVersion().getVersion());
         assertEquals(2, sucursalRepositorio.count());
         assertEquals(4, hotelRepositorio.count());
         assertEquals(4, vueloRepositorio.count());
@@ -48,15 +51,15 @@ class DatosDesarrolloMigracionTest {
     @Test
     @Transactional
     void calculaBalanceSoloConReservasPagadas() {
-        var reserva = reservaRepositorio.findAll().get(0);
+        Reserva reserva = reservaRepositorio.findAll().get(0);
         assertTrue(reserva.getTotal() > 0);
-        assertEquals(0, reservaRepositorio.balancePagadas().reservasPagadas());
+        assertEquals(0, reservaRepositorio.balancePagadas().getReservasPagadas());
         reserva.confirmarPago();
         reservaRepositorio.flush();
-        var balance = reservaRepositorio.balancePagadas();
-        assertEquals(1, balance.reservasPagadas());
-        assertEquals(reserva.getPrecioVuelo(), balance.ingresosVuelos());
-        assertEquals(reserva.getPrecioHotel(), balance.ingresosHoteles());
-        assertEquals(reserva.getTotal(), balance.ingresosTotales());
+        BalanceVentas balance = reservaRepositorio.balancePagadas();
+        assertEquals(1, balance.getReservasPagadas());
+        assertEquals(reserva.getPrecioVuelo(), balance.getIngresosVuelos());
+        assertEquals(reserva.getPrecioHotel(), balance.getIngresosHoteles());
+        assertEquals(reserva.getTotal(), balance.getIngresosTotales());
     }
 }

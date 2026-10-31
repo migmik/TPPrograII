@@ -1,34 +1,41 @@
 package com.tijetravel.tijefront.controladores;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
+import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.ReservasApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
-import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
+import com.tijetravel.tijefront.dto.PaginaReservasRespuesta;
 import com.tijetravel.tijefront.dto.ReservaRespuesta;
-import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
+import com.tijetravel.tijefront.dto.TuristaRespuesta;
+import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.formularios.GuardarReservaFormulario;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
@@ -51,17 +58,19 @@ public class ReservasControlador {
 
     @GetMapping
     public String listar(@RequestParam(required = false) Integer codigoTurista,
+            @RequestParam(required = false) String dni,
             @RequestParam(required = false) Integer numeroVuelo,
             @RequestParam(required = false) Integer codigoHotel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(required = false) Boolean pagada,
             @RequestParam(defaultValue = "0") int pagina,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null)
             return salida;
-        var resultado = reservasApi.listarPagina(
-                codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, 20);
+        PaginaReservasRespuesta resultado = reservasApi.listarPagina(
+                codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagada, pagina, 20);
         List<ReservaRespuesta> reservas = resultado.elementos();
         modelo.addAttribute("reservas", reservas);
         modelo.addAttribute("pagina", resultado.pagina());
@@ -69,12 +78,20 @@ public class ReservasControlador {
         modelo.addAttribute("hayAnterior", resultado.hayAnterior());
         modelo.addAttribute("haySiguiente", resultado.haySiguiente());
         modelo.addAttribute("codigoTuristaBusqueda", codigoTurista);
+        modelo.addAttribute("dniBusqueda", dni);
+        modelo.addAttribute("pagadaBusqueda", pagada);
         modelo.addAttribute("numeroVueloBusqueda", numeroVuelo);
         modelo.addAttribute("codigoHotelBusqueda", codigoHotel);
         modelo.addAttribute("fechaDesdeBusqueda", fechaDesde);
         modelo.addAttribute("fechaHastaBusqueda", fechaHasta);
         Map<Integer, TuristaResumen> turistas = new HashMap<>();
-        List<Integer> codigos = reservas.stream().map(ReservaRespuesta::getCodigoTurista).distinct().toList();
+        // Codigos de turista sin repetir, para pedir sus datos en una sola consulta.
+        List<Integer> codigos = new ArrayList<>();
+        for (ReservaRespuesta reserva : reservas) {
+            if (!codigos.contains(reserva.getCodigoTurista())) {
+                codigos.add(reserva.getCodigoTurista());
+            }
+        }
         for (TuristaResumen turista : turistasApi.listarPorCodigos(codigos))
             turistas.put(turista.getCodigo(), turista);
         modelo.addAttribute("turistasPorCodigo", turistas);
@@ -111,7 +128,7 @@ public class ReservasControlador {
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null) return salida;
-        var sesion = solicitud.getSession(false);
+        HttpSession sesion = solicitud.getSession(false);
         Object esperado = sesion == null ? null : sesion.getAttribute("pago:" + codigo);
         if (!token.equals(esperado)) {
             respuesta.setStatus(403);
@@ -277,7 +294,7 @@ public class ReservasControlador {
         } else if (dni != null && !dni.isBlank()) {
             modelo.addAttribute("turistas", turistasApi.listarDetalles(dni.trim()));
         } else if (formulario.getCodigoTurista() != null) {
-            var turista = turistasApi.buscar(formulario.getCodigoTurista());
+            TuristaRespuesta turista = turistasApi.buscar(formulario.getCodigoTurista());
             modelo.addAttribute("turistas", turista == null ? List.of() : List.of(turista));
         } else {
             modelo.addAttribute("turistas", List.of());
@@ -301,7 +318,7 @@ public class ReservasControlador {
 
     private String comprobarAcceso(boolean escritura, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
-        var sesion = solicitud.getSession(false);
+        HttpSession sesion = solicitud.getSession(false);
         if (sesion == null || sesion.getAttribute("usuarioActual") == null)
             return "redirect:/login";
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();

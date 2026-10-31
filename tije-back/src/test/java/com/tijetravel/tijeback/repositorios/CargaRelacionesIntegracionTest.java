@@ -1,7 +1,5 @@
 package com.tijetravel.tijeback.repositorios;
 
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -22,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -88,8 +87,8 @@ class CargaRelacionesIntegracionTest {
                 codigoTitular = titular.getCodigo();
             }
         }
-        codigosUsuarios.add(guardar(new Administrador("administrador", "hash", com.tijetravel.tijeback.DnisPrueba.siguiente())).getCodigo());
-        codigosUsuarios.add(guardar(new Vendedor("vendedor", "hash", com.tijetravel.tijeback.DnisPrueba.siguiente())).getCodigo());
+        codigosUsuarios.add(guardar(new Administrador("administrador", "hash", DnisPrueba.siguiente())).getCodigo());
+        codigosUsuarios.add(guardar(new Vendedor("vendedor", "hash", DnisPrueba.siguiente())).getCodigo());
 
         // Excluir INSERTs y evitar que la cache de primer nivel oculte consultas
         // adicionales.
@@ -104,10 +103,10 @@ class CargaRelacionesIntegracionTest {
         List<Reserva> resultado = reservas.findByHotelCodigo(codigoHotel);
 
         assertEquals(3, resultado.size());
-        resultado.forEach(reserva -> assertEquals("Cordoba", reserva.getVuelo().getDestino()));
+        verificarDestinos(resultado);
         assertEquals(1, estadisticas.getPrepareStatementCount());
         entityManager.clear();
-        resultado.forEach(reserva -> assertEquals("Cordoba", reserva.getVuelo().getDestino()));
+        verificarDestinos(resultado);
     }
 
     @Test
@@ -115,28 +114,33 @@ class CargaRelacionesIntegracionTest {
         List<Reserva> resultado = reservas.findByVueloNumero(numeroVuelo);
 
         assertEquals(3, resultado.size());
-        resultado.forEach(reserva -> assertEquals("Cordoba", reserva.getHotel().getCiudad()));
+        verificarCiudadesDeHoteles(resultado);
         assertEquals(1, estadisticas.getPrepareStatementCount());
         entityManager.clear();
-        resultado.forEach(reserva -> assertEquals("Cordoba", reserva.getHotel().getCiudad()));
+        verificarCiudadesDeHoteles(resultado);
     }
 
     @ParameterizedTest
     @ValueSource(strings = { "todas", "codigo", "turista", "familia" })
     void cargaElGrafoCompletoSinConsultasAdicionales(String consulta) {
-        List<Reserva> resultado = switch (consulta) {
-            case "todas" -> reservas.findAll();
-            case "codigo" -> List.of(reservas.findById(codigoReserva).orElseThrow());
-            case "turista" -> reservas.findByTuristaCodigo(codigoFamiliar);
-            case "familia" -> reservas.listarPorTitularYFamiliares(codigoTitular);
-            default -> throw new IllegalArgumentException(consulta);
-        };
+        List<Reserva> resultado;
+        int esperadas;
+        if (consulta.equals("todas")) {
+            resultado = reservas.findAll();
+            esperadas = 6;
+        } else if (consulta.equals("codigo")) {
+            resultado = new ArrayList<>();
+            resultado.add(reservas.findById(codigoReserva).get());
+            esperadas = 1;
+        } else if (consulta.equals("turista")) {
+            resultado = reservas.findByTuristaCodigo(codigoFamiliar);
+            esperadas = 2;
+        } else {
+            resultado = reservas.listarPorTitularYFamiliares(codigoTitular);
+            esperadas = 2;
+        }
 
-        assertEquals(switch (consulta) {
-            case "todas" -> 6;
-            case "codigo" -> 1;
-            default -> 2;
-        }, resultado.size());
+        assertEquals(esperadas, resultado.size());
         assertEquals(1, estadisticas.getPrepareStatementCount());
         entityManager.clear();
         for (Reserva reserva : resultado) {
@@ -154,19 +158,21 @@ class CargaRelacionesIntegracionTest {
         List<Usuario> resultado = usuarios.findAll();
 
         assertEquals(5, resultado.size());
-        assertEquals(3, resultado.stream().filter(usuario -> usuario.getRol() == RolUsuario.CLIENTE).count());
-        assertEquals(1, resultado.stream().filter(usuario -> usuario.getRol() == RolUsuario.ADMINISTRADOR).count());
-        assertEquals(1, resultado.stream().filter(usuario -> usuario.getRol() == RolUsuario.VENDEDOR).count());
+        assertEquals(3, contarPorRol(resultado, RolUsuario.CLIENTE));
+        assertEquals(1, contarPorRol(resultado, RolUsuario.ADMINISTRADOR));
+        assertEquals(1, contarPorRol(resultado, RolUsuario.VENDEDOR));
         assertEquals(1, estadisticas.getPrepareStatementCount());
         entityManager.clear();
-        resultado.forEach(this::verificarTuristaFueraDelContexto);
+        for (Usuario usuario : resultado) {
+            verificarTuristaFueraDelContexto(usuario);
+        }
         assertEquals(1, estadisticas.getPrepareStatementCount());
     }
 
     @ParameterizedTest
     @ValueSource(ints = { 0, 3, 4 })
     void encuentraPorCodigoCualquierRolConSuTuristaCargado(int indice) {
-        Usuario resultado = usuarios.findById(codigosUsuarios.get(indice)).orElseThrow();
+        Usuario resultado = usuarios.findById(codigosUsuarios.get(indice)).get();
 
         assertEquals(codigosUsuarios.get(indice), resultado.getCodigo());
         assertEquals(1, estadisticas.getPrepareStatementCount());
@@ -177,7 +183,7 @@ class CargaRelacionesIntegracionTest {
     @ParameterizedTest
     @ValueSource(strings = { "CLIENTE1", "ADMINISTRADOR", "VENDEDOR" })
     void encuentraParaLoginSinDistinguirMayusculasYConTuristaCargado(String nombre) {
-        Usuario resultado = usuarios.findByNombreUsuarioIgnoreCase(nombre).orElseThrow();
+        Usuario resultado = usuarios.findByNombreUsuarioIgnoreCase(nombre);
 
         assertTrue(nombre.equalsIgnoreCase(resultado.getNombreUsuario()));
         assertEquals(1, estadisticas.getPrepareStatementCount());
@@ -188,7 +194,7 @@ class CargaRelacionesIntegracionTest {
     @Test
     void devuelveVacioCuandoNoExisteElUsuario() {
         assertTrue(usuarios.findById(-1).isEmpty());
-        assertTrue(usuarios.findByNombreUsuarioIgnoreCase("inexistente").isEmpty());
+        assertNull(usuarios.findByNombreUsuarioIgnoreCase("inexistente"));
         assertEquals(2, estadisticas.getPrepareStatementCount());
     }
 
@@ -201,6 +207,28 @@ class CargaRelacionesIntegracionTest {
             assertNull(usuario.getCodigoTurista());
             assertNull(usuario.getTurista());
         }
+    }
+
+    private void verificarDestinos(List<Reserva> reservasConsultadas) {
+        for (Reserva reserva : reservasConsultadas) {
+            assertEquals("Cordoba", reserva.getVuelo().getDestino());
+        }
+    }
+
+    private void verificarCiudadesDeHoteles(List<Reserva> reservasConsultadas) {
+        for (Reserva reserva : reservasConsultadas) {
+            assertEquals("Cordoba", reserva.getHotel().getCiudad());
+        }
+    }
+
+    private int contarPorRol(List<Usuario> lista, RolUsuario rol) {
+        int cantidad = 0;
+        for (Usuario usuario : lista) {
+            if (usuario.getRol() == rol) {
+                cantidad++;
+            }
+        }
+        return cantidad;
     }
 
     private <T> T guardar(T entidad) {

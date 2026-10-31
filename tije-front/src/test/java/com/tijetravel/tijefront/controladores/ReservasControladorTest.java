@@ -1,16 +1,19 @@
 package com.tijetravel.tijefront.controladores;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import java.time.LocalDate;
 import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -18,11 +21,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
+
 import com.tijetravel.tijefront.clientes.*;
 import com.tijetravel.tijefront.dto.*;
+import com.tijetravel.tijefront.dto.PaginaReservasRespuesta;
+import com.tijetravel.tijefront.dto.ReservaRespuesta;
+import com.tijetravel.tijefront.dto.TuristaRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarReservaFormulario;
 
 @SpringBootTest
@@ -50,23 +58,22 @@ class ReservasControladorTest {
     @ValueSource(strings = {"ADMINISTRADOR", "VENDEDOR"})
     void ambosRolesCreanConFechasYCodigosDelFormulario(String rol) throws Exception {
         preparar(rol);
-        doAnswer(inv -> {
-            GuardarReservaFormulario datos = inv.getArgument(0);
-            assertEquals(2, datos.getCodigoTurista());
-            assertEquals(100, datos.getNumeroVuelo());
-            assertEquals(LocalDate.of(2027, 1, 10), datos.getFechaLlegada());
-            return reserva();
-        }).when(reservasApi).crear(any());
+        when(reservasApi.crear(any())).thenReturn(reserva());
         mvc.perform(formulario("/reservas")).andExpect(redirectedUrl("/reservas/1/pago"));
-        verify(reservasApi).crear(any());
+
+        ArgumentCaptor<GuardarReservaFormulario> enviado = ArgumentCaptor.forClass(GuardarReservaFormulario.class);
+        verify(reservasApi).crear(enviado.capture());
+        assertEquals(2, enviado.getValue().getCodigoTurista());
+        assertEquals(100, enviado.getValue().getNumeroVuelo());
+        assertEquals(LocalDate.of(2027, 1, 10), enviado.getValue().getFechaLlegada());
         verifyNoInteractions(turistasApi, hotelesApi, vuelosApi);
     }
 
     @Test
     void clienteConsultaSusReservasYCreaPeroNoEditaNiElimina() throws Exception {
         preparar("CLIENTE");
-        var grupo = List.of(reserva());
-        when(reservasApi.listarPagina(null, null, null, null, null, 0, 20))
+        List<ReservaRespuesta> grupo = List.of(reserva());
+        when(reservasApi.listarPagina(null, null, null, null, null, null, null, 0, 20))
             .thenReturn(new PaginaReservasRespuesta(grupo, 0, 1, false, false));
         mvc.perform(get("/reservas").session(sesion()))
             .andExpect(model().attribute("reservas", grupo))
@@ -107,8 +114,8 @@ class ReservasControladorTest {
     @Test
     void buscaReservasPorVueloYPagina() throws Exception {
         preparar("VENDEDOR");
-        var resultado = new PaginaReservasRespuesta(List.of(reserva()), 1, 3, true, true);
-        when(reservasApi.listarPagina(null, 100, null, null, null, 1, 20)).thenReturn(resultado);
+        PaginaReservasRespuesta resultado = new PaginaReservasRespuesta(List.of(reserva()), 1, 3, true, true);
+        when(reservasApi.listarPagina(null, null, 100, null, null, null, null, 1, 20)).thenReturn(resultado);
 
         mvc.perform(get("/reservas").param("numeroVuelo", "100").param("pagina", "1").session(sesion()))
                 .andExpect(view().name("reservas/lista"))
@@ -117,17 +124,17 @@ class ReservasControladorTest {
                 .andExpect(model().attribute("hayAnterior", true))
                 .andExpect(model().attribute("haySiguiente", true));
 
-        verify(reservasApi).listarPagina(null, 100, null, null, null, 1, 20);
+        verify(reservasApi).listarPagina(null, null, 100, null, null, null, null, 1, 20);
     }
 
     @Test
     void reservaDesdeElBuscadorLlegaConVueloHotelYFechasPrecargados() throws Exception {
         preparar("CLIENTE");
-        var resultado = mvc.perform(get("/reservas/nueva").session(sesion())
+        MvcResult resultado = mvc.perform(get("/reservas/nueva").session(sesion())
                 .param("numeroVuelo", "100").param("codigoHotel", "3")
                 .param("fechaLlegada", "2027-01-10").param("fechaPartida", "2027-01-12"))
                 .andExpect(view().name("reservas/formulario")).andReturn();
-        var formulario = (GuardarReservaFormulario) resultado.getModelAndView().getModel().get("reserva");
+        GuardarReservaFormulario formulario = (GuardarReservaFormulario) resultado.getModelAndView().getModel().get("reserva");
         assertEquals(100, formulario.getNumeroVuelo());
         assertEquals(3, formulario.getCodigoHotel());
         assertEquals(LocalDate.of(2027, 1, 10), formulario.getFechaLlegada());
@@ -142,7 +149,7 @@ class ReservasControladorTest {
     @Test
     void vendedorBuscaPasajeroPorDniSinDescargarTodosLosTuristas() throws Exception {
         preparar("VENDEDOR");
-        var pasajero = new TuristaRespuesta();
+        TuristaRespuesta pasajero = new TuristaRespuesta();
         pasajero.setCodigo(2);
         pasajero.setDni("12345678");
         when(turistasApi.listarDetalles("12345678")).thenReturn(List.of(pasajero));
@@ -161,7 +168,7 @@ class ReservasControladorTest {
         preparar("CLIENTE");
         mvc.perform(formulario("/reservas")
                 .param("seleccionBuscador", "true")
-                .with(r -> { r.setParameter("fechaPartida", "2027-01-10"); return r; }))
+                .with(new CambiarParametro("fechaPartida", "2027-01-10")))
                 .andExpect(view().name("reservas/formulario"))
                 .andExpect(model().attributeHasFieldErrors("reserva", "fechaPartida"));
         verify(hotelesApi, never()).listar();
@@ -180,9 +187,11 @@ class ReservasControladorTest {
     @Test
     void erroresDeFechasYEnumeracionesNoSeEnvianAlBackend() throws Exception {
         preparar("VENDEDOR");
-        mvc.perform(formulario("/reservas").with(r -> { r.setParameter("fechaPartida", "2027-01-10"); return r; }))
+        mvc.perform(formulario("/reservas").with(new CambiarParametro("fechaPartida", "2027-01-10")))
                 .andExpect(model().attributeHasFieldErrors("reserva", "fechaPartida"));
-        mvc.perform(formulario("/reservas").with(r -> { r.setParameter("fechaLlegada", "invalida"); r.setParameter("claseVuelo", "OTRA"); return r; }))
+        mvc.perform(formulario("/reservas")
+                .with(new CambiarParametro("fechaLlegada", "invalida"))
+                .with(new CambiarParametro("claseVuelo", "OTRA")))
                 .andExpect(model().attributeHasFieldErrors("reserva", "fechaLlegada", "claseVuelo"));
         mvc.perform(post("/reservas").session(sesion()).with(csrf()))
                 .andExpect(model().attributeHasFieldErrors("reserva", "codigoTurista", "fechaLlegada", "fechaPartida"));
@@ -193,12 +202,12 @@ class ReservasControladorTest {
     void edicionRecuperaTodosLosCamposYConservaSucursalHistoricaEnLaVista() throws Exception {
         preparar("VENDEDOR");
         when(reservasApi.buscar(1)).thenReturn(reserva());
-        var resultado = mvc.perform(get("/reservas/1/editar").session(sesion()))
+        MvcResult resultado = mvc.perform(get("/reservas/1/editar").session(sesion()))
                 .andExpect(view().name("reservas/formulario")).andReturn();
-        var formulario = (GuardarReservaFormulario) resultado.getModelAndView().getModel().get("reserva");
+        GuardarReservaFormulario formulario = (GuardarReservaFormulario) resultado.getModelAndView().getModel().get("reserva");
         assertEquals(LocalDate.of(2027, 1, 10), formulario.getFechaLlegada());
         assertEquals("PRIMERA", formulario.getClaseVuelo());
-        var actual = (ReservaRespuesta) resultado.getModelAndView().getModel().get("actual");
+        ReservaRespuesta actual = (ReservaRespuesta) resultado.getModelAndView().getModel().get("actual");
         assertEquals(7, actual.getCodigoSucursalContratacion());
         mvc.perform(formulario("/reservas/1/editar")).andExpect(redirectedUrl("/reservas"));
         verify(reservasApi).modificar(eq(1), any());

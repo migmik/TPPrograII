@@ -7,9 +7,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -20,8 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
+
 import com.tijetravel.tijefront.clientes.*;
 import com.tijetravel.tijefront.dto.*;
+import com.tijetravel.tijefront.dto.PaginaTuristasRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarTuristaFormulario;
 
 @SpringBootTest
@@ -78,7 +82,7 @@ class TuristasControladorTest {
         preparar("ADMINISTRADOR");
         List<TuristaRespuesta> resultado = List.of(turista(true));
         when(turistasApi.listarPagina("12345678", null, 0))
-                .thenReturn(new com.tijetravel.tijefront.dto.PaginaTuristasRespuesta(resultado, 0, 1, false, false));
+                .thenReturn(new PaginaTuristasRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/turistas").param("dni", "12345678").session(sesion()))
                 .andExpect(view().name("turistas/lista"))
@@ -93,7 +97,7 @@ class TuristasControladorTest {
         preparar("ADMINISTRADOR");
         List<TuristaRespuesta> resultado = List.of(turista(false));
         when(turistasApi.listarPagina(null, false, 0))
-                .thenReturn(new com.tijetravel.tijefront.dto.PaginaTuristasRespuesta(resultado, 0, 1, false, false));
+                .thenReturn(new PaginaTuristasRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/turistas").param("titular", "false").session(sesion()))
                 .andExpect(view().name("turistas/lista"))
@@ -131,16 +135,14 @@ class TuristasControladorTest {
     void editarFamiliarConservaTitularYSucursalAunqueManipulenFormulario() throws Exception {
         preparar("VENDEDOR");
         when(turistasApi.buscar(2)).thenReturn(turista(false));
-        doAnswer(inv -> {
-            GuardarTuristaFormulario datos = inv.getArgument(1);
-            assertEquals("76543210", datos.getDni());
-            assertEquals(1, datos.getCodigoTitular());
-            assertEquals(3, datos.getCodigoSucursal());
-            return null;
-        }).when(turistasApi).modificar(eq(2), any());
         mvc.perform(formulario("/turistas/2/editar").param("codigoSucursal", "999").param("codigoTitular", "999"))
                 .andExpect(redirectedUrl("/turistas"));
-        verify(turistasApi).modificar(eq(2), any());
+
+        ArgumentCaptor<GuardarTuristaFormulario> enviado = ArgumentCaptor.forClass(GuardarTuristaFormulario.class);
+        verify(turistasApi).modificar(eq(2), enviado.capture());
+        assertEquals("76543210", enviado.getValue().getDni());
+        assertEquals(1, enviado.getValue().getCodigoTitular());
+        assertEquals(3, enviado.getValue().getCodigoSucursal());
     }
 
     @Test
@@ -215,7 +217,7 @@ class TuristasControladorTest {
     void noEnviaDniInvalidoALaApi(String dni) throws Exception {
         preparar("ADMINISTRADOR");
         mvc.perform(formulario("/turistas").param("codigoSucursal", "1")
-                .with(request -> { request.setParameter("dni", dni); return request; }))
+                .with(new CambiarParametro("dni", dni)))
                 .andExpect(model().attributeHasFieldErrors("turista", "dni"));
         verify(turistasApi, never()).crear(any());
     }

@@ -15,25 +15,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosGestionApiCliente;
-import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarVueloFormulario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/vuelos")
-public class VuelosGestionControlador {
-    private final AutenticacionApiCliente autenticacionApi;
+public class VuelosGestionControlador extends ControladorAdministracion {
     private final VuelosApiCliente vuelosApi;
     private final VuelosGestionApiCliente gestionApi;
 
     public VuelosGestionControlador(AutenticacionApiCliente autenticacionApi,
             VuelosApiCliente vuelosApi, VuelosGestionApiCliente gestionApi) {
-        this.autenticacionApi = autenticacionApi;
+        super(autenticacionApi);
         this.vuelosApi = vuelosApi;
         this.gestionApi = gestionApi;
     }
@@ -159,37 +156,8 @@ public class VuelosGestionControlador {
         }
     }
 
-    private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null)
-            return "redirect:/login";
-        SesionRespuesta usuario = autenticacionApi.obtenerSesion();
-        sesion.setAttribute("usuarioActual", usuario);
-        modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
-            respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar vuelos.");
-            return "error";
-        }
-        return null;
-    }
-
-    private String mostrarError(RestClientResponseException error, HttpServletResponse respuesta, Model modelo,
-            String vista, String mensajeConflicto) {
-        int estado = error.getStatusCode().value();
-        if (estado != 400 && estado != 403 && estado != 409)
-            throw error;
-        respuesta.setStatus(estado);
-        modelo.addAttribute("errorGestion", estado == 400 ? "La API rechazó los datos. Revisá los campos."
-                : estado == 403 ? "La API no permite esta operación. Revisá tus permisos y las reservas relacionadas."
-                        : mensajeConflicto);
-        return vista;
-    }
-
-    private String mostrarConexionIncierta(HttpServletResponse respuesta, Model modelo, String vista) {
-        respuesta.setStatus(503);
-        modelo.addAttribute("errorGestion",
-                "No pudimos confirmar la operación. Consultá el listado antes de intentarlo nuevamente.");
-        return vista;
+    @Override
+    protected String recursoGestionado() {
+        return "vuelos";
     }
 }

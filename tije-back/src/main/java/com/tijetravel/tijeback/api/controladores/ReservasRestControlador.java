@@ -2,9 +2,9 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tijetravel.tijeback.api.dto.GuardarReservaSolicitud;
 import com.tijetravel.tijeback.api.dto.BalanceRespuesta;
+import com.tijetravel.tijeback.api.dto.GuardarReservaSolicitud;
 import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.ReservaRespuesta;
+import com.tijetravel.tijeback.api.mapeadores.BalanceMapeador;
 import com.tijetravel.tijeback.api.mapeadores.ReservaMapeador;
-import com.tijetravel.tijeback.servicios.ReservaServicio;
-import org.springframework.data.domain.Page;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
+import com.tijetravel.tijeback.servicios.ReservaServicio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -36,46 +36,43 @@ import jakarta.validation.constraints.Positive;
 public class ReservasRestControlador {
         private final ReservaServicio reservaServicio;
         private final ReservaMapeador reservaMapeador;
+        private final BalanceMapeador balanceMapeador;
         private final UsuarioActualServicio usuarioActualServicio;
 
         public ReservasRestControlador(
                         ReservaServicio reservaServicio,
                         ReservaMapeador reservaMapeador,
+                        BalanceMapeador balanceMapeador,
                         UsuarioActualServicio usuarioActualServicio) {
                 this.reservaServicio = reservaServicio;
                 this.reservaMapeador = reservaMapeador;
+                this.balanceMapeador = balanceMapeador;
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
-        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
         public List<ReservaRespuesta> listar(Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return reservaServicio.listarPara(actor).stream()
-                                .map(reservaMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(ReservaRespuesta::codigo))
-                                .toList();
+                return reservaMapeador.aRespuestas(reservaServicio.listarPara(actor));
         }
 
         @GetMapping("/pagina")
         public PaginaRespuesta<ReservaRespuesta> listarPagina(
                         @RequestParam(required = false) Integer codigoTurista,
+                        @RequestParam(required = false) String dni,
                         @RequestParam(required = false) Integer numeroVuelo,
                         @RequestParam(required = false) Integer codigoHotel,
                         @RequestParam(required = false) LocalDate fechaDesde,
                         @RequestParam(required = false) LocalDate fechaHasta,
+                        @RequestParam(required = false) Boolean pagada,
                         @RequestParam(defaultValue = "0") int pagina,
                         @RequestParam(defaultValue = "20") int tamanio,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
                 Page<Reserva> resultado = reservaServicio.paginaPara(
-                                actor, codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
-                return new PaginaRespuesta<>(
-                                resultado.getContent().stream().map(reservaMapeador::aRespuesta).toList(),
-                                resultado.getNumber(),
-                                resultado.getTotalPages(),
-                                resultado.hasPrevious(),
-                                resultado.hasNext());
+                                actor, codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta,
+                                pagada, pagina, tamanio);
+                return reservaMapeador.aPagina(resultado);
         }
 
         @GetMapping("/{codigo}")
@@ -89,13 +86,14 @@ public class ReservasRestControlador {
 
         @GetMapping("/balance")
         public BalanceRespuesta balance(Authentication autenticacion) {
-                return reservaServicio.balance(usuarioActualServicio.obtener(autenticacion));
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return balanceMapeador.aRespuesta(reservaServicio.balance(actor));
         }
 
         @PostMapping("/{codigo}/pagar")
         public ReservaRespuesta pagar(@PathVariable @Positive Integer codigo, Authentication autenticacion) {
-                return reservaMapeador.aRespuesta(
-                                reservaServicio.confirmarPago(usuarioActualServicio.obtener(autenticacion), codigo));
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return reservaMapeador.aRespuesta(reservaServicio.confirmarPago(actor, codigo));
         }
 
         @PostMapping

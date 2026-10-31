@@ -12,6 +12,8 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "hoteles", uniqueConstraints = @UniqueConstraint(name = "uk_hotel_nombre_ciudad", columnNames = {
         "nombre", "ciudad" }))
 public class Hotel {
+    public static final int PRECIO_MINIMO = 25000;
+    public static final int PRECIO_MAXIMO = 55000;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
@@ -38,7 +40,7 @@ public class Hotel {
     }
 
     public Hotel(String nombre, String direccion, String ciudad, String telefono, int capacidadTotal) {
-        this(nombre, direccion, ciudad, telefono, capacidadTotal, 25000);
+        this(nombre, direccion, ciudad, telefono, capacidadTotal, PRECIO_MINIMO);
     }
 
     public Hotel(String nombre, String direccion, String ciudad, String telefono, int capacidadTotal,
@@ -46,25 +48,24 @@ public class Hotel {
         actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
     }
 
-    public void actualizarDatos(
-            String nombre,
-            String direccion,
-            String ciudad,
-            String telefono,
-            int capacidadTotal) {
-        actualizarDatos(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
-    }
-
     public void actualizarDatos(String nombre, String direccion, String ciudad, String telefono,
             int capacidadTotal, int precioNochePersona) {
-        this.nombre = ValidacionModelo.textoObligatorio(nombre, "nombre");
-        this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
-        this.ciudad = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
-        this.telefono = ValidacionModelo.textoObligatorio(telefono, "telefono");
-        this.capacidadTotal = ValidacionModelo.enteroNoNegativo(capacidadTotal, "capacidadTotal");
-        if (precioNochePersona < 25000 || precioNochePersona > 55000 || precioNochePersona % 1000 != 0) {
-            throw new IllegalArgumentException("El precio del hotel debe estar entre 25000 y 55000 y ser multiplo de 1000");
+        // Primero se valida todo para no dejar el hotel modificado a medias.
+        String nombreValidado = ValidacionModelo.textoObligatorio(nombre, "nombre");
+        String direccionValidada = ValidacionModelo.textoObligatorio(direccion, "direccion");
+        String ciudadValidada = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
+        String telefonoValidado = ValidacionModelo.textoObligatorio(telefono, "telefono");
+        ValidacionModelo.enteroNoNegativo(capacidadTotal, "capacidadTotal");
+        if (precioNochePersona < PRECIO_MINIMO || precioNochePersona > PRECIO_MAXIMO
+                || precioNochePersona % 1000 != 0) {
+            throw new IllegalArgumentException("El precio del hotel debe estar entre " + PRECIO_MINIMO + " y "
+                    + PRECIO_MAXIMO + " y ser multiplo de 1000");
         }
+        this.nombre = nombreValidado;
+        this.direccion = direccionValidada;
+        this.ciudad = ciudadValidada;
+        this.telefono = telefonoValidado;
+        this.capacidadTotal = capacidadTotal;
         this.precioNochePersona = precioNochePersona;
     }
 

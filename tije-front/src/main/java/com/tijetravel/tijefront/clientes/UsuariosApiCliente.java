@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
-import com.tijetravel.tijefront.dto.UsuarioRespuesta;
 import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
+import com.tijetravel.tijefront.dto.UsuarioRespuesta;
 import com.tijetravel.tijefront.formularios.CrearUsuarioFormulario;
 import com.tijetravel.tijefront.formularios.ModificarUsuarioFormulario;
 
@@ -24,26 +24,20 @@ public class UsuariosApiCliente {
         return listar(null);
     }
 
-    public PaginaUsuariosRespuesta listarPagina(String rol, String nombre, int pagina) {
-        PaginaUsuariosRespuesta resultado = conexion.getCliente().get().uri(uri -> {
-            var ruta = uri.path("/api/v1/usuarios/pagina")
-                    .queryParam("pagina", pagina).queryParam("tamanio", 20);
-            if (rol != null && !rol.isBlank()) ruta.queryParam("rol", rol.trim());
-            if (nombre != null && !nombre.isBlank()) ruta.queryParam("nombre", nombre.trim());
-            return ruta.build();
-        }).retrieve().body(PaginaUsuariosRespuesta.class);
+    public PaginaUsuariosRespuesta listarPagina(String rol, Integer codigo, String nombre, String dni, int pagina) {
+        RutaConsulta ruta = new RutaConsulta("/api/v1/usuarios/pagina")
+                .parametro("pagina", pagina).parametro("tamanio", 20)
+                .parametro("rol", rol).parametro("codigo", codigo)
+                .parametro("nombre", nombre).parametro("dni", dni);
+        PaginaUsuariosRespuesta resultado = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
+                .retrieve().body(PaginaUsuariosRespuesta.class);
         if (resultado == null) throw new RestClientException("La API no devolvió la página de usuarios.");
         return resultado;
     }
 
     public List<UsuarioRespuesta> listar(String rol) {
-        UsuarioRespuesta[] usuarios = conexion.getCliente().get().uri(uriBuilder -> {
-            var ruta = uriBuilder.path("/api/v1/usuarios");
-            if (rol != null && !rol.isBlank()) {
-                ruta.queryParam("rol", rol.trim());
-            }
-            return ruta.build();
-        })
+        RutaConsulta ruta = new RutaConsulta("/api/v1/usuarios").parametro("rol", rol);
+        UsuarioRespuesta[] usuarios = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve().body(UsuarioRespuesta[].class);
         if (usuarios == null) {
             throw new RestClientException("La API no devolvió el listado de usuarios.");

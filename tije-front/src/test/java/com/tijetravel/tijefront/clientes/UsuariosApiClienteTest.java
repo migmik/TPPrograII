@@ -1,7 +1,7 @@
 package com.tijetravel.tijefront.clientes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -10,6 +10,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
+import com.tijetravel.tijefront.dto.TuristaResumen;
+import com.tijetravel.tijefront.dto.UsuarioRespuesta;
 import com.tijetravel.tijefront.formularios.CrearUsuarioFormulario;
 
 class UsuariosApiClienteTest {
@@ -42,7 +46,7 @@ class UsuariosApiClienteTest {
         servidor.expect(requestTo("http://backend/api/v1/usuarios")).andRespond(withSuccess("""
                 [{"codigo":2,"nombreUsuario":"ana","rol":"CLIENTE","codigoTurista":3}]
                 """, MediaType.APPLICATION_JSON));
-        var respuesta = usuarios.listar().get(0);
+        UsuarioRespuesta respuesta = usuarios.listar().get(0);
         assertEquals("ana", respuesta.getNombreUsuario());
         assertEquals("CLIENTE", respuesta.getRol());
         assertEquals(3, respuesta.getCodigoTurista());
@@ -84,7 +88,12 @@ class UsuariosApiClienteTest {
     @Test
     void noOcultaLaFaltaDePermisos() {
         servidor.expect(requestTo("http://backend/api/v1/usuarios")).andRespond(withStatus(HttpStatus.FORBIDDEN));
-        assertThrows(HttpClientErrorException.Forbidden.class, () -> usuarios.listar());
+        try {
+            usuarios.listar();
+            fail("Se esperaba HttpClientErrorException.Forbidden");
+        } catch (HttpClientErrorException.Forbidden esperada) {
+            // Es la excepcion que se esperaba.
+        }
         servidor.verify();
     }
 
@@ -94,7 +103,7 @@ class UsuariosApiClienteTest {
                 [{"codigo":3,"nombre":"Ana","apellido":"Pérez","direccion":"Calle 1",
                   "email":"ana@example.test","codigoSucursal":1,"titular":true}]
                 """, MediaType.APPLICATION_JSON));
-        var turistas = new TuristasApiCliente(conexion).listar();
+        List<TuristaResumen> turistas = new TuristasApiCliente(conexion).listar();
         assertEquals(3, turistas.get(0).getCodigo());
         assertEquals("Pérez", turistas.get(0).getApellido());
         servidor.verify();

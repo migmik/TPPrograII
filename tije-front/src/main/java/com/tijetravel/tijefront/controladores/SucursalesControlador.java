@@ -8,35 +8,35 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.SucursalesApiCliente;
-import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.SucursalResumen;
 import com.tijetravel.tijefront.formularios.GuardarSucursalFormulario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/sucursales")
-public class SucursalesControlador {
-    private final AutenticacionApiCliente autenticacionApi;
+public class SucursalesControlador extends ControladorAdministracion {
     private final SucursalesApiCliente sucursalesApi;
 
     public SucursalesControlador(AutenticacionApiCliente autenticacionApi, SucursalesApiCliente sucursalesApi) {
-        this.autenticacionApi = autenticacionApi;
+        super(autenticacionApi);
         this.sucursalesApi = sucursalesApi;
     }
 
     @GetMapping
-    public String listar(Model modelo) {
-        modelo.addAttribute("sucursales", sucursalesApi.listar());
+    public String listar(@RequestParam(required = false) String ciudad, Model modelo) {
+        modelo.addAttribute("ciudadBusqueda", ciudad);
+        modelo.addAttribute("ciudades", sucursalesApi.listarCiudades());
+        modelo.addAttribute("sucursales", sucursalesApi.listar(ciudad));
         return "sucursales/lista";
     }
 
@@ -80,6 +80,7 @@ public class SucursalesControlador {
         SucursalResumen actual = sucursalesApi.buscar(codigo);
         GuardarSucursalFormulario formulario = new GuardarSucursalFormulario();
         formulario.setDireccion(actual.getDireccion());
+        formulario.setCiudad(actual.getCiudad());
         formulario.setTelefono(actual.getTelefono());
         modelo.addAttribute("sucursal", formulario);
         modelo.addAttribute("codigo", codigo);
@@ -145,37 +146,13 @@ public class SucursalesControlador {
         return "redirect:/sucursales";
     }
 
-    private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null)
-            return "redirect:/login";
-        SesionRespuesta usuario = autenticacionApi.obtenerSesion();
-        sesion.setAttribute("usuarioActual", usuario);
-        modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
-            respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar sucursales.");
-            return "error";
-        }
-        return null;
+    @Override
+    protected String recursoGestionado() {
+        return "sucursales";
     }
 
-    private String mostrarError(RestClientResponseException error, HttpServletResponse respuesta, Model modelo,
-            String vista, String mensajeConflicto) {
-        int estado = error.getStatusCode().value();
-        if (estado != 400 && estado != 403 && estado != 409)
-            throw error;
-        respuesta.setStatus(estado);
-        modelo.addAttribute("errorGestion", estado == 400 ? "La API rechazó los datos. Revisá los campos."
-                : estado == 403 ? "La API no permite esta operación. Revisá tus permisos y los datos relacionados."
-                        : mensajeConflicto);
-        return vista;
-    }
-
-    private String mostrarConexionIncierta(HttpServletResponse respuesta, Model modelo, String vista) {
-        respuesta.setStatus(503);
-        modelo.addAttribute("errorGestion",
-                "No pudimos confirmar la operación. Consultá el listado antes de intentarlo nuevamente.");
-        return vista;
+    @Override
+    protected String mensajeOperacionNoPermitida() {
+        return "La API no permite esta operación. Revisá tus permisos y los datos relacionados.";
     }
 }

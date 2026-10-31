@@ -1,6 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,6 +25,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -32,6 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -39,6 +43,7 @@ import org.springframework.web.client.ResourceAccessException;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
 import com.tijetravel.tijefront.clientes.UsuariosApiCliente;
+import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.dto.UsuarioRespuesta;
@@ -84,9 +89,9 @@ class UsuariosControladorTest {
     @Test
     void entregaElListadoDelBackend() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
-        var usuarios = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listarPagina(null, null, 0))
-                .thenReturn(new com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta(usuarios, 0, 1, false, false));
+        List<UsuarioRespuesta> usuarios = List.of(new UsuarioRespuesta());
+        when(usuariosApi.listarPagina(null, null, null, null, 0))
+                .thenReturn(new PaginaUsuariosRespuesta(usuarios, 0, 1, false, false));
         mvc.perform(get("/usuarios").session(sesion()))
                 .andExpect(view().name("usuarios/lista")).andExpect(model().attribute("usuarios", usuarios));
     }
@@ -95,15 +100,15 @@ class UsuariosControladorTest {
     void filtraUsuariosPorRol() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         List<UsuarioRespuesta> resultado = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listarPagina("VENDEDOR", null, 0))
-                .thenReturn(new com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta(resultado, 0, 1, false, false));
+        when(usuariosApi.listarPagina("VENDEDOR", null, null, null, 0))
+                .thenReturn(new PaginaUsuariosRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/usuarios").param("rol", "VENDEDOR").session(sesion()))
                 .andExpect(view().name("usuarios/lista"))
                 .andExpect(model().attribute("usuarios", resultado))
                 .andExpect(model().attribute("rolBusqueda", "VENDEDOR"));
 
-        verify(usuariosApi).listarPagina("VENDEDOR", null, 0);
+        verify(usuariosApi).listarPagina("VENDEDOR", null, null, null, 0);
     }
 
     @Test
@@ -119,17 +124,25 @@ class UsuariosControladorTest {
 
     @ParameterizedTest
     @ValueSource(strings = { "ADMINISTRADOR", "VENDEDOR", "CLIENTE" })
-    void creaCadaRolYRedirigeParaNoReenviarElFormulario(String rol) throws Exception {
+    void creaCadaRolYRedirigeParaNoReenviarElFormulario(final String rol) throws Exception {
         prepararFormulario();
-        doAnswer(invocacion -> {
-            CrearUsuarioFormulario formulario = invocacion.getArgument(0);
-            assertEquals("nuevo", formulario.getNombreUsuario());
-            assertEquals("clave-elegida", formulario.getContrasenia());
-            assertEquals(rol, formulario.getRol());
-            assertEquals("CLIENTE".equals(rol) ? 1 : null, formulario.getCodigoTurista());
-            return null;
+        // Se revisa el formulario en el momento del envio, porque despues el controlador borra la contrasenia.
+        doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocacion) {
+                CrearUsuarioFormulario formulario = invocacion.getArgument(0);
+                assertEquals("nuevo", formulario.getNombreUsuario());
+                assertEquals("clave-elegida", formulario.getContrasenia());
+                assertEquals(rol, formulario.getRol());
+                if ("CLIENTE".equals(rol)) {
+                    assertEquals(1, formulario.getCodigoTurista());
+                } else {
+                    assertNull(formulario.getCodigoTurista());
+                }
+                return null;
+            }
         }).when(usuariosApi).crear(any());
-        var solicitud = alta(rol);
+        MockHttpServletRequestBuilder solicitud = alta(rol);
         if ("CLIENTE".equals(rol))
             solicitud.param("codigoTurista", "1");
         mvc.perform(solicitud).andExpect(redirectedUrl("/usuarios"))
@@ -170,10 +183,10 @@ class UsuariosControladorTest {
     void duplicadoConservaCamposPeroLimpiaLaContrasenia() throws Exception {
         prepararFormulario();
         doThrow(error(HttpStatus.CONFLICT)).when(usuariosApi).crear(any());
-        var resultado = mvc.perform(alta("CLIENTE").param("codigoTurista", "1"))
+        MvcResult resultado = mvc.perform(alta("CLIENTE").param("codigoTurista", "1"))
                 .andExpect(status().isConflict()).andExpect(view().name("usuarios/nuevo"))
                 .andExpect(model().attributeExists("errorCreacion", "turistasDisponibles")).andReturn();
-        var formulario = (CrearUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
+        CrearUsuarioFormulario formulario = (CrearUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
         assertEquals("nuevo", formulario.getNombreUsuario());
         assertEquals("CLIENTE", formulario.getRol());
         assertEquals(1, formulario.getCodigoTurista());
@@ -209,9 +222,9 @@ class UsuariosControladorTest {
     @Test
     void editarCargaElNombreSinContrasenia() throws Exception {
         prepararEdicion();
-        var resultado = mvc.perform(get("/usuarios/2/editar").session(sesion()))
+        MvcResult resultado = mvc.perform(get("/usuarios/2/editar").session(sesion()))
                 .andExpect(view().name("usuarios/editar")).andReturn();
-        var formulario = (ModificarUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
+        ModificarUsuarioFormulario formulario = (ModificarUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
         assertEquals("anterior", formulario.getNombreUsuario());
         assertTrue(formulario.getContrasenia() == null || formulario.getContrasenia().isEmpty());
     }
@@ -219,11 +232,14 @@ class UsuariosControladorTest {
     @Test
     void modificaCredencialesYConservaLaSesionDelAdministrador() throws Exception {
         prepararEdicion();
-        doAnswer(invocacion -> {
-            ModificarUsuarioFormulario formulario = invocacion.getArgument(1);
-            assertEquals("nuevo", formulario.getNombreUsuario());
-            assertEquals("clave-nueva", formulario.getContrasenia());
-            return null;
+        doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocacion) {
+                ModificarUsuarioFormulario formulario = invocacion.getArgument(1);
+                assertEquals("nuevo", formulario.getNombreUsuario());
+                assertEquals("clave-nueva", formulario.getContrasenia());
+                return null;
+            }
         }).when(usuariosApi).modificar(eq(2), any());
         mvc.perform(edicion(2, "clave-nueva")).andExpect(redirectedUrl("/usuarios"));
         verify(usuariosApi).modificar(eq(2), any());
@@ -244,9 +260,9 @@ class UsuariosControladorTest {
     void nombreDuplicadoNoDevuelveLaContrasenia() throws Exception {
         prepararEdicion();
         doThrow(error(HttpStatus.CONFLICT)).when(usuariosApi).modificar(any(), any());
-        var resultado = mvc.perform(edicion(2, "clave-nueva")).andExpect(status().isConflict())
+        MvcResult resultado = mvc.perform(edicion(2, "clave-nueva")).andExpect(status().isConflict())
                 .andExpect(model().attributeExists("errorEdicion")).andReturn();
-        var formulario = (ModificarUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
+        ModificarUsuarioFormulario formulario = (ModificarUsuarioFormulario) resultado.getModelAndView().getModel().get("usuario");
         assertEquals("", formulario.getContrasenia());
     }
 
@@ -320,10 +336,10 @@ class UsuariosControladorTest {
     @Test
     void empleadoRequiereDniYClienteNoLoCargaDosVeces() throws Exception {
         prepararFormulario();
-        mvc.perform(alta("VENDEDOR").with(request -> { request.setParameter("dni", ""); return request; }))
+        mvc.perform(alta("VENDEDOR").with(new CambiarParametro("dni", "")))
                 .andExpect(model().attributeHasFieldErrors("usuario", "dni"));
         mvc.perform(alta("CLIENTE").param("codigoTurista", "1")
-                .with(request -> { request.setParameter("dni", "12345678"); return request; }))
+                .with(new CambiarParametro("dni", "12345678")))
                 .andExpect(model().attributeHasFieldErrors("usuario", "dni"));
         verify(usuariosApi, never()).crear(any());
     }

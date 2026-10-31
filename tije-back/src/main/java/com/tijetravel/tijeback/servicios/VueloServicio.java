@@ -1,162 +1,53 @@
 package com.tijetravel.tijeback.servicios;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
 
-import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
-import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
-import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
-import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vuelo;
-import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
-import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
-@Service
-@Transactional(readOnly = true)
-public class VueloServicio {
-    private final BloqueoEscrituras bloqueoEscrituras;
-    private final VueloRepositorio vueloRepositorio;
-    private final ReservaRepositorio reservaRepositorio;
-    private final AutorizacionServicio autorizacion;
+/**
+ * Operaciones sobre los vuelos.
+ *
+ * Las altas, bajas y modificaciones requieren el permiso ADMINISTRAR_VUELOS y
+ * lanzan OperacionNoPermitidaException si el actor no lo tiene.
+ */
+public interface VueloServicio {
 
-    public VueloServicio(
-            VueloRepositorio vueloRepositorio,
-            ReservaRepositorio reservaRepositorio,
-            AutorizacionServicio autorizacion,
-            BloqueoEscrituras bloqueoEscrituras) {
-        this.bloqueoEscrituras = bloqueoEscrituras;
-        this.vueloRepositorio = vueloRepositorio;
-        this.reservaRepositorio = reservaRepositorio;
-        this.autorizacion = autorizacion;
-    }
+    /** @throws EntidadDuplicadaException si ya existe un vuelo con ese numero */
+    Vuelo crear(Usuario actor, int numero, LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista, int plazasPrimera, int precio);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Vuelo crear(
-            Usuario actor,
-            int numero,
-            LocalDateTime fechaYHora,
-            String origen,
-            String destino,
-            int totalPlazas,
-            int plazasTurista,
-            int plazasPrimera) {
-        return crear(actor, numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, 150000);
-    }
+    /** Catalogo completo ordenado por numero, precioAsc o precioDesc. Solo para el personal. */
+    List<Vuelo> listarPara(Usuario actor, String orden);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Vuelo crear(Usuario actor, int numero, LocalDateTime fechaYHora, String origen, String destino,
-            int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
-        bloqueoEscrituras.adquirir();
-        if (vueloRepositorio.existsById(numero)) {
-            throw new EntidadDuplicadaException("Ya existe el vuelo " + numero);
-        }
-        Vuelo vuelo = new Vuelo(
-                numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
-        return vueloRepositorio.save(vuelo);
-    }
+    List<String> listarOrigenes();
 
-    public List<Vuelo> listar() {
-        return vueloRepositorio.findAll();
-    }
+    List<String> listarDestinos();
 
-    public Page<Vuelo> buscarPagina(String origen, String destino, LocalDate desde, LocalDate hasta,
-            Pageable pagina) {
-        return vueloRepositorio.buscarPagina(origen, destino,
-                desde == null ? null : desde.atStartOfDay(),
-                hasta == null ? null : hasta.plusDays(1).atStartOfDay(), pagina);
-    }
+    /** Busqueda paginada por origen, destino y fechas. Sin filtros se trata como el catalogo completo. */
+    Page<Vuelo> buscarPagina(Usuario actor, String origen, String destino, LocalDate desde, LocalDate hasta,
+            String orden, int pagina, int tamanio);
 
-    public List<Vuelo> buscarEnFecha(String origen, String destino, LocalDate fecha, int personas) {
-        validarBusqueda(fecha, personas);
-        return vueloRepositorio.buscarEnFecha(CiudadConsulta.nombres(origen), CiudadConsulta.nombres(destino),
-                fecha.atStartOfDay(), fecha.plusDays(1).atStartOfDay(), ClaseVuelo.TURISTA, personas);
-    }
+    /** Vuelos de ese dia con lugar en clase turista para la cantidad de personas. */
+    List<Vuelo> buscarEnFecha(String origen, String destino, LocalDate fecha, int personas);
 
-    public List<Vuelo> sugerirOtrosDias(String origen, String destino, LocalDate fecha, int personas) {
-        validarBusqueda(fecha, personas);
-        List<Vuelo> vuelos = vueloRepositorio.buscarOtrosDias(
-                CiudadConsulta.nombres(origen), CiudadConsulta.nombres(destino),
-                LocalDate.now().atStartOfDay(), fecha.atStartOfDay(),
-                fecha.plusDays(1).atStartOfDay(), ClaseVuelo.TURISTA, personas);
-        return vuelos.stream()
-                .sorted(Comparator.comparingLong((Vuelo vuelo) -> Math.abs(ChronoUnit.DAYS.between(
-                        fecha, vuelo.getFechaYHora().toLocalDate())))
-                        .thenComparing(Vuelo::getFechaYHora))
-                .limit(5).toList();
-    }
+    /** Hasta cinco vuelos de otros dias, empezando por los mas cercanos a la fecha pedida. */
+    List<Vuelo> sugerirOtrosDias(String origen, String destino, LocalDate fecha, int personas);
 
-    private void validarBusqueda(LocalDate fecha, int personas) {
-        if (fecha == null || personas < 1 || personas > 20) {
-            throw new IllegalArgumentException("La fecha y una cantidad de 1 a 20 personas son obligatorias");
-        }
-    }
+    /** @throws EntidadNoEncontradaException si no existe el vuelo */
+    Vuelo encontrarPorId(Integer numero);
 
-    public Vuelo encontrarPorId(Integer numero) {
-        return vueloRepositorio.findById(numero)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el vuelo " + numero));
-    }
+    /**
+     * @throws CapacidadExcedidaException si las plazas quedan por debajo de las reservas hechas
+     * @throws OperacionNoPermitidaException si el cambio deja reservas incompatibles
+     */
+    Vuelo modificar(Usuario actor, Integer numero, LocalDateTime fechaYHora, String origen, String destino,
+            int totalPlazas, int plazasTurista, int plazasPrimera, int precio);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Vuelo modificar(
-            Usuario actor,
-            Integer numero,
-            LocalDateTime fechaYHora,
-            String origen,
-            String destino,
-            int totalPlazas,
-            int plazasTurista,
-            int plazasPrimera) {
-        return modificar(actor, numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera,
-                150000);
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Vuelo modificar(Usuario actor, Integer numero, LocalDateTime fechaYHora, String origen, String destino,
-            int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
-        bloqueoEscrituras.adquirir();
-        Vuelo vuelo = encontrarPorId(numero);
-
-        long reservasTurista = reservaRepositorio.countByVueloNumeroAndClaseVuelo(
-                numero, ClaseVuelo.TURISTA);
-        long reservasPrimera = reservaRepositorio.countByVueloNumeroAndClaseVuelo(
-                numero, ClaseVuelo.PRIMERA);
-        if (plazasTurista < reservasTurista || plazasPrimera < reservasPrimera) {
-            throw new CapacidadExcedidaException(
-                    "Las plazas no pueden ser menores que las reservas ya registradas");
-        }
-
-        if (reservaRepositorio.findByVueloNumero(numero).stream()
-                .anyMatch(reserva -> fechaYHora == null || !reserva.getFechaLlegada().equals(fechaYHora.toLocalDate())
-                        || destino == null || !reserva.getHotel().getCiudad().equalsIgnoreCase(destino.trim()))) {
-            throw new OperacionNoPermitidaException("El cambio dejaría reservas incompatibles con su hotel o fecha");
-        }
-        vuelo.actualizarDatos(
-                fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
-        return vuelo;
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer numero) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
-        bloqueoEscrituras.adquirir();
-        Vuelo vuelo = encontrarPorId(numero);
-        if (reservaRepositorio.existsByVueloNumero(numero)) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un vuelo que tiene reservas");
-        }
-        vueloRepositorio.delete(vuelo);
-    }
+    /** @throws OperacionNoPermitidaException si el vuelo tiene reservas */
+    void eliminar(Usuario actor, Integer numero);
 }

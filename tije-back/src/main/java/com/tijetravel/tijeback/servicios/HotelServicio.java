@@ -1,135 +1,48 @@
 package com.tijetravel.tijeback.servicios;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
 
-import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
-import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
-import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
-import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Hotel;
-import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.ValidacionModelo;
-import com.tijetravel.tijeback.repositorios.HotelRepositorio;
-import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 
-@Service
-@Transactional(readOnly = true)
-public class HotelServicio {
-    private final BloqueoEscrituras bloqueoEscrituras;
-    private final HotelRepositorio hotelRepositorio;
-    private final ReservaRepositorio reservaRepositorio;
-    private final AutorizacionServicio autorizacion;
+/**
+ * Operaciones sobre los hoteles de la agencia.
+ *
+ * Las altas, bajas y modificaciones requieren el permiso ADMINISTRAR_HOTELES y
+ * lanzan OperacionNoPermitidaException si el actor no lo tiene.
+ */
+public interface HotelServicio {
 
-    public HotelServicio(
-            HotelRepositorio hotelRepositorio,
-            ReservaRepositorio reservaRepositorio,
-            AutorizacionServicio autorizacion,
-            BloqueoEscrituras bloqueoEscrituras) {
-        this.bloqueoEscrituras = bloqueoEscrituras;
-        this.hotelRepositorio = hotelRepositorio;
-        this.reservaRepositorio = reservaRepositorio;
-        this.autorizacion = autorizacion;
-    }
+    /** @throws EntidadDuplicadaException si ya existe un hotel con ese nombre en la ciudad */
+    Hotel crear(Usuario actor, String nombre, String direccion, String ciudad, String telefono,
+            int capacidadTotal, int precioNochePersona);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Hotel crear(
-            Usuario actor,
-            String nombre,
-            String direccion,
-            String ciudad,
-            String telefono,
-            int capacidadTotal) {
-        return crear(actor, nombre, direccion, ciudad, telefono, capacidadTotal, 25000);
-    }
+    /** Catalogo completo ordenado por codigo, precioAsc o precioDesc. Solo para el personal. */
+    List<Hotel> listarPara(Usuario actor, String orden);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Hotel crear(Usuario actor, String nombre, String direccion, String ciudad, String telefono,
-            int capacidadTotal, int precioNochePersona) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
-        bloqueoEscrituras.adquirir();
-        Hotel hotel = new Hotel(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
-        if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCase(
-                hotel.getNombre(), hotel.getCiudad())) {
-            throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
-        }
-        return hotelRepositorio.save(hotel);
-    }
+    List<String> listarCiudades();
 
-    public List<Hotel> listar() {
-        return hotelRepositorio.findAll();
-    }
+    List<String> listarNombres();
 
-    public Page<Hotel> buscarPagina(String ciudad, String nombre, Pageable pagina) {
-        return hotelRepositorio.buscarPagina(ciudad, nombre, pagina);
-    }
+    /** Busqueda paginada por ciudad y nombre. Sin filtros se trata como el catalogo completo. */
+    Page<Hotel> buscarPagina(Usuario actor, String ciudad, String nombre, String orden, int pagina, int tamanio);
 
-    public List<Hotel> buscarPorCiudad(String ciudad) {
-        return hotelRepositorio.buscarPorCiudad(CiudadConsulta.nombres(ciudad));
-    }
+    /** Hoteles de la ciudad con lugar para la cantidad de personas en esas fechas. */
+    List<Hotel> buscarDisponibles(String ciudad, LocalDate fechaLlegada, LocalDate fechaPartida, int personas);
 
-    public Hotel encontrarPorId(Integer codigo) {
-        return hotelRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el hotel " + codigo));
-    }
+    /** @throws EntidadNoEncontradaException si no existe el hotel */
+    Hotel encontrarPorId(Integer codigo);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Hotel modificar(
-            Usuario actor,
-            Integer codigo,
-            String nombre,
-            String direccion,
-            String ciudad,
-            String telefono,
-            int capacidadTotal) {
-        return modificar(actor, codigo, nombre, direccion, ciudad, telefono, capacidadTotal, 25000);
-    }
+    /**
+     * @throws OperacionNoPermitidaException si la nueva ciudad deja reservas incompatibles
+     * @throws CapacidadExcedidaException si la capacidad queda por debajo de la ocupacion registrada
+     */
+    Hotel modificar(Usuario actor, Integer codigo, String nombre, String direccion, String ciudad,
+            String telefono, int capacidadTotal, int precioNochePersona);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Hotel modificar(Usuario actor, Integer codigo, String nombre, String direccion, String ciudad,
-            String telefono, int capacidadTotal, int precioNochePersona) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
-        bloqueoEscrituras.adquirir();
-        String nombreNormalizado = ValidacionModelo.textoObligatorio(nombre, "nombre");
-        String ciudadNormalizada = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
-        if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCaseAndCodigoNot(
-                nombreNormalizado, ciudadNormalizada, codigo)) {
-            throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
-        }
-
-        List<Reserva> reservas = reservaRepositorio.findByHotelCodigo(codigo);
-        if (reservas.stream()
-                .anyMatch(reserva -> !reserva.getVuelo().getDestino().equalsIgnoreCase(ciudadNormalizada))) {
-            throw new OperacionNoPermitidaException("La ciudad dejaría reservas incompatibles con su vuelo");
-        }
-        int ocupacionMaxima = OcupacionHotel.maxima(reservas, null, null, null);
-        if (capacidadTotal < ocupacionMaxima) {
-            throw new CapacidadExcedidaException(
-                    "La capacidad no puede ser menor que la ocupacion maxima registrada: " + ocupacionMaxima);
-        }
-
-        Hotel hotel = encontrarPorId(codigo);
-        hotel.actualizarDatos(nombreNormalizado, direccion, ciudadNormalizada, telefono, capacidadTotal,
-                precioNochePersona);
-        return hotel;
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer codigo) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
-        bloqueoEscrituras.adquirir();
-        Hotel hotel = encontrarPorId(codigo);
-        if (reservaRepositorio.existsByHotelCodigo(codigo)) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un hotel que tiene reservas");
-        }
-        hotelRepositorio.delete(hotel);
-    }
-
+    /** @throws OperacionNoPermitidaException si el hotel tiene reservas */
+    void eliminar(Usuario actor, Integer codigo);
 }

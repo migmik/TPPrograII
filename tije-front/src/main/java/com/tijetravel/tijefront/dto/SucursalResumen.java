@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class SucursalResumen {
     private Integer codigo;
     private String direccion;
+    private String ciudad;
+
+    public String getCiudad() { return ciudad; }
+    public void setCiudad(String ciudad) { this.ciudad = ciudad; }
     private String telefono;
 
     public Integer getCodigo() {

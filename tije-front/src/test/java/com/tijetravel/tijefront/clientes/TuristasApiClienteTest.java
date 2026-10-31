@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
+
 import com.tijetravel.tijefront.dto.CsrfRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarTuristaFormulario;
 
@@ -20,7 +22,7 @@ class TuristasApiClienteTest {
 
     @BeforeEach
     void preparar() {
-        var builder = RestClient.builder().baseUrl("http://backend");
+        RestClient.Builder builder = RestClient.builder().baseUrl("http://backend");
         servidor = MockRestServiceServer.bindTo(builder).build();
         conexion = mock(ConexionApiSesion.class);
         when(conexion.getCliente()).thenReturn(builder.build());

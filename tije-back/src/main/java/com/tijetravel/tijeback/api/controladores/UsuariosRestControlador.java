@@ -1,12 +1,7 @@
 package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,12 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.CrearUsuarioSolicitud;
 import com.tijetravel.tijeback.api.dto.ModificarUsuarioSolicitud;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.UsuarioRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.UsuarioMapeador;
 import com.tijetravel.tijeback.enums.RolUsuario;
-import com.tijetravel.tijeback.servicios.UsuarioServicio;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
+import com.tijetravel.tijeback.servicios.UsuarioServicio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -48,35 +44,26 @@ public class UsuariosRestControlador {
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
-        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
         public List<UsuarioRespuesta> listar(
                         @RequestParam(required = false) RolUsuario rol,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return usuarioServicio.listarPara(actor, rol).stream()
-                                .map(usuarioMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
-                                .toList();
+                return usuarioMapeador.aRespuestas(usuarioServicio.listarPara(actor, rol));
         }
 
         @GetMapping("/pagina")
         public PaginaRespuesta<UsuarioRespuesta> listarPagina(
                         @RequestParam(required = false) RolUsuario rol,
+                        @RequestParam(required = false) Integer codigo,
                         @RequestParam(required = false) String nombre,
+                        @RequestParam(required = false) String dni,
                         @RequestParam(defaultValue = "0") int pagina,
                         @RequestParam(defaultValue = "20") int tamanio,
                         Authentication autenticacion) {
-                if (pagina < 0 || tamanio < 1 || tamanio > 100)
-                        throw new IllegalArgumentException("Pagina o tamanio no valido");
-                if (nombre != null && (nombre.contains("%") || nombre.contains("_")))
-                        throw new IllegalArgumentException("El filtro contiene caracteres no permitidos");
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                Page<Usuario> resultado = usuarioServicio.buscarPaginaPara(actor, rol, nombre,
-                                PageRequest.of(pagina, tamanio, Sort.by("codigo")));
-                return new PaginaRespuesta<>(resultado.map(usuarioMapeador::aRespuesta).getContent(),
-                                resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(),
-                                resultado.hasNext());
+                return usuarioMapeador.aPagina(
+                                usuarioServicio.buscarPaginaPara(actor, rol, codigo, nombre, dni, pagina, tamanio));
         }
 
         @GetMapping("/{codigo}")

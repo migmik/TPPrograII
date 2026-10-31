@@ -1,11 +1,11 @@
 package com.tijetravel.tijeback.api;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.hasItems;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +31,20 @@ class CatalogosApiIntegracionTest {
                 .andExpect(jsonPath("$[0].codigo").value(1))
                 .andExpect(jsonPath("$[0].direccion").value("Av Corrientes 1234"))
                 .andExpect(jsonPath("$[0].telefono").value("011-4321-1000"));
+    }
+
+    @Test
+    void entregaOpcionesDeFiltrosSinCargarLosCatalogosCompletos() throws Exception {
+        mockMvc.perform(get("/api/v1/vuelos/origenes"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").value(hasItems("Buenos Aires")));
+        mockMvc.perform(get("/api/v1/vuelos/destinos"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").value(hasItems("Cordoba")));
+        mockMvc.perform(get("/api/v1/hoteles/ciudades"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").value(hasItems("Goya")));
+        mockMvc.perform(get("/api/v1/hoteles/nombres"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").value(hasItems("Hotel Taragui")));
+        mockMvc.perform(get("/api/v1/sucursales/ciudades"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
     }
 
         @Test
