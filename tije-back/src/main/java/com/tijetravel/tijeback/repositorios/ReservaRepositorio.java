@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -51,6 +52,10 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
         @Override
         @EntityGraph("Reserva.completa")
         List<Reserva> findAll();
+
+        @Override
+        @EntityGraph("Reserva.completa")
+        List<Reserva> findAll(Sort orden);
 
         @Override
         @EntityGraph("Reserva.completa")
@@ -120,6 +125,7 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
                         from Reserva r
                         where r.turista.codigo = :codigoTitular
                            or r.turista.titular.codigo = :codigoTitular
+                        order by r.codigo
                         """)
         List<Reserva> listarPorTitularYFamiliares(@Param("codigoTitular") Integer codigoTitular);
 }

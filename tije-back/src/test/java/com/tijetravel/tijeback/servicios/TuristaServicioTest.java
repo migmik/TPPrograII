@@ -112,7 +112,7 @@ class TuristaServicioTest {
     void buscaTuristaPorDniSinListarTodaLaTabla() {
         when(turistaRepositorio.findByDni(turista.getDni())).thenReturn(List.of(turista));
 
-        assertEquals(List.of(turista), servicio.listarPara(administrador, turista.getDni()));
+        assertEquals(List.of(turista), servicio.listarPara(administrador, turista.getDni(), null));
 
         verify(turistaRepositorio).findByDni(turista.getDni());
         verify(turistaRepositorio, never()).findAll();
@@ -120,11 +120,11 @@ class TuristaServicioTest {
 
     @Test
     void filtraTitularesSinListarTodaLaTabla() {
-        when(turistaRepositorio.findByTitularIsNull()).thenReturn(List.of(turista));
+        when(turistaRepositorio.findByTitularIsNullOrderByCodigo()).thenReturn(List.of(turista));
 
         assertEquals(List.of(turista), servicio.listarPara(administrador, null, true));
 
-        verify(turistaRepositorio).findByTitularIsNull();
+        verify(turistaRepositorio).findByTitularIsNullOrderByCodigo();
         verify(turistaRepositorio, never()).findAll();
     }
 }

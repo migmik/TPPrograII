@@ -81,6 +81,7 @@ class VueloServicioTest {
                                 "Cordoba",
                                 20,
                                 plazasTurista,
-                                plazasPrimera);
+                                plazasPrimera,
+                                150000);
         }
 }

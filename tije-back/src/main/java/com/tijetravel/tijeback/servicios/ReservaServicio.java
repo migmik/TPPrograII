@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -94,19 +93,16 @@ public class ReservaServicio {
         return reservaRepositorio.save(reserva);
     }
 
-    public List<Reserva> listar() {
-        return reservaRepositorio.findAll();
-    }
-
     public List<Reserva> listarPara(Usuario actor) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         Integer codigoGrupoFamiliar = actor.getCodigoGrupoFamiliar();
         if (codigoGrupoFamiliar != null) {
-            return listarPorTitularYFamiliares(codigoGrupoFamiliar);
+            return reservaRepositorio.listarPorTitularYFamiliares(codigoGrupoFamiliar);
         }
-        return listar();
+        return reservaRepositorio.findAll(Sort.by("codigo"));
     }
 
+    /** Busqueda paginada con filtros opcionales; el cliente solo ve las de su grupo familiar. */
     public Page<Reserva> paginaPara(
             Usuario actor,
             Integer codigoTurista,
@@ -119,41 +115,16 @@ public class ReservaServicio {
             int pagina,
             int tamanio) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        validarConsultaPaginada(codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
-        Pageable pageable = PageRequest.of(pagina, tamanio, Sort.by("codigo"));
-        String dniBuscado = dni == null || dni.isBlank() ? null : dni.trim();
-        Integer titular = actor.getCodigoGrupoFamiliar();
-        return reservaRepositorio.buscarPagina(titular, codigoTurista, dniBuscado, numeroVuelo,
-                codigoHotel, fechaDesde, fechaHasta, pagada, pageable);
-    }
-
-    private void validarConsultaPaginada(
-            Integer codigoTurista,
-            String dni,
-            Integer numeroVuelo,
-            Integer codigoHotel,
-            LocalDate fechaDesde,
-            LocalDate fechaHasta,
-            int pagina,
-            int tamanio) {
         if (fechaDesde != null && fechaHasta != null && fechaHasta.isBefore(fechaDesde)) {
             throw new IllegalArgumentException("El rango de fechas debe estar en orden");
         }
-        if (dni != null && !dni.isBlank() && !dni.trim().matches("[0-9]{7,8}"))
-            throw new IllegalArgumentException("El DNI debe tener 7 u 8 digitos");
-        if ((codigoTurista != null && codigoTurista < 1)
-                || (numeroVuelo != null && numeroVuelo < 1)
-                || (codigoHotel != null && codigoHotel < 1)) {
-            throw new IllegalArgumentException("Los codigos deben ser positivos");
-        }
-        if (pagina < 0 || tamanio < 1 || tamanio > 100) {
-            throw new IllegalArgumentException("La pagina debe ser positiva y el tamanio debe estar entre 1 y 100");
-        }
-    }
-
-    public Reserva encontrarPorId(Integer codigo) {
-        return reservaRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la reserva " + codigo));
+        String dniBuscado = FiltrosConsulta.dni(dni);
+        FiltrosConsulta.codigoPositivo(codigoTurista);
+        FiltrosConsulta.codigoPositivo(numeroVuelo);
+        FiltrosConsulta.codigoPositivo(codigoHotel);
+        Pageable paginado = FiltrosConsulta.pagina(pagina, tamanio, Sort.by("codigo"));
+        return reservaRepositorio.buscarPagina(actor.getCodigoGrupoFamiliar(), codigoTurista, dniBuscado,
+                numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagada, paginado);
     }
 
     public Reserva encontrarVisiblePara(Usuario actor, Integer codigo) {
@@ -176,14 +147,6 @@ public class ReservaServicio {
     public BalanceVentas balance(Usuario actor) {
         autorizacion.verificarPermiso(actor, Permiso.VER_BALANCE);
         return reservaRepositorio.balancePagadas();
-    }
-
-    public List<Reserva> listarPorTitularYFamiliares(Integer codigoTitular) {
-        Turista titular = encontrarTurista(codigoTitular);
-        if (!titular.isTitular()) {
-            throw new OperacionNoPermitidaException("El turista indicado no es titular");
-        }
-        return reservaRepositorio.listarPorTitularYFamiliares(codigoTitular);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -248,19 +211,35 @@ public class ReservaServicio {
         }
     }
 
+    private Reserva encontrarPorId(Integer codigo) {
+        Reserva reserva = reservaRepositorio.findById(codigo).orElse(null);
+        if (reserva == null) {
+            throw new EntidadNoEncontradaException("No se encontro la reserva " + codigo);
+        }
+        return reserva;
+    }
+
     private Turista encontrarTurista(Integer codigo) {
-        return turistaRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el turista " + codigo));
+        Turista turista = turistaRepositorio.findById(codigo).orElse(null);
+        if (turista == null) {
+            throw new EntidadNoEncontradaException("No se encontro el turista " + codigo);
+        }
+        return turista;
     }
 
     private Vuelo encontrarVuelo(Integer numero) {
-        return vueloRepositorio.findById(numero)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el vuelo " + numero));
+        Vuelo vuelo = vueloRepositorio.findById(numero).orElse(null);
+        if (vuelo == null) {
+            throw new EntidadNoEncontradaException("No se encontro el vuelo " + numero);
+        }
+        return vuelo;
     }
 
     private Hotel encontrarHotel(Integer codigo) {
-        return hotelRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el hotel " + codigo));
+        Hotel hotel = hotelRepositorio.findById(codigo).orElse(null);
+        if (hotel == null) {
+            throw new EntidadNoEncontradaException("No se encontro el hotel " + codigo);
+        }
+        return hotel;
     }
-
 }

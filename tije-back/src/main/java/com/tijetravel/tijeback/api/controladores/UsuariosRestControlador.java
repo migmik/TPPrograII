@@ -1,11 +1,7 @@
 package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 
 import org.springframework.http.ResponseEntity;
@@ -48,16 +44,12 @@ public class UsuariosRestControlador {
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
-        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
         public List<UsuarioRespuesta> listar(
                         @RequestParam(required = false) RolUsuario rol,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return usuarioServicio.listarPara(actor, rol).stream()
-                                .map(usuarioMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(UsuarioRespuesta::codigo))
-                                .toList();
+                return usuarioMapeador.aRespuestas(usuarioServicio.listarPara(actor, rol));
         }
 
         @GetMapping("/pagina")
@@ -69,20 +61,9 @@ public class UsuariosRestControlador {
                         @RequestParam(defaultValue = "0") int pagina,
                         @RequestParam(defaultValue = "20") int tamanio,
                         Authentication autenticacion) {
-                if (pagina < 0 || tamanio < 1 || tamanio > 100)
-                        throw new IllegalArgumentException("Pagina o tamanio no valido");
-                if (nombre != null && (nombre.contains("%") || nombre.contains("_")))
-                        throw new IllegalArgumentException("El filtro contiene caracteres no permitidos");
-                if (dni != null && !dni.isBlank() && !dni.trim().matches("[0-9]{7,8}"))
-                        throw new IllegalArgumentException("El DNI debe tener 7 u 8 digitos");
-                if (codigo != null && codigo < 1)
-                        throw new IllegalArgumentException("El codigo debe ser positivo");
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                Page<Usuario> resultado = usuarioServicio.buscarPaginaPara(actor, rol, codigo, nombre, dni,
-                                PageRequest.of(pagina, tamanio, Sort.by("codigo")));
-                return new PaginaRespuesta<>(resultado.map(usuarioMapeador::aRespuesta).getContent(),
-                                resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(),
-                                resultado.hasNext());
+                return usuarioMapeador.aPagina(
+                                usuarioServicio.buscarPaginaPara(actor, rol, codigo, nombre, dni, pagina, tamanio));
         }
 
         @GetMapping("/{codigo}")

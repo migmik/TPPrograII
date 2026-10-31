@@ -49,6 +49,7 @@ class HotelServicioTest {
                                 hotelRepositorio,
                                 reservaRepositorio,
                                 new AutorizacionServicio(),
+                                org.mockito.Mockito.mock(DisponibilidadServicio.class),
                                 org.mockito.Mockito.mock(BloqueoEscrituras.class));
                 hotel = new Hotel("Hotel Centro", "Calle 1", "Cordoba", "351-1000", 5);
                 ReflectionTestUtils.setField(hotel, "codigo", 1);
@@ -68,6 +69,7 @@ class HotelServicioTest {
                 when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(List.of(
                                 reserva("ana@example.com", LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 4)),
                                 reserva("luis@example.com", LocalDate.of(2026, 10, 2), LocalDate.of(2026, 10, 3))));
+                when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 
                 assertThrows(
                                 CapacidadExcedidaException.class,
@@ -78,7 +80,8 @@ class HotelServicioTest {
                                                 "Calle 1",
                                                 "Cordoba",
                                                 "351-1000",
-                                                1));
+                                                1,
+                                                25000));
         }
 
         @Test
@@ -96,9 +99,23 @@ class HotelServicioTest {
                                 "Calle 1",
                                 "Cordoba",
                                 "351-1000",
-                                2);
+                                2,
+                                25000);
 
                 assertEquals(2, modificado.getCapacidadTotal());
+        }
+
+        @Test
+        void aceptaLaMismaCiudadEscritaConAcento() {
+                when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(List.of(
+                                reserva("ana@example.com", LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 4))));
+                when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
+
+                Hotel modificado = servicio.modificar(
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                1, "Hotel Centro", "Calle 1", "Córdoba", "351-1000", 5, 25000);
+
+                assertEquals("Córdoba", modificado.getCiudad());
         }
 
         private Reserva reserva(String email, LocalDate llegada, LocalDate partida) {

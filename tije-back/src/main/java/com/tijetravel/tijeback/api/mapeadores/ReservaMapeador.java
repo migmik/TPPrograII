@@ -6,8 +6,9 @@ import com.tijetravel.tijeback.api.dto.ReservaRespuesta;
 import com.tijetravel.tijeback.modelos.Reserva;
 
 @Component
-public class ReservaMapeador {
+public class ReservaMapeador extends MapeadorBase<Reserva, ReservaRespuesta> {
 
+    @Override
     public ReservaRespuesta aRespuesta(Reserva reserva) {
         return new ReservaRespuesta(
                 reserva.getCodigo(),
