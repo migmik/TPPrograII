@@ -24,7 +24,7 @@
                             <p>Estos son los turistas de tu grupo familiar.</p>
                         </c:if>
                         <c:if test="${puedeGestionar}">
-                            <p><a href="<c:url value='/turistas/nuevo'/>">Crear turista</a></p>
+                            <p><a href="<c:url value='/turistas/nuevo'/>">Crear turista</a> | <a href="<c:url value='/bajas/turistas'/>">Ver dados de baja</a></p>
                             <form class="filter-form" method="get" action="<c:url value='/turistas'/>">
                                 <div class="filter-field"><label for="dni">Buscar por DNI</label>
                                 <input type="search" id="dni" name="dni" inputmode="numeric" minlength="7"

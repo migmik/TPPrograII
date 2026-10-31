@@ -25,7 +25,7 @@
                         <button type="submit">Buscar</button>
                     </form>
                     <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_HOTELES')}">
-                        <p><a href="<c:url value='/hoteles/nuevo'/>">Agregar hotel</a></p>
+                        <p><a href="<c:url value='/hoteles/nuevo'/>">Agregar hotel</a> | <a href="<c:url value='/bajas/hoteles'/>">Ver dados de baja</a></p>
                     </c:if>
                     <c:if test="${not empty mensajeExito}">
                         <p role="status">

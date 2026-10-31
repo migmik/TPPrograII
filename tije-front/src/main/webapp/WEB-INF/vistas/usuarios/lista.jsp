@@ -20,7 +20,7 @@
                         </p>
                     </c:if>
                     <p><a href="<c:url value='/usuarios/nuevo'/>">Crear usuario</a> |
-                        <a href="<c:url value='/roles'/>">Roles y permisos</a></p>
+                        <a href="<c:url value='/roles'/>">Roles y permisos</a> | <a href="<c:url value='/bajas/usuarios'/>">Ver dados de baja</a></p>
                     <form class="filter-form" method="get" action="<c:url value='/usuarios'/>">
                         <div class="filter-field"><label for="codigoRol">Rol</label>
                         <select id="codigoRol" name="codigoRol">

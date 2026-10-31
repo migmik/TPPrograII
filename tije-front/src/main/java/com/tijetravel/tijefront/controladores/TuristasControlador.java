@@ -191,7 +191,7 @@ public class TuristasControlador {
                     "No pudimos confirmar la eliminación. Consultá el listado antes de volver a intentarlo.");
             return "turistas/eliminar";
         }
-        redireccion.addFlashAttribute("mensajeExito", "Turista eliminado correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Turista dado de baja correctamente.");
         return "redirect:/turistas";
     }
 

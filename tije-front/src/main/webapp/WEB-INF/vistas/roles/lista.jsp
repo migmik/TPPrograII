@@ -22,7 +22,7 @@
                     <p>Cada usuario tiene un rol. Al cambiar los permisos de un rol, cambian para todos los
                         usuarios que lo tienen.</p>
                     <p><a href="<c:url value='/roles/nuevo'/>">Crear rol</a> |
-                        <a href="<c:url value='/usuarios'/>">Ver usuarios</a></p>
+                        <a href="<c:url value='/usuarios'/>">Ver usuarios</a> | <a href="<c:url value='/bajas/roles'/>">Ver dados de baja</a></p>
                     <table>
                         <caption>Roles activos</caption>
                         <thead>

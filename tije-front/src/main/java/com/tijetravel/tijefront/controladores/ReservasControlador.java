@@ -273,7 +273,7 @@ public class ReservasControlador {
                     "No pudimos confirmar la eliminación. Consultá el listado antes de volver a intentarlo.");
             return "reservas/eliminar";
         }
-        redireccion.addFlashAttribute("mensajeExito", "Reserva eliminada correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Reserva dada de baja correctamente.");
         return "redirect:/reservas";
     }
 

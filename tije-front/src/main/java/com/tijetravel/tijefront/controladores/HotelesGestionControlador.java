@@ -136,7 +136,7 @@ public class HotelesGestionControlador extends ControladorAdministracion {
         } catch (ResourceAccessException error) {
             return mostrarConexionIncierta(respuesta, modelo, "hoteles/eliminar");
         }
-        redireccion.addFlashAttribute("mensajeExito", "Hotel eliminado correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Hotel dado de baja correctamente.");
         return "redirect:/hoteles";
     }
 

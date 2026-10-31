@@ -28,7 +28,7 @@
                         <button type="submit">Buscar</button>
                     </form>
                     <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_VUELOS')}">
-                        <p><a href="<c:url value='/vuelos/nuevo'/>">Agregar vuelo</a></p>
+                        <p><a href="<c:url value='/vuelos/nuevo'/>">Agregar vuelo</a> | <a href="<c:url value='/bajas/vuelos'/>">Ver dados de baja</a></p>
                     </c:if>
                     <c:if test="${not empty mensajeExito}">
                         <p role="status">

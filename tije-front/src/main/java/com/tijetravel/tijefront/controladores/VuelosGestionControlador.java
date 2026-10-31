@@ -140,7 +140,7 @@ public class VuelosGestionControlador extends ControladorAdministracion {
         } catch (ResourceAccessException error) {
             return mostrarConexionIncierta(respuesta, modelo, "vuelos/eliminar");
         }
-        redireccion.addFlashAttribute("mensajeExito", "Vuelo eliminado correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Vuelo dado de baja correctamente.");
         return "redirect:/vuelos";
     }
 

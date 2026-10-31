@@ -142,7 +142,7 @@ public class SucursalesControlador extends ControladorAdministracion {
         } catch (ResourceAccessException error) {
             return mostrarConexionIncierta(respuesta, modelo, "sucursales/eliminar");
         }
-        redireccion.addFlashAttribute("mensajeExito", "Sucursal eliminada correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Sucursal dada de baja correctamente.");
         return "redirect:/sucursales";
     }
 

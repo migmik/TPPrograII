@@ -26,6 +26,9 @@
                         <c:if test="${puedeCrear}">
                             <p><a href="<c:url value='/reservas/nueva'/>">Crear reserva</a></p>
                         </c:if>
+                        <c:if test="${puedeGestionar}">
+                            <p><a href="<c:url value='/bajas/reservas'/>">Ver dados de baja</a></p>
+                        </c:if>
                         <form class="filter-form" method="get" action="<c:url value='/reservas'/>">
                             <div class="filter-field"><label for="codigoTurista">Código de turista</label>
                             <input id="codigoTurista" name="codigoTurista" type="number" min="1"

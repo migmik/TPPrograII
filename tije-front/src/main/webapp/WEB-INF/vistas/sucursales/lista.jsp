@@ -20,7 +20,7 @@
                         <button type="submit">Filtrar</button>
                     </form>
                     <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_SUCURSALES')}">
-                        <p><a href="<c:url value='/sucursales/nuevo'/>">Agregar sucursal</a></p>
+                        <p><a href="<c:url value='/sucursales/nuevo'/>">Agregar sucursal</a> | <a href="<c:url value='/bajas/sucursales'/>">Ver dados de baja</a></p>
                     </c:if>
                     <c:if test="${not empty mensajeExito}">
                         <p role="status">
