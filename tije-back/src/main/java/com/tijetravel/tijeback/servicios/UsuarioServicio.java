@@ -191,16 +191,14 @@ public class UsuarioServicio {
         }
 
         Usuario usuario = encontrarPorId(codigo);
-        if (usuario.getRol() == RolUsuario.CLIENTE) {
-            if (dni != null && !dni.isBlank()) {
-                throw new IllegalArgumentException("El DNI del cliente se modifica en su turista asociado");
-            }
-        } else {
+        if (usuario.tieneDniPropio()) {
             ValidacionModelo.dni(dni);
             if (usuarioRepositorio.existsByDniAndCodigoNot(dni, codigo)) {
                 throw new EntidadDuplicadaException("Ya existe un empleado con ese DNI");
             }
             usuario.actualizarDni(dni);
+        } else if (dni != null && !dni.isBlank()) {
+            throw new IllegalArgumentException("El DNI del cliente se modifica en su turista asociado");
         }
         usuario.actualizarCredenciales(
                 nombreNormalizado,

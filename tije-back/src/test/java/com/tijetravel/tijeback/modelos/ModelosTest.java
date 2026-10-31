@@ -5,6 +5,7 @@ import com.tijetravel.tijeback.DnisPrueba;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
@@ -118,5 +120,28 @@ class ModelosTest {
                 assertThrows(
                                 IllegalArgumentException.class,
                                 () -> new Cliente("cliente", "clave", familiar));
+        }
+
+        @Test
+        void clienteSoloVeASuGrupoFamiliarYLosEmpleadosVenATodos() {
+                Sucursal sucursal = new Sucursal("Direccion", "1234");
+                Turista titular = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "ana@example.com", "123", "456", sucursal);
+                Turista familiar = new Turista(DnisPrueba.siguiente(), "Luis", "Perez", "Direccion", "luis@example.com", "123", "789", sucursal, titular);
+                Turista otro = new Turista(DnisPrueba.siguiente(), "Eva", "Gomez", "Direccion", "eva@example.com", "123", "111", sucursal);
+                ReflectionTestUtils.setField(titular, "codigo", 1);
+                ReflectionTestUtils.setField(familiar, "codigo", 2);
+                ReflectionTestUtils.setField(otro, "codigo", 3);
+                Cliente cliente = new Cliente("cliente", "clave", titular);
+                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+
+                assertTrue(cliente.puedeVerTurista(titular));
+                assertTrue(cliente.puedeVerTurista(familiar));
+                assertFalse(cliente.puedeVerTurista(otro));
+                assertEquals(1, cliente.getCodigoGrupoFamiliar());
+                assertTrue(vendedor.puedeVerTurista(otro));
+                assertNull(vendedor.getCodigoGrupoFamiliar());
+                assertTrue(vendedor.tienePermiso(Permiso.VER_CATALOGO_COMPLETO));
+                assertFalse(vendedor.tienePermiso(Permiso.VER_BALANCE));
+                assertFalse(cliente.tienePermiso(Permiso.VER_CATALOGO_COMPLETO));
         }
 }

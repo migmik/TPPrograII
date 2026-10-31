@@ -3,6 +3,8 @@ package com.tijetravel.tijeback.enums;
 public enum Permiso {
     CONSULTAR,
     CREAR_RESERVAS,
+    VER_CATALOGO_COMPLETO,
+    VER_BALANCE,
     ADMINISTRAR_TURISTAS,
     ADMINISTRAR_RESERVAS,
     ADMINISTRAR_SUCURSALES,

@@ -1,5 +1,6 @@
 package com.tijetravel.tijeback.servicios;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
@@ -126,8 +126,7 @@ public class TuristaServicio {
     public Page<Turista> buscarPaginaParaPersonal(Usuario actor, String dni, Boolean titular,
             Pageable pagina) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_TURISTAS);
-        return turistaRepositorio.buscarPagina(dni == null || dni.isBlank() ? null : dni.trim(),
-                titular, pagina);
+        return turistaRepositorio.buscarPagina(limpiarDni(dni), titular, pagina);
     }
 
     public List<Turista> listarTitularesSinCuentaPara(Usuario actor) {
@@ -145,50 +144,73 @@ public class TuristaServicio {
 
     public List<Turista> listarPara(Usuario actor, String dni, Boolean titular) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        String dniBusqueda = dni == null || dni.isBlank() ? null : dni.trim();
-        if (actor.getRol() != RolUsuario.CLIENTE) {
-            List<Turista> turistas;
-            if (dniBusqueda != null) {
-                turistas = turistaRepositorio.findByDni(dniBusqueda);
-            } else if (titular == null) {
-                return listar();
-            } else if (titular) {
-                turistas = turistaRepositorio.findByTitularIsNull();
-            } else {
-                turistas = turistaRepositorio.findByTitularIsNotNull();
-            }
-            if (titular != null && dniBusqueda != null) {
-                return filtrarPorTipo(turistas, titular);
-            }
-            return turistas;
+        String dniBusqueda = limpiarDni(dni);
+        Integer codigoGrupoFamiliar = actor.getCodigoGrupoFamiliar();
+        if (codigoGrupoFamiliar == null) {
+            return listarParaPersonal(dniBusqueda, titular);
         }
 
-        Integer codigoTitular = autorizacion.codigoTitular(actor);
-        List<Turista> grupoFamiliar = turistaRepositorio.findByCodigoOrTitularCodigo(codigoTitular, codigoTitular);
+        List<Turista> grupoFamiliar = turistaRepositorio.findByCodigoOrTitularCodigo(
+                codigoGrupoFamiliar, codigoGrupoFamiliar);
         if (grupoFamiliar.isEmpty()) {
-            throw new EntidadNoEncontradaException("No se encontro el turista " + codigoTitular);
+            throw new EntidadNoEncontradaException("No se encontro el turista " + codigoGrupoFamiliar);
         }
-        List<Turista> turistasVisibles = dniBusqueda == null ? grupoFamiliar
-                : grupoFamiliar.stream().filter(turista -> dniBusqueda.equals(turista.getDni())).toList();
-        return titular == null ? List.copyOf(turistasVisibles) : filtrarPorTipo(turistasVisibles, titular);
+        List<Turista> resultado = new ArrayList<>();
+        for (Turista turista : grupoFamiliar) {
+            if (coincideDni(turista, dniBusqueda) && coincideTipo(turista, titular)) {
+                resultado.add(turista);
+            }
+        }
+        return resultado;
+    }
+
+    private List<Turista> listarParaPersonal(String dni, Boolean titular) {
+        List<Turista> turistas;
+        if (dni != null) {
+            turistas = turistaRepositorio.findByDni(dni);
+        } else if (titular == null) {
+            return listar();
+        } else if (titular) {
+            return turistaRepositorio.findByTitularIsNull();
+        } else {
+            return turistaRepositorio.findByTitularIsNotNull();
+        }
+        List<Turista> resultado = new ArrayList<>();
+        for (Turista turista : turistas) {
+            if (coincideTipo(turista, titular)) {
+                resultado.add(turista);
+            }
+        }
+        return resultado;
     }
 
     public List<Turista> listarPorCodigosPara(Usuario actor, List<Integer> codigos) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
+        List<Turista> resultado = new ArrayList<>();
         if (codigos == null || codigos.isEmpty()) {
-            return List.of();
+            return resultado;
         }
-        List<Turista> turistas = turistaRepositorio.findByCodigoIn(codigos);
-        if (actor.getRol() != RolUsuario.CLIENTE) {
-            return turistas;
+        for (Turista turista : turistaRepositorio.findByCodigoIn(codigos)) {
+            if (actor.puedeVerTurista(turista)) {
+                resultado.add(turista);
+            }
         }
-        return turistas.stream()
-                .filter(turista -> autorizacion.perteneceAlGrupoFamiliar(actor, turista))
-                .toList();
+        return resultado;
     }
 
-    private List<Turista> filtrarPorTipo(List<Turista> turistas, boolean titular) {
-        return turistas.stream().filter(turista -> turista.isTitular() == titular).toList();
+    private boolean coincideDni(Turista turista, String dni) {
+        return dni == null || dni.equals(turista.getDni());
+    }
+
+    private boolean coincideTipo(Turista turista, Boolean titular) {
+        return titular == null || turista.isTitular() == titular;
+    }
+
+    private String limpiarDni(String dni) {
+        if (dni == null || dni.isBlank()) {
+            return null;
+        }
+        return dni.trim();
     }
 
     public Turista encontrarPorId(Integer codigo) {
@@ -199,10 +221,8 @@ public class TuristaServicio {
     public Turista encontrarVisiblePara(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
         Turista turista = encontrarPorId(codigo);
-        if (actor.getRol() == RolUsuario.CLIENTE && !autorizacion.perteneceAlGrupoFamiliar(actor, turista)) {
-            throw new OperacionNoPermitidaException(
-                    "El cliente no puede consultar turistas de otro grupo familiar");
-        }
+        autorizacion.verificarAccesoATurista(actor, turista,
+                "El cliente no puede consultar turistas de otro grupo familiar");
         return turista;
     }
 

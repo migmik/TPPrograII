@@ -14,13 +14,15 @@ public class Vendedor extends Usuario {
     }
 
     public Vendedor(String nombreUsuario, String contrasenia, String dni) {
-        super(nombreUsuario, contrasenia, RolUsuario.VENDEDOR, dni);
+        super(nombreUsuario, contrasenia, RolUsuario.VENDEDOR);
+        actualizarDni(dni);
     }
 
     @Override
     public boolean tienePermiso(Permiso permiso) {
         return permiso == Permiso.CONSULTAR
                 || permiso == Permiso.CREAR_RESERVAS
+                || permiso == Permiso.VER_CATALOGO_COMPLETO
                 || permiso == Permiso.ADMINISTRAR_TURISTAS
                 || permiso == Permiso.ADMINISTRAR_RESERVAS;
     }

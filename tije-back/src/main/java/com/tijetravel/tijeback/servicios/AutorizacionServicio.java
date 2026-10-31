@@ -7,21 +7,13 @@ import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 
+/**
+ * Centraliza los controles de acceso. Las reglas de cada tipo de usuario
+ * estan en el modelo (tienePermiso y puedeVerTurista), aca solo se lanzan
+ * las excepciones.
+ */
 @Service
 public class AutorizacionServicio {
-
-    public Integer codigoTitular(Usuario actor) {
-        Integer codigo = actor.getCodigoTurista();
-        if (codigo == null) {
-            throw new OperacionNoPermitidaException("El cliente no tiene un turista titular asociado");
-        }
-        return codigo;
-    }
-
-    public boolean perteneceAlGrupoFamiliar(Usuario actor, Turista turista) {
-        Integer codigo = codigoTitular(actor);
-        return codigo.equals(turista.getCodigo()) || codigo.equals(turista.getCodigoTitular());
-    }
 
     public boolean tienePermiso(Usuario usuario, Permiso permiso) {
         return usuario != null && permiso != null && usuario.tienePermiso(permiso);
@@ -30,6 +22,12 @@ public class AutorizacionServicio {
     public void verificarPermiso(Usuario usuario, Permiso permiso) {
         if (!tienePermiso(usuario, permiso)) {
             throw new OperacionNoPermitidaException("El usuario no tiene permiso para realizar esta operacion");
+        }
+    }
+
+    public void verificarAccesoATurista(Usuario usuario, Turista turista, String mensaje) {
+        if (!usuario.puedeVerTurista(turista)) {
+            throw new OperacionNoPermitidaException(mensaje);
         }
     }
 }
