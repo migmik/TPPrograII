@@ -1,5 +1,6 @@
 package com.tijetravel.tijefront.controladores;
 
+import com.tijetravel.tijefront.dto.PaginaHotelesRespuesta;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -49,7 +50,7 @@ public class HotelesControlador {
         modelo.addAttribute("ciudades", hotelesApi.listarCiudades());
         modelo.addAttribute("nombresHoteles", hotelesApi.listarNombres());
         if (busqueda || personal) {
-            var resultado = hotelesApi.listarPagina(ciudad, nombre, orden, pagina, personal);
+            PaginaHotelesRespuesta resultado = hotelesApi.listarPagina(ciudad, nombre, orden, pagina, personal);
             modelo.addAttribute("hoteles", resultado.elementos());
             modelo.addAttribute("pagina", resultado.pagina());
             modelo.addAttribute("totalPaginas", resultado.totalPaginas());
