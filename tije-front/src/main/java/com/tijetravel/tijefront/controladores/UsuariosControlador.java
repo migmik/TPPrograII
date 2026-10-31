@@ -47,21 +47,25 @@ public class UsuariosControlador {
 
     @GetMapping
     public String listar(@RequestParam(required = false) String rol,
+            @RequestParam(required = false) Integer codigo,
             @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String dni,
             @RequestParam(defaultValue = "0") int pagina,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAdministrador(solicitud, respuesta, modelo);
         if (salida != null) {
             return salida;
         }
-        var resultado = usuariosApi.listarPagina(rol, nombre, Math.max(0, pagina));
+        var resultado = usuariosApi.listarPagina(rol, codigo, nombre, dni, Math.max(0, pagina));
         modelo.addAttribute("usuarios", resultado.elementos());
         modelo.addAttribute("pagina", resultado.pagina());
         modelo.addAttribute("totalPaginas", resultado.totalPaginas());
         modelo.addAttribute("hayAnterior", resultado.hayAnterior());
         modelo.addAttribute("haySiguiente", resultado.haySiguiente());
         modelo.addAttribute("rolBusqueda", rol == null ? "" : rol.trim());
+        modelo.addAttribute("codigoBusqueda", codigo);
         modelo.addAttribute("nombreBusqueda", nombre == null ? "" : nombre.trim());
+        modelo.addAttribute("dniBusqueda", dni == null ? "" : dni.trim());
         return "usuarios/lista";
     }
 

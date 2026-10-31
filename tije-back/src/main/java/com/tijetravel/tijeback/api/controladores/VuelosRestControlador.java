@@ -74,6 +74,12 @@ public class VuelosRestControlador {
                 .toList();
     }
 
+    @GetMapping("/origenes")
+    public List<String> origenes() { return vueloServicio.listarOrigenes(); }
+
+    @GetMapping("/destinos")
+    public List<String> destinos() { return vueloServicio.listarDestinos(); }
+
     @GetMapping("/pagina")
     public PaginaRespuesta<VueloRespuesta> listarPagina(
             @RequestParam(required = false) String origen, @RequestParam(required = false) String destino,

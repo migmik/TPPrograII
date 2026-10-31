@@ -17,12 +17,27 @@ public class SucursalesApiCliente {
     }
 
     public List<SucursalResumen> listar() {
-        SucursalResumen[] sucursales = conexion.getCliente().get().uri("/api/v1/sucursales")
+        return listar(null);
+    }
+
+    public List<SucursalResumen> listar(String ciudad) {
+        SucursalResumen[] sucursales = conexion.getCliente().get().uri(uri -> {
+            var ruta = uri.path("/api/v1/sucursales");
+            if (ciudad != null && !ciudad.isBlank()) ruta.queryParam("ciudad", ciudad.trim());
+            return ruta.build();
+        })
                 .retrieve().body(SucursalResumen[].class);
         if (sucursales == null) {
             throw new RestClientException("La API no devolvió sucursales.");
         }
         return Arrays.asList(sucursales);
+    }
+
+    public List<String> listarCiudades() {
+        String[] ciudades = conexion.getCliente().get().uri("/api/v1/sucursales/ciudades")
+                .retrieve().body(String[].class);
+        if (ciudades == null) throw new RestClientException("La API no devolvio ciudades de sucursales.");
+        return Arrays.asList(ciudades);
     }
 
     public SucursalResumen buscar(Integer codigo) {

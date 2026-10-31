@@ -14,17 +14,17 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Vuelos</h1>
-                    <form method="get" action="<c:url value='/vuelos'/>">
-                        <label for="origen">Origen</label>
-                        <input id="origen" name="origen" value="<c:out value='${origen}'/>" placeholder="Ej.: Buenos Aires">
-                        <label for="destino">Destino</label>
-                        <input id="destino" name="destino" value="<c:out value='${destino}'/>" placeholder="Ej.: Bariloche">
-                        <label for="fechaDesde">Desde</label>
-                        <input id="fechaDesde" name="fechaDesde" type="date" value="<c:out value='${fechaDesde}'/>">
-                        <label for="fechaHasta">Hasta</label>
-                        <input id="fechaHasta" name="fechaHasta" type="date" value="<c:out value='${fechaHasta}'/>">
-                        <label for="orden">Ordenar por</label>
-                        <select id="orden" name="orden"><option value="numero">Número</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select>
+                    <form class="filter-form" method="get" action="<c:url value='/vuelos'/>">
+                        <div class="filter-field"><label for="origen">Origen</label>
+                        <select id="origen" name="origen"><option value="">Todos</option><c:forEach items="${origenes}" var="opcion"><option value="<c:out value='${opcion}'/>" ${origen == opcion ? 'selected' : ''}><c:out value="${opcion}"/></option></c:forEach></select></div>
+                        <div class="filter-field"><label for="destino">Destino</label>
+                        <select id="destino" name="destino"><option value="">Todos</option><c:forEach items="${destinos}" var="opcion"><option value="<c:out value='${opcion}'/>" ${destino == opcion ? 'selected' : ''}><c:out value="${opcion}"/></option></c:forEach></select></div>
+                        <div class="filter-field"><label for="fechaDesde">Desde</label>
+                        <input id="fechaDesde" name="fechaDesde" type="date" value="<c:out value='${fechaDesde}'/>"></div>
+                        <div class="filter-field"><label for="fechaHasta">Hasta</label>
+                        <input id="fechaHasta" name="fechaHasta" type="date" value="<c:out value='${fechaHasta}'/>"></div>
+                        <div class="filter-field"><label for="orden">Ordenar por</label>
+                        <select id="orden" name="orden"><option value="numero">Número</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select></div>
                         <button type="submit">Buscar</button>
                     </form>
                     <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">

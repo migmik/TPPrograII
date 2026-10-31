@@ -106,10 +106,11 @@ public class UsuarioServicio {
         return usuarioRepositorio.findAll();
     }
 
-    public Page<Usuario> buscarPaginaPara(Usuario actor, RolUsuario rol, String nombre,
+    public Page<Usuario> buscarPaginaPara(Usuario actor, RolUsuario rol, Integer codigo, String nombre, String dni,
             Pageable pagina) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
-        return usuarioRepositorio.buscarPagina(rol, nombre == null || nombre.isBlank() ? null : nombre.trim(),
+        return usuarioRepositorio.buscarPagina(rol, codigo, nombre == null || nombre.isBlank() ? null : nombre.trim(),
+                dni == null || dni.isBlank() ? null : dni.trim(),
                 pagina);
     }
 

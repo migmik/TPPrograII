@@ -16,10 +16,36 @@ import com.tijetravel.tijeback.modelos.Reserva;
 
 public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
-        @Query("select new com.tijetravel.tijeback.api.dto.BalanceRespuesta(count(r), "
-                        + "coalesce(sum(r.precioVuelo), 0), coalesce(sum(r.precioHotel), 0), "
-                        + "coalesce(sum(r.total), 0)) from Reserva r where r.pagada = true")
+        @Query("""
+                select new com.tijetravel.tijeback.api.dto.BalanceRespuesta(
+                    coalesce(sum(case when r.pagada = true then 1 else 0 end), 0),
+                    coalesce(sum(case when r.pagada = true then r.precioVuelo else 0 end), 0),
+                    coalesce(sum(case when r.pagada = true then r.precioHotel else 0 end), 0),
+                    coalesce(sum(case when r.pagada = true then r.total else 0 end), 0),
+                    coalesce(sum(case when r.pagada = false then 1 else 0 end), 0),
+                    coalesce(sum(case when r.pagada = false then r.total else 0 end), 0))
+                from Reserva r
+                """)
         com.tijetravel.tijeback.api.dto.BalanceRespuesta balancePagadas();
+
+        @EntityGraph("Reserva.completa")
+        @Query("""
+                select r from Reserva r where
+                    (:codigoTitular is null or r.turista.codigo = :codigoTitular
+                        or r.turista.titular.codigo = :codigoTitular)
+                    and (:codigoTurista is null or r.turista.codigo = :codigoTurista)
+                    and (:dni is null or r.turista.dni = :dni)
+                    and (:numeroVuelo is null or r.vuelo.numero = :numeroVuelo)
+                    and (:codigoHotel is null or r.hotel.codigo = :codigoHotel)
+                    and (:desde is null or r.fechaLlegada >= :desde)
+                    and (:hasta is null or r.fechaLlegada <= :hasta)
+                    and (:pagada is null or r.pagada = :pagada)
+                """)
+        Page<Reserva> buscarPagina(@Param("codigoTitular") Integer codigoTitular,
+                @Param("codigoTurista") Integer codigoTurista,
+                @Param("dni") String dni, @Param("numeroVuelo") Integer numeroVuelo,
+                @Param("codigoHotel") Integer codigoHotel, @Param("desde") LocalDate desde,
+                @Param("hasta") LocalDate hasta, @Param("pagada") Boolean pagada, Pageable pagina);
 
         @Override
         @EntityGraph("Reserva.completa")

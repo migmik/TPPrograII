@@ -117,10 +117,26 @@ class RepositoriosIntegracionTest {
                                 LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3), PageRequest.of(0, 1))
                                 .getTotalElements());
                 assertEquals(1, reservaRepositorio.findAll(PageRequest.of(0, 1)).getTotalElements());
+                assertEquals(1, reservaRepositorio.buscarPagina(null, familiar.getCodigo(), familiar.getDni(),
+                                100, hotel.getCodigo(), null, null, false, PageRequest.of(0, 10))
+                                .getTotalElements());
+                assertEquals(0, reservaRepositorio.buscarPagina(null, null, titular.getDni(),
+                                null, null, null, null, null, PageRequest.of(0, 10))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.buscarPagina(titular.getCodigo(), null, null,
+                                null, null, null, null, null, PageRequest.of(0, 10))
+                                .getTotalElements());
+                assertEquals(1, reservaRepositorio.balancePagadas().reservasPendientes());
+                assertEquals(0, reservaRepositorio.balancePagadas().reservasPagadas());
+                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.CLIENTE, null, null,
+                                titular.getDni(), PageRequest.of(0, 10)).getTotalElements());
+                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.ADMINISTRADOR,
+                                usuarioRepositorio.findByRol(RolUsuario.ADMINISTRADOR).get(0).getCodigo(),
+                                null, null, PageRequest.of(0, 10)).getTotalElements());
         }
 
         @Test
         void aplicaLaMigracionInicialAntesDeValidarJpa() {
-                assertEquals("8", flyway.info().current().getVersion().getVersion());
+                assertEquals("9", flyway.info().current().getVersion().getVersion());
         }
 }

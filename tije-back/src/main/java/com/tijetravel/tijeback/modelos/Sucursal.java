@@ -18,6 +18,9 @@ public class Sucursal {
     @Column(nullable = false)
     private String direccion;
 
+    @Column(nullable = false, length = 100)
+    private String ciudad;
+
     @Column(nullable = false)
     private String telefono;
 
@@ -25,12 +28,21 @@ public class Sucursal {
     }
 
     public Sucursal(String direccion, String telefono) {
-        actualizarDatos(direccion, telefono);
+        this(direccion, telefono, "Sin especificar");
+    }
+
+    public Sucursal(String direccion, String telefono, String ciudad) {
+        actualizarDatos(direccion, telefono, ciudad);
     }
 
     public void actualizarDatos(String direccion, String telefono) {
+        actualizarDatos(direccion, telefono, this.ciudad);
+    }
+
+    public void actualizarDatos(String direccion, String telefono, String ciudad) {
         this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
         this.telefono = ValidacionModelo.textoObligatorio(telefono, "telefono");
+        this.ciudad = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
     }
 
     public Integer getCodigo() {
@@ -41,12 +53,15 @@ public class Sucursal {
         return direccion;
     }
 
+    public String getCiudad() { return ciudad; }
+
     public String getTelefono() {
         return telefono;
     }
 
     @Override
     public String toString() {
-        return "Sucursal | codigo=" + codigo + ", direccion=" + direccion + ", telefono=" + telefono;
+        return "Sucursal | codigo=" + codigo + ", ciudad=" + ciudad
+                + ", direccion=" + direccion + ", telefono=" + telefono;
     }
 }

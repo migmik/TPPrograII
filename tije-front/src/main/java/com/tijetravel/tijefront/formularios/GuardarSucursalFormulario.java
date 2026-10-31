@@ -8,6 +8,13 @@ public class GuardarSucursalFormulario {
     @Size(max = 255, message = "La dirección no puede superar 255 caracteres.")
     private String direccion;
 
+    @NotBlank(message = "Ingresá la ciudad.")
+    @Size(max = 100)
+    private String ciudad;
+
+    public String getCiudad() { return ciudad; }
+    public void setCiudad(String ciudad) { this.ciudad = ciudad; }
+
     @NotBlank(message = "Ingresá el teléfono.")
     @Size(max = 255, message = "El teléfono no puede superar 255 caracteres.")
     private String telefono;

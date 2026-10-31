@@ -28,6 +28,16 @@ public class HotelesApiCliente {
         this.conexion = conexion;
     }
 
+    public List<String> listarCiudades() { return opciones("/api/v1/hoteles/ciudades"); }
+
+    public List<String> listarNombres() { return opciones("/api/v1/hoteles/nombres"); }
+
+    private List<String> opciones(String ruta) {
+        String[] valores = clienteBackend.get().uri(ruta).retrieve().body(String[].class);
+        if (valores == null) throw new RestClientException("La API no devolvio las opciones de hoteles.");
+        return Arrays.asList(valores);
+    }
+
     public PaginaHotelesRespuesta listarPagina(String ciudad, String nombre, String orden,
             int pagina, boolean personal) {
         RestClient cliente = personal ? conexion.getCliente() : clienteBackend;

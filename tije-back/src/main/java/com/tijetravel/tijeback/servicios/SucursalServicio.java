@@ -40,10 +40,10 @@ public class SucursalServicio {
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Sucursal crear(Usuario actor, String direccion, String telefono) {
+    public Sucursal crear(Usuario actor, String direccion, String telefono, String ciudad) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
         bloqueoEscrituras.adquirir();
-        Sucursal sucursal = new Sucursal(direccion, telefono);
+        Sucursal sucursal = new Sucursal(direccion, telefono, ciudad);
         if (sucursalRepositorio.existsByDireccionIgnoreCase(sucursal.getDireccion())) {
             throw new EntidadDuplicadaException("Ya existe una sucursal en esa direccion");
         }
@@ -54,13 +54,20 @@ public class SucursalServicio {
         return sucursalRepositorio.findAll();
     }
 
+    public List<Sucursal> listarPorCiudad(String ciudad) {
+        return ciudad == null || ciudad.isBlank() ? listar()
+                : sucursalRepositorio.findByCiudadIgnoreCaseOrderByCodigo(ciudad.trim());
+    }
+
+    public List<String> listarCiudades() { return sucursalRepositorio.listarCiudades(); }
+
     public Sucursal encontrarPorId(Integer codigo) {
         return sucursalRepositorio.findById(codigo)
                 .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la sucursal " + codigo));
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Sucursal modificar(Usuario actor, Integer codigo, String direccion, String telefono) {
+    public Sucursal modificar(Usuario actor, Integer codigo, String direccion, String telefono, String ciudad) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_SUCURSALES);
         bloqueoEscrituras.adquirir();
         String direccionNormalizada = ValidacionModelo.textoObligatorio(direccion, "direccion");
@@ -69,7 +76,7 @@ public class SucursalServicio {
         }
 
         Sucursal sucursal = encontrarPorId(codigo);
-        sucursal.actualizarDatos(direccionNormalizada, telefono);
+        sucursal.actualizarDatos(direccionNormalizada, telefono, ciudad);
         return sucursal;
     }
 

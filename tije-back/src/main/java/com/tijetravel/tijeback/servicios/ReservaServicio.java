@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -113,64 +112,37 @@ public class ReservaServicio {
     public Page<Reserva> paginaPara(
             Usuario actor,
             Integer codigoTurista,
+            String dni,
             Integer numeroVuelo,
             Integer codigoHotel,
             LocalDate fechaDesde,
             LocalDate fechaHasta,
+            Boolean pagada,
             int pagina,
             int tamanio) {
         autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        validarConsultaPaginada(codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
-        Pageable pageable = PageRequest.of(pagina, tamanio, Sort.by("codigo").ascending());
-
-        if (actor.getRol() == RolUsuario.CLIENTE) {
-            List<Reserva> reservas = listarPorTitularYFamiliares(autorizacion.codigoTitular(actor)).stream()
-                    .filter(reserva -> codigoTurista == null || codigoTurista.equals(reserva.getTurista().getCodigo()))
-                    .filter(reserva -> numeroVuelo == null || numeroVuelo.equals(reserva.getVuelo().getNumero()))
-                    .filter(reserva -> codigoHotel == null || codigoHotel.equals(reserva.getHotel().getCodigo()))
-                    .filter(reserva -> fechaDesde == null || !reserva.getFechaLlegada().isBefore(fechaDesde))
-                    .filter(reserva -> fechaHasta == null || !reserva.getFechaLlegada().isAfter(fechaHasta))
-                    .sorted(java.util.Comparator.comparing(Reserva::getCodigo))
-                    .toList();
-            int inicio = (int) Math.min(pageable.getOffset(), reservas.size());
-            int fin = Math.min(inicio + tamanio, reservas.size());
-            return new PageImpl<>(reservas.subList(inicio, fin), pageable, reservas.size());
-        }
-
-        if (codigoTurista != null) {
-            return reservaRepositorio.findByTuristaCodigo(codigoTurista, pageable);
-        }
-        if (numeroVuelo != null) {
-            return reservaRepositorio.findByVueloNumero(numeroVuelo, pageable);
-        }
-        if (codigoHotel != null) {
-            return reservaRepositorio.findByHotelCodigo(codigoHotel, pageable);
-        }
-        if (fechaDesde != null) {
-            return reservaRepositorio.findByFechaLlegadaBetween(fechaDesde, fechaHasta, pageable);
-        }
-        return reservaRepositorio.findAll(pageable);
+        validarConsultaPaginada(codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
+        Pageable pageable = PageRequest.of(pagina, tamanio, Sort.by("codigo"));
+        String dniBuscado = dni == null || dni.isBlank() ? null : dni.trim();
+        Integer titular = actor.getRol() == RolUsuario.CLIENTE ? autorizacion.codigoTitular(actor) : null;
+        return reservaRepositorio.buscarPagina(titular, codigoTurista, dniBuscado, numeroVuelo,
+                codigoHotel, fechaDesde, fechaHasta, pagada, pageable);
     }
 
     private void validarConsultaPaginada(
             Integer codigoTurista,
+            String dni,
             Integer numeroVuelo,
             Integer codigoHotel,
             LocalDate fechaDesde,
             LocalDate fechaHasta,
             int pagina,
             int tamanio) {
-        int filtros = (codigoTurista == null ? 0 : 1)
-                + (numeroVuelo == null ? 0 : 1)
-                + (codigoHotel == null ? 0 : 1)
-                + (fechaDesde == null && fechaHasta == null ? 0 : 1);
-        if (filtros > 1) {
-            throw new IllegalArgumentException("Usa un solo filtro por consulta");
+        if (fechaDesde != null && fechaHasta != null && fechaHasta.isBefore(fechaDesde)) {
+            throw new IllegalArgumentException("El rango de fechas debe estar en orden");
         }
-        if ((fechaDesde == null) != (fechaHasta == null)
-                || (fechaDesde != null && fechaHasta.isBefore(fechaDesde))) {
-            throw new IllegalArgumentException("El rango de fechas debe estar completo y en orden");
-        }
+        if (dni != null && !dni.isBlank() && !dni.trim().matches("[0-9]{7,8}"))
+            throw new IllegalArgumentException("El DNI debe tener 7 u 8 digitos");
         if ((codigoTurista != null && codigoTurista < 1)
                 || (numeroVuelo != null && numeroVuelo < 1)
                 || (codigoHotel != null && codigoHotel < 1)) {

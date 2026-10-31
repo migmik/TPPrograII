@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.GuardarSucursalSolicitud;
@@ -44,12 +45,15 @@ public class SucursalesRestControlador {
 
     @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
-    public List<SucursalRespuesta> listar() {
-        return sucursalServicio.listar().stream()
+    public List<SucursalRespuesta> listar(@RequestParam(required = false) String ciudad) {
+        return sucursalServicio.listarPorCiudad(ciudad).stream()
                 .map(sucursalMapeador::aRespuesta)
                 .sorted(Comparator.comparing(SucursalRespuesta::codigo))
                 .toList();
     }
+
+    @GetMapping("/ciudades")
+    public List<String> ciudades() { return sucursalServicio.listarCiudades(); }
 
     @GetMapping("/{codigo}")
     public SucursalRespuesta encontrarPorId(
@@ -65,7 +69,8 @@ public class SucursalesRestControlador {
         Sucursal sucursal = sucursalServicio.crear(
                 actor,
                 solicitud.direccion(),
-                solicitud.telefono());
+                solicitud.telefono(),
+                solicitud.ciudad());
         SucursalRespuesta respuesta = sucursalMapeador.aRespuesta(sucursal);
         return ResponseEntity
                 .created(URI.create("/api/v1/sucursales/" + respuesta.codigo()))
@@ -82,7 +87,8 @@ public class SucursalesRestControlador {
                 actor,
                 codigo,
                 solicitud.direccion(),
-                solicitud.telefono()));
+                solicitud.telefono(),
+                solicitud.ciudad()));
     }
 
     @DeleteMapping("/{codigo}")

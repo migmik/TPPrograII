@@ -67,6 +67,10 @@ public class HotelServicio {
         return hotelRepositorio.findAll();
     }
 
+    public List<String> listarCiudades() { return hotelRepositorio.listarCiudades(); }
+
+    public List<String> listarNombres() { return hotelRepositorio.listarNombres(); }
+
     public Page<Hotel> buscarPagina(String ciudad, String nombre, Pageable pagina) {
         return hotelRepositorio.buscarPagina(ciudad, nombre, pagina);
     }

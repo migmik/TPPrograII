@@ -51,17 +51,19 @@ public class ReservasControlador {
 
     @GetMapping
     public String listar(@RequestParam(required = false) Integer codigoTurista,
+            @RequestParam(required = false) String dni,
             @RequestParam(required = false) Integer numeroVuelo,
             @RequestParam(required = false) Integer codigoHotel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(required = false) Boolean pagada,
             @RequestParam(defaultValue = "0") int pagina,
             HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null)
             return salida;
         var resultado = reservasApi.listarPagina(
-                codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, 20);
+                codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagada, pagina, 20);
         List<ReservaRespuesta> reservas = resultado.elementos();
         modelo.addAttribute("reservas", reservas);
         modelo.addAttribute("pagina", resultado.pagina());
@@ -69,6 +71,8 @@ public class ReservasControlador {
         modelo.addAttribute("hayAnterior", resultado.hayAnterior());
         modelo.addAttribute("haySiguiente", resultado.haySiguiente());
         modelo.addAttribute("codigoTuristaBusqueda", codigoTurista);
+        modelo.addAttribute("dniBusqueda", dni);
+        modelo.addAttribute("pagadaBusqueda", pagada);
         modelo.addAttribute("numeroVueloBusqueda", numeroVuelo);
         modelo.addAttribute("codigoHotelBusqueda", codigoHotel);
         modelo.addAttribute("fechaDesdeBusqueda", fechaDesde);

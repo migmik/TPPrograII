@@ -85,7 +85,7 @@ class UsuariosControladorTest {
     void entregaElListadoDelBackend() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         var usuarios = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listarPagina(null, null, 0))
+        when(usuariosApi.listarPagina(null, null, null, null, 0))
                 .thenReturn(new com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta(usuarios, 0, 1, false, false));
         mvc.perform(get("/usuarios").session(sesion()))
                 .andExpect(view().name("usuarios/lista")).andExpect(model().attribute("usuarios", usuarios));
@@ -95,7 +95,7 @@ class UsuariosControladorTest {
     void filtraUsuariosPorRol() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuarioActual("ADMINISTRADOR"));
         List<UsuarioRespuesta> resultado = List.of(new UsuarioRespuesta());
-        when(usuariosApi.listarPagina("VENDEDOR", null, 0))
+        when(usuariosApi.listarPagina("VENDEDOR", null, null, null, 0))
                 .thenReturn(new com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta(resultado, 0, 1, false, false));
 
         mvc.perform(get("/usuarios").param("rol", "VENDEDOR").session(sesion()))
@@ -103,7 +103,7 @@ class UsuariosControladorTest {
                 .andExpect(model().attribute("usuarios", resultado))
                 .andExpect(model().attribute("rolBusqueda", "VENDEDOR"));
 
-        verify(usuariosApi).listarPagina("VENDEDOR", null, 0);
+        verify(usuariosApi).listarPagina("VENDEDOR", null, null, null, 0);
     }
 
     @Test

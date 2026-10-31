@@ -27,10 +27,12 @@ public class ReservasApiCliente {
 
     public PaginaReservasRespuesta listarPagina(
             Integer codigoTurista,
+            String dni,
             Integer numeroVuelo,
             Integer codigoHotel,
             LocalDate fechaDesde,
             LocalDate fechaHasta,
+            Boolean pagada,
             int pagina,
             int tamanio) {
         PaginaReservasRespuesta resultado = conexion.getCliente().get().uri(uriBuilder -> {
@@ -38,10 +40,12 @@ public class ReservasApiCliente {
                     .queryParam("pagina", pagina)
                     .queryParam("tamanio", tamanio);
             if (codigoTurista != null) ruta.queryParam("codigoTurista", codigoTurista);
+            if (dni != null && !dni.isBlank()) ruta.queryParam("dni", dni.trim());
             if (numeroVuelo != null) ruta.queryParam("numeroVuelo", numeroVuelo);
             if (codigoHotel != null) ruta.queryParam("codigoHotel", codigoHotel);
             if (fechaDesde != null) ruta.queryParam("fechaDesde", fechaDesde);
             if (fechaHasta != null) ruta.queryParam("fechaHasta", fechaHasta);
+            if (pagada != null) ruta.queryParam("pagada", pagada);
             return ruta.build();
         }).retrieve().body(PaginaReservasRespuesta.class);
         if (resultado == null) throw new RestClientException("La API no devolvio la pagina de reservas.");

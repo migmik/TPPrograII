@@ -14,13 +14,14 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Hoteles</h1>
-                    <form method="get" action="<c:url value='/hoteles'/>">
-                        <label for="ciudad">Ciudad</label>
-                        <input id="ciudad" name="ciudad" value="<c:out value='${ciudadBusqueda}'/>" placeholder="Ej.: Salta">
-                        <label for="nombre">Nombre</label>
-                        <input id="nombre" name="nombre" value="<c:out value='${nombreBusqueda}'/>" placeholder="Nombre del hotel">
-                        <label for="orden">Ordenar por</label>
-                        <select id="orden" name="orden"><option value="codigo">Código</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select>
+                    <form class="filter-form" method="get" action="<c:url value='/hoteles'/>">
+                        <div class="filter-field"><label for="ciudad">Ciudad</label>
+                        <select id="ciudad" name="ciudad"><option value="">Todas</option><c:forEach items="${ciudades}" var="opcion"><option value="<c:out value='${opcion}'/>" ${ciudadBusqueda == opcion ? 'selected' : ''}><c:out value="${opcion}"/></option></c:forEach></select></div>
+                        <div class="filter-field"><label for="nombre">Nombre</label>
+                        <input id="nombre" name="nombre" list="nombres-hoteles" value="<c:out value='${nombreBusqueda}'/>" placeholder="Escribí o elegí un hotel"></div>
+                        <datalist id="nombres-hoteles"><c:forEach items="${nombresHoteles}" var="opcion"><option value="<c:out value='${opcion}'/>"></option></c:forEach></datalist>
+                        <div class="filter-field"><label for="orden">Ordenar por</label>
+                        <select id="orden" name="orden"><option value="codigo">Código</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select></div>
                         <button type="submit">Buscar</button>
                     </form>
                     <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
