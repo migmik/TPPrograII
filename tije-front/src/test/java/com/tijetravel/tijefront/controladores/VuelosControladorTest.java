@@ -16,8 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -25,9 +25,9 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
 import com.tijetravel.tijefront.dto.DisponibilidadVueloRespuesta;
-import com.tijetravel.tijefront.dto.VueloRespuesta;
 import com.tijetravel.tijefront.dto.PaginaVuelosRespuesta;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
+import com.tijetravel.tijefront.dto.VueloRespuesta;
 
 @ExtendWith(MockitoExtension.class)
 class VuelosControladorTest {
@@ -45,7 +45,7 @@ class VuelosControladorTest {
 
     @Test
     void muestraSoloResultadosFiltradosAlVisitante() throws Exception {
-        var vuelos = List.of(new VueloRespuesta());
+        List<VueloRespuesta> vuelos = List.of(new VueloRespuesta());
         when(vuelosApi.listarPagina("Cordoba", null, null, null, "numero", 0, false))
                 .thenReturn(new PaginaVuelosRespuesta(vuelos, 0, 1, false, false));
         mvc.perform(get("/vuelos").param("origen", "Cordoba"))
@@ -68,7 +68,7 @@ class VuelosControladorTest {
         usuario.setRol("VENDEDOR");
         MockHttpSession sesion = new MockHttpSession();
         sesion.setAttribute("usuarioActual", usuario);
-        var vuelos = List.of(new VueloRespuesta());
+        List<VueloRespuesta> vuelos = List.of(new VueloRespuesta());
         when(vuelosApi.listarPagina(null, null, null, null, "numero", 0, true))
                 .thenReturn(new PaginaVuelosRespuesta(vuelos, 0, 1, false, false));
         mvc.perform(get("/vuelos").session(sesion))

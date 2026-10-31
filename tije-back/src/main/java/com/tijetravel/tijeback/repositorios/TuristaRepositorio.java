@@ -40,7 +40,7 @@ public interface TuristaRepositorio extends JpaRepository<Turista, Integer> {
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     Optional<Turista> findById(Integer codigo);
 
-    Optional<Turista> findByEmailIgnoreCase(String email);
+    Turista findByEmailIgnoreCase(String email);
 
     @EntityGraph(attributePaths = { "sucursalContratacion", "titular" })
     List<Turista> findByDni(String dni);

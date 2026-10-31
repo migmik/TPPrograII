@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
@@ -65,14 +66,14 @@ class EscriturasApiIntegracionTest {
 
         @BeforeEach
         void prepararUsuarios() {
-                Turista titular = turistaRepositorio.findById(1).orElseThrow();
+                Turista titular = turistaRepositorio.findById(1).get();
                 usuarioRepositorio.save(new Cliente(
                                 USUARIO_CLIENTE,
                                 codificadorContrasenias.encode(CONTRASENIA_CLIENTE),
                                 titular));
                 usuarioRepositorio.save(new Vendedor(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), com.tijetravel.tijeback.DnisPrueba.siguiente()));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
         }
 
         @Test
@@ -102,8 +103,7 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(jsonPath("$.codigoSucursal").value(2));
 
                 Turista turista = turistaRepositorio
-                                .findByEmailIgnoreCase("lucia.escrituras@example.com")
-                                .orElseThrow();
+                                .findByEmailIgnoreCase("lucia.escrituras@example.com");
 
                 mockMvc.perform(put("/api/v1/turistas/{codigo}", turista.getCodigo())
                                 .session(sesion)
@@ -208,8 +208,7 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(jsonPath("$.contrasenia").doesNotExist());
 
                 Usuario usuario = usuarioRepositorio
-                                .findByNombreUsuarioIgnoreCase("operador-nuevo")
-                                .orElseThrow();
+                                .findByNombreUsuarioIgnoreCase("operador-nuevo");
                 assertTrue(codificadorContrasenias.matches("ClaveOperador123!", usuario.getContrasenia()));
 
                 mockMvc.perform(put("/api/v1/usuarios/{codigo}", usuario.getCodigo())
@@ -229,7 +228,7 @@ class EscriturasApiIntegracionTest {
 
                 assertTrue(codificadorContrasenias.matches(
                                 "NuevaClaveOperador123!",
-                                usuarioRepositorio.findById(usuario.getCodigo()).orElseThrow().getContrasenia()));
+                                usuarioRepositorio.findById(usuario.getCodigo()).get().getContrasenia()));
 
                 mockMvc.perform(delete("/api/v1/usuarios/{codigo}", usuario.getCodigo())
                                 .session(sesion)
@@ -305,7 +304,6 @@ class EscriturasApiIntegracionTest {
                 MockHttpSession sesionVendedor = iniciarSesion(USUARIO_VENDEDOR, CONTRASENIA_VENDEDOR);
                 Integer codigoAdmin = usuarioRepositorio
                                 .findByNombreUsuarioIgnoreCase(USUARIO_ADMIN)
-                                .orElseThrow()
                                 .getCodigo();
 
                 mockMvc.perform(delete("/api/v1/usuarios/{codigo}", codigoAdmin)

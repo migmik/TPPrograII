@@ -1,15 +1,16 @@
 package com.tijetravel.tijeback.repositorios;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
+
 import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 class DniMigracionTest {
     @Test
     void actualizaUnaBaseAnteriorSinInventarDniNiPerderFamiliares() {
-        var fuente = new SingleConnectionDataSource("jdbc:h2:mem:migracion-dni;MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "", true);
+        SingleConnectionDataSource fuente = new SingleConnectionDataSource("jdbc:h2:mem:migracion-dni;MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "", true);
         Flyway.configure().dataSource(fuente).locations("classpath:db/migration").target("5").load().migrate();
         JdbcTemplate jdbc = new JdbcTemplate(fuente);
         jdbc.update("INSERT INTO sucursales(codigo,direccion,telefono) VALUES (1,'Calle','1')");

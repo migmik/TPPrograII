@@ -1,14 +1,15 @@
 package com.tijetravel.tijefront.clientes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,9 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+
+import com.tijetravel.tijefront.dto.DisponibilidadVueloRespuesta;
+import com.tijetravel.tijefront.dto.VueloRespuesta;
 
 class VuelosApiClienteTest {
     private MockRestServiceServer servidor;
@@ -40,9 +44,9 @@ class VuelosApiClienteTest {
         servidor.expect(requestTo("http://backend/api/v1/vuelos"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("[" + VUELO_JSON + "]", MediaType.APPLICATION_JSON));
-        var vuelos = cliente.listar();
+        List<VueloRespuesta> vuelos = cliente.listar();
         assertEquals(1, vuelos.size());
-        var vuelo = vuelos.get(0);
+        VueloRespuesta vuelo = vuelos.get(0);
         assertEquals(101, vuelo.getNumero());
         assertEquals("Córdoba", vuelo.getDestino());
         assertEquals(LocalDateTime.of(2027, 2, 1, 9, 30), vuelo.getFechaYHora());
@@ -79,7 +83,7 @@ class VuelosApiClienteTest {
                             """.formatted(clase), MediaType.APPLICATION_JSON));
         }
         for (String clase : new String[] { "TURISTA", "PRIMERA" }) {
-            var disponibilidad = cliente.consultarDisponibilidad(101, clase);
+            DisponibilidadVueloRespuesta disponibilidad = cliente.consultarDisponibilidad(101, clase);
             assertEquals(101, disponibilidad.getNumeroVuelo());
             assertEquals(clase, disponibilidad.getClaseVuelo());
             assertEquals(0, disponibilidad.getPlazasDisponibles());
@@ -91,7 +95,12 @@ class VuelosApiClienteTest {
     void conservaElErrorDeVueloInexistente() {
         servidor.expect(requestTo("http://backend/api/v1/vuelos/999"))
                 .andRespond(withStatus(HttpStatus.NOT_FOUND));
-        assertThrows(HttpClientErrorException.NotFound.class, () -> cliente.buscar(999));
+        try {
+            cliente.buscar(999);
+            fail("Se esperaba HttpClientErrorException.NotFound");
+        } catch (HttpClientErrorException.NotFound esperada) {
+            // Es la excepcion que se esperaba.
+        }
         servidor.verify();
     }
 
@@ -99,7 +108,12 @@ class VuelosApiClienteTest {
     void noConfundeUnaRespuestaSinCuerpoConUnCatalogoVacio() {
         servidor.expect(requestTo("http://backend/api/v1/vuelos"))
                 .andRespond(withStatus(HttpStatus.NO_CONTENT));
-        assertThrows(RestClientException.class, () -> cliente.listar());
+        try {
+            cliente.listar();
+            fail("Se esperaba RestClientException");
+        } catch (RestClientException esperada) {
+            // Es la excepcion que se esperaba.
+        }
         servidor.verify();
     }
 }

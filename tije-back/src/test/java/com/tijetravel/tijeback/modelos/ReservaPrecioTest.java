@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.Test;
+
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 
@@ -27,11 +30,16 @@ class ReservaPrecioTest {
         assertEquals(346000, reserva.getTotal());
 
         reserva.confirmarPago();
-        var primeraFecha = reserva.getFechaPago();
+        LocalDateTime primeraFecha = reserva.getFechaPago();
         reserva.confirmarPago();
         assertTrue(reserva.isPagada());
         assertEquals(primeraFecha, reserva.getFechaPago());
-        assertThrows(IllegalStateException.class, () -> reserva.actualizarDatos(turista, vuelo, hotel,
-                ClaseVuelo.PRIMERA, TipoHospedaje.PENSION_COMPLETA, llegada, partida));
+        try {
+            reserva.actualizarDatos(turista, vuelo, hotel,
+                    ClaseVuelo.PRIMERA, TipoHospedaje.PENSION_COMPLETA, llegada, partida);
+            fail("Se esperaba IllegalStateException");
+        } catch (IllegalStateException esperada) {
+            // Es la excepcion que se esperaba.
+        }
     }
 }

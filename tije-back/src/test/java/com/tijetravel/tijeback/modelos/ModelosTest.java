@@ -1,13 +1,10 @@
 package com.tijetravel.tijeback.modelos;
 
-import com.tijetravel.tijeback.DnisPrueba;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -23,23 +21,29 @@ class ModelosTest {
 
         @Test
         void rechazaHotelConCapacidadNegativa() {
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> new Hotel("Hotel", "Direccion", "Cordoba", "1234", -1));
+                try {
+                        new Hotel("Hotel", "Direccion", "Cordoba", "1234", -1);
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
         void rechazaVueloSiLasPlazasPorClaseSuperanElTotal() {
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> new Vuelo(
-                                                100,
-                                                LocalDateTime.of(2026, 10, 1, 10, 0),
-                                                "Buenos Aires",
-                                                "Cordoba",
-                                                10,
-                                                8,
-                                                3));
+                try {
+                        new Vuelo(
+                                100,
+                                LocalDateTime.of(2026, 10, 1, 10, 0),
+                                "Buenos Aires",
+                                "Cordoba",
+                                10,
+                                8,
+                                3);
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -56,27 +60,30 @@ class ModelosTest {
                                 8,
                                 2);
 
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> new Reserva(
-                                                turista,
-                                                vuelo,
-                                                hotel,
-                                                ClaseVuelo.TURISTA,
-                                                TipoHospedaje.MEDIA_PENSION,
-                                                LocalDate.of(2026, 10, 2),
-                                                LocalDate.of(2026, 10, 1)));
+                try {
+                        new Reserva(
+                                turista,
+                                vuelo,
+                                hotel,
+                                ClaseVuelo.TURISTA,
+                                TipoHospedaje.MEDIA_PENSION,
+                                LocalDate.of(2026, 10, 2),
+                                LocalDate.of(2026, 10, 1));
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
         void mantieneElPolimorfismoDePermisos() {
-                Administrador administrador = new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
-                Vendedor vendedor = new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+                Administrador administrador = new Administrador("admin", "clave", DnisPrueba.siguiente());
+                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
 
                 assertTrue(administrador.tienePermiso(Permiso.ADMINISTRAR_USUARIOS));
                 assertTrue(vendedor.tienePermiso(Permiso.ADMINISTRAR_RESERVAS));
                 assertFalse(vendedor.tienePermiso(Permiso.ADMINISTRAR_HOTELES));
-                assertDoesNotThrow(() -> administrador.actualizarCredenciales("admin2", "otra-clave"));
+                administrador.actualizarCredenciales("admin2", "otra-clave");
         }
 
         @Test
@@ -99,9 +106,12 @@ class ModelosTest {
         void rechazaEmailConFormatoInvalido() {
                 Sucursal sucursal = new Sucursal("Direccion", "1234");
 
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "email-invalido", "123", "456", sucursal));
+                try {
+                        new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "email-invalido", "123", "456", sucursal);
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -117,9 +127,12 @@ class ModelosTest {
                                 sucursal,
                                 titular);
 
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> new Cliente("cliente", "clave", familiar));
+                try {
+                        new Cliente("cliente", "clave", familiar);
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test

@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Vendedor;
@@ -68,7 +69,7 @@ class CatalogosEscriturasApiIntegracionTest {
         void prepararVendedor() {
                 usuarioRepositorio.save(new Vendedor(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), com.tijetravel.tijeback.DnisPrueba.siguiente()));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
         }
 
         @Test
@@ -103,12 +104,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                 "/api/v1/sucursales/\\d+")))
                                 .andExpect(jsonPath("$.direccion").value("Av. Prueba 100"));
 
-                Sucursal sucursal = sucursalRepositorio
-                                .findAll()
-                                .stream()
-                                .filter(elemento -> elemento.getDireccion().equals("Av. Prueba 100"))
-                                .findFirst()
-                                .orElseThrow();
+                Sucursal sucursal = buscarSucursal("Av. Prueba 100");
 
                 mockMvc.perform(put("/api/v1/sucursales/{codigo}", sucursal.getCodigo())
                                 .session(sesion)
@@ -141,12 +137,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                                 "/api/v1/hoteles/\\d+")))
                                 .andExpect(jsonPath("$.capacidadTotal").value(25));
 
-                Hotel hotel = hotelRepositorio
-                                .findAll()
-                                .stream()
-                                .filter(elemento -> elemento.getNombre().equals("Hotel Prueba"))
-                                .findFirst()
-                                .orElseThrow();
+                Hotel hotel = buscarHotel("Hotel Prueba");
 
                 mockMvc.perform(put("/api/v1/hoteles/{codigo}", hotel.getCodigo())
                                 .session(sesion)
@@ -370,5 +361,23 @@ class CatalogosEscriturasApiIntegracionTest {
                                 .andExpect(status().isOk())
                                 .andReturn();
                 return (MockHttpSession) resultado.getRequest().getSession(false);
+        }
+
+        private Sucursal buscarSucursal(String direccion) {
+                for (Sucursal sucursal : sucursalRepositorio.findAll()) {
+                        if (sucursal.getDireccion().equals(direccion)) {
+                                return sucursal;
+                        }
+                }
+                throw new AssertionError("No se encontro la sucursal " + direccion);
+        }
+
+        private Hotel buscarHotel(String nombre) {
+                for (Hotel hotel : hotelRepositorio.findAll()) {
+                        if (hotel.getNombre().equals(nombre)) {
+                                return hotel;
+                        }
+                }
+                throw new AssertionError("No se encontro el hotel " + nombre);
         }
 }

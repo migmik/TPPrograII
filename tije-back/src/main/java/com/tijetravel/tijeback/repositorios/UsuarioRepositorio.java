@@ -58,7 +58,7 @@ public interface UsuarioRepositorio extends JpaRepository<Usuario, Integer> {
                         left join fetch treat(u as Cliente).turista
                         where upper(u.nombreUsuario) = upper(:nombreUsuario)
                         """)
-        Optional<Usuario> findByNombreUsuarioIgnoreCase(@Param("nombreUsuario") String nombreUsuario);
+        Usuario findByNombreUsuarioIgnoreCase(@Param("nombreUsuario") String nombreUsuario);
 
         boolean existsByNombreUsuarioIgnoreCase(String nombreUsuario);
 

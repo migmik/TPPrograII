@@ -1,20 +1,18 @@
 package com.tijetravel.tijeback.servicios;
 
-import com.tijetravel.tijeback.servicios.impl.UsuarioServicioImpl;
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Administrador;
@@ -31,9 +30,10 @@ import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vendedor;
-import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
+import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
+import com.tijetravel.tijeback.servicios.impl.UsuarioServicioImpl;
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioServicioTest {
@@ -67,14 +67,17 @@ class UsuarioServicioTest {
 
         @Test
         void vendedorNoPuedeAdministrarUsuarios() {
-                assertThrows(
-                                OperacionNoPermitidaException.class,
-                                () -> servicio.crear(
-                                                new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
-                                                "nuevo",
-                                                "clave",
-                                                RolUsuario.VENDEDOR,
-                                                null, null));
+                try {
+                        servicio.crear(
+                                new Vendedor("vendedor", "clave", DnisPrueba.siguiente()),
+                                "nuevo",
+                                "clave",
+                                RolUsuario.VENDEDOR,
+                                null, null);
+                        fail("Se esperaba OperacionNoPermitidaException");
+                } catch (OperacionNoPermitidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
 
                 verify(usuarioRepositorio, never()).save(any());
         }
@@ -99,9 +102,9 @@ class UsuarioServicioTest {
                 when(sucursalRepositorio.findById(1)).thenReturn(Optional.of(sucursal));
                 when(codificadorContrasenias.encode("clave-segura")).thenReturn("{bcrypt}hash");
                 when(turistaRepositorio.save(any(Turista.class)))
-                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                                .then(returnsFirstArg());
                 when(usuarioRepositorio.save(any(Usuario.class)))
-                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                                .then(returnsFirstArg());
 
                 Usuario usuario = servicio.registrarCliente(
                                 "ana", "clave-segura", DnisPrueba.siguiente(), "Ana", "Perez",
@@ -117,14 +120,17 @@ class UsuarioServicioTest {
 
         @Test
         void rechazaContraseniasVaciasAntesDeCodificarlas() {
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> servicio.crear(
-                                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
-                                                "nuevo",
-                                                "  ",
-                                                RolUsuario.VENDEDOR,
-                                                null, null));
+                try {
+                        servicio.crear(
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                "nuevo",
+                                "  ",
+                                RolUsuario.VENDEDOR,
+                                null, null);
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
 
                 verify(codificadorContrasenias, never()).encode(any());
                 verify(usuarioRepositorio, never()).save(any());
@@ -138,14 +144,17 @@ class UsuarioServicioTest {
                 when(turistaRepositorio.findById(2)).thenReturn(Optional.of(familiar));
                 when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
-                assertThrows(
-                                IllegalArgumentException.class,
-                                () -> servicio.crear(
-                                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
-                                                "cliente",
-                                                "clave",
-                                                RolUsuario.CLIENTE,
-                                                2, null));
+                try {
+                        servicio.crear(
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                "cliente",
+                                "clave",
+                                RolUsuario.CLIENTE,
+                                2, null);
+                        fail("Se esperaba IllegalArgumentException");
+                } catch (IllegalArgumentException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
 
                 verify(usuarioRepositorio, never()).save(any());
         }
@@ -156,11 +165,11 @@ class UsuarioServicioTest {
                 Turista titular = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Calle 1", "ana@example.com", "100", "200", sucursal);
                 when(turistaRepositorio.findById(1)).thenReturn(Optional.of(titular));
                 when(usuarioRepositorio.save(any(Usuario.class)))
-                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                                .then(returnsFirstArg());
                 when(codificadorContrasenias.encode("clave")).thenReturn("{bcrypt}hash");
 
                 Usuario usuario = servicio.crear(
-                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
                                 "cliente",
                                 "clave",
                                 RolUsuario.CLIENTE,
@@ -173,26 +182,32 @@ class UsuarioServicioTest {
 
         @Test
         void usuarioNoPuedeEliminarseASiMismo() {
-                Administrador administrador = new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+                Administrador administrador = new Administrador("admin", "clave", DnisPrueba.siguiente());
                 when(usuarioRepositorio.findById(1)).thenReturn(Optional.of(administrador));
 
-                assertThrows(
-                                OperacionNoPermitidaException.class,
-                                () -> servicio.eliminar(administrador, 1));
+                try {
+                        servicio.eliminar(administrador, 1);
+                        fail("Se esperaba OperacionNoPermitidaException");
+                } catch (OperacionNoPermitidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
 
                 verify(usuarioRepositorio, never()).delete(any());
         }
 
         @Test
         void noEliminaElUltimoAdministrador() {
-                Administrador actor = new Administrador("admin-principal", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
-                Administrador objetivo = new Administrador("admin-secundario", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+                Administrador actor = new Administrador("admin-principal", "clave", DnisPrueba.siguiente());
+                Administrador objetivo = new Administrador("admin-secundario", "clave", DnisPrueba.siguiente());
                 when(usuarioRepositorio.findById(2)).thenReturn(Optional.of(objetivo));
                 when(usuarioRepositorio.countByRol(RolUsuario.ADMINISTRADOR)).thenReturn(1L);
 
-                assertThrows(
-                                OperacionNoPermitidaException.class,
-                                () -> servicio.eliminar(actor, 2));
+                try {
+                        servicio.eliminar(actor, 2);
+                        fail("Se esperaba OperacionNoPermitidaException");
+                } catch (OperacionNoPermitidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
 
                 verify(usuarioRepositorio, never()).delete(any());
         }

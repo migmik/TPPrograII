@@ -1,10 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
-import com.tijetravel.tijeback.servicios.impl.TuristaServicioImpl;
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.Administrador;
 import com.tijetravel.tijeback.modelos.Sucursal;
@@ -27,6 +25,7 @@ import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
+import com.tijetravel.tijeback.servicios.impl.TuristaServicioImpl;
 
 @ExtendWith(MockitoExtension.class)
 class TuristaServicioTest {
@@ -55,7 +54,7 @@ class TuristaServicioTest {
                 usuarioRepositorio,
                 new AutorizacionServicio(),
                 org.mockito.Mockito.mock(BloqueoEscrituras.class));
-        administrador = new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente());
+        administrador = new Administrador("admin", "clave", DnisPrueba.siguiente());
         turista = new Turista(DnisPrueba.siguiente(), "Ana",
                 "Perez",
                 "Direccion",
@@ -70,9 +69,12 @@ class TuristaServicioTest {
             when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         when(reservaRepositorio.existsByTuristaCodigo(1)).thenReturn(true);
 
-        assertThrows(
-                OperacionNoPermitidaException.class,
-                () -> servicio.eliminar(administrador, 1));
+        try {
+            servicio.eliminar(administrador, 1);
+            fail("Se esperaba OperacionNoPermitidaException");
+        } catch (OperacionNoPermitidaException esperada) {
+            // Es la excepcion que se esperaba.
+        }
 
         verify(turistaRepositorio, never()).delete(any());
     }
@@ -82,9 +84,12 @@ class TuristaServicioTest {
         when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         when(turistaRepositorio.existsByTitularCodigo(1)).thenReturn(true);
 
-        assertThrows(
-                OperacionNoPermitidaException.class,
-                () -> servicio.eliminar(administrador, 1));
+        try {
+            servicio.eliminar(administrador, 1);
+            fail("Se esperaba OperacionNoPermitidaException");
+        } catch (OperacionNoPermitidaException esperada) {
+            // Es la excepcion que se esperaba.
+        }
 
         verify(turistaRepositorio, never()).delete(any());
     }
@@ -94,9 +99,12 @@ class TuristaServicioTest {
         when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
         when(usuarioRepositorio.contarClientesPorTurista(1)).thenReturn(1L);
 
-        assertThrows(
-                OperacionNoPermitidaException.class,
-                () -> servicio.eliminar(administrador, 1));
+        try {
+            servicio.eliminar(administrador, 1);
+            fail("Se esperaba OperacionNoPermitidaException");
+        } catch (OperacionNoPermitidaException esperada) {
+            // Es la excepcion que se esperaba.
+        }
 
         verify(turistaRepositorio, never()).delete(any());
     }
