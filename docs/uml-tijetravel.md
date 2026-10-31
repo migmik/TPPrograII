@@ -38,31 +38,44 @@ flowchart TB
 ```mermaid
 classDiagram
     class Usuario {
-        -String dni
-        +getDni() String
         <<abstract>>
         -Integer codigo
         -String nombreUsuario
         -String contrasenia
+        -String dni
         -RolUsuario rol
         +actualizarCredenciales()
         +tienePermiso(Permiso) boolean
+        +puedeVerTurista(Turista) boolean
+        +getCodigoGrupoFamiliar() Integer
+        +tieneDniPropio() boolean
     }
-    class Administrador
-    class Vendedor
-    class Cliente
+    class Administrador {
+        +tienePermiso(Permiso) boolean
+    }
+    class Vendedor {
+        +tienePermiso(Permiso) boolean
+    }
+    class Cliente {
+        +tienePermiso(Permiso) boolean
+        +puedeVerTurista(Turista) boolean
+        +getCodigoGrupoFamiliar() Integer
+        +tieneDniPropio() boolean
+    }
     class Turista {
-        -String dni
         -Integer codigo
+        -String dni
         -String nombre
         -String apellido
         -String email
         +actualizarDatos()
+        +cambiarSucursal(Sucursal)
         +isTitular() boolean
     }
     class Sucursal {
         -Integer codigo
         -String direccion
+        -String ciudad
         -String telefono
     }
     class Hotel {
@@ -70,6 +83,7 @@ classDiagram
         -String nombre
         -String ciudad
         -int capacidadTotal
+        -int precioNochePersona
     }
     class Vuelo {
         -Integer numero
@@ -79,6 +93,7 @@ classDiagram
         -int totalPlazas
         -int plazasTurista
         -int plazasPrimera
+        -int precio
     }
     class Reserva {
         -Integer codigo
@@ -86,6 +101,24 @@ classDiagram
         -TipoHospedaje tipoHospedaje
         -LocalDate fechaLlegada
         -LocalDate fechaPartida
+        -int precioVuelo
+        -int precioHotel
+        -int total
+        -boolean pagada
+        +actualizarDatos()
+        +confirmarPago()
+    }
+    class ClaseVuelo {
+        <<enumeration>>
+        TURISTA
+        PRIMERA
+        +getPorcentajeRecargo() int
+    }
+    class TipoHospedaje {
+        <<enumeration>>
+        MEDIA_PENSION
+        PENSION_COMPLETA
+        +getPorcentajeRecargo() int
     }
 
     Usuario <|-- Administrador
@@ -98,47 +131,83 @@ classDiagram
     Reserva --> Sucursal : sucursal historica
     Reserva --> Vuelo
     Reserva --> Hotel
+    Reserva --> ClaseVuelo
+    Reserva --> TipoHospedaje
 ```
 
+Cada subclase de `Usuario` redefine `tienePermiso`. `Cliente` además redefine
+`puedeVerTurista` y `getCodigoGrupoFamiliar` para limitarse a su grupo familiar,
+así los servicios no preguntan por el rol (polimorfismo).
+
 ## Componentes
+
+Los controladores dependen de las interfaces de los servicios y no de sus
+implementaciones (principio de inversión de dependencias). Spring inyecta la
+clase `...Impl` que corresponde.
+
+```mermaid
+classDiagram
+    class HotelServicio {
+        <<interface>>
+    }
+    class VueloServicio {
+        <<interface>>
+    }
+    class SucursalServicio {
+        <<interface>>
+    }
+    class TuristaServicio {
+        <<interface>>
+    }
+    class ReservaServicio {
+        <<interface>>
+    }
+    class UsuarioServicio {
+        <<interface>>
+    }
+    class DisponibilidadServicio {
+        <<interface>>
+    }
+    class CiudadServicio {
+        <<interface>>
+    }
+
+    HotelServicio <|.. HotelServicioImpl
+    VueloServicio <|.. VueloServicioImpl
+    SucursalServicio <|.. SucursalServicioImpl
+    TuristaServicio <|.. TuristaServicioImpl
+    ReservaServicio <|.. ReservaServicioImpl
+    UsuarioServicio <|.. UsuarioServicioImpl
+    DisponibilidadServicio <|.. DisponibilidadServicioImpl
+    CiudadServicio <|.. CiudadServicioImpl
+
+    HotelesRestControlador --> HotelServicio
+    VuelosRestControlador --> VueloServicio
+    SucursalesRestControlador --> SucursalServicio
+    TuristasRestControlador --> TuristaServicio
+    ReservasRestControlador --> ReservaServicio
+    UsuariosRestControlador --> UsuarioServicio
+    CiudadesRestControlador --> CiudadServicio
+
+    ReservaServicioImpl --> DisponibilidadServicio
+    HotelServicioImpl --> DisponibilidadServicio
+    UsuarioServicioImpl --> UsuarioFactory
+    UsuarioFactory --> CreadorUsuario
+    class CreadorUsuario {
+        <<interface>>
+    }
+    CreadorUsuario <|.. CreadorAdministrador
+    CreadorUsuario <|.. CreadorVendedor
+    CreadorUsuario <|.. CreadorCliente
+```
+
+### Servicios, repositorios y seguridad
 
 ```mermaid
 classDiagram
     class JpaRepository {
         <<interface>>
     }
-    class SucursalRepositorio
-    class HotelRepositorio
-    class VueloRepositorio
-    class TuristaRepositorio
-    class ReservaRepositorio
-    class UsuarioRepositorio
-
-    class SucursalServicio
-    class HotelServicio
-    class VueloServicio
-    class TuristaServicio
-    class ReservaServicio
-    class UsuarioServicio
-    class BloqueoEscrituras
-    class OcupacionHotel
-    class DisponibilidadServicio
-    class UsuarioFactory
-    class CreadorUsuario {
-        <<interface>>
-    }
-    UsuarioServicio --> UsuarioFactory
-    UsuarioFactory --> CreadorUsuario
-    class AutorizacionServicio
-    class AutenticacionRestControlador
-    class TuristasRestControlador
-    class ReservasRestControlador
-    class UsuariosRestControlador
-    class ConfiguracionSeguridad
-    class UsuarioDetallesServicio
-    class UsuarioActualServicio
-    class UsuarioAutenticado
-
     JpaRepository <|-- SucursalRepositorio
     JpaRepository <|-- HotelRepositorio
     JpaRepository <|-- VueloRepositorio
@@ -146,38 +215,53 @@ classDiagram
     JpaRepository <|-- ReservaRepositorio
     JpaRepository <|-- UsuarioRepositorio
 
-    SucursalServicio --> SucursalRepositorio
-    HotelServicio --> HotelRepositorio
-    VueloServicio --> VueloRepositorio
-    TuristaServicio --> TuristaRepositorio
-    ReservaServicio --> BloqueoEscrituras
-    HotelServicio --> BloqueoEscrituras
-    VueloServicio --> BloqueoEscrituras
-    TuristaServicio --> BloqueoEscrituras
-    UsuarioServicio --> BloqueoEscrituras
-    SucursalServicio --> BloqueoEscrituras
-    HotelServicio --> OcupacionHotel
-    DisponibilidadServicio --> OcupacionHotel
-    ReservaServicio --> DisponibilidadServicio
-    DisponibilidadServicio --> ReservaRepositorio
-    DisponibilidadServicio --> VueloRepositorio
-    DisponibilidadServicio --> HotelRepositorio
-    ReservaServicio --> ReservaRepositorio
-    UsuarioServicio --> UsuarioRepositorio
-    AutenticacionRestControlador --> ConfiguracionSeguridad
-    SucursalesRestControlador --> UsuarioActualServicio
-    HotelesRestControlador --> UsuarioActualServicio
-    VuelosRestControlador --> UsuarioActualServicio
-    HotelesRestControlador --> DisponibilidadServicio : consulta disponibilidad
-    VuelosRestControlador --> DisponibilidadServicio : consulta disponibilidad
-    TuristasRestControlador --> TuristaServicio
-    ReservasRestControlador --> ReservaServicio
-    UsuariosRestControlador --> UsuarioServicio
-    TuristasRestControlador --> UsuarioActualServicio
-    ReservasRestControlador --> UsuarioActualServicio
-    UsuariosRestControlador --> UsuarioActualServicio
+    HotelServicioImpl --> HotelRepositorio
+    VueloServicioImpl --> VueloRepositorio
+    SucursalServicioImpl --> SucursalRepositorio
+    TuristaServicioImpl --> TuristaRepositorio
+    ReservaServicioImpl --> ReservaRepositorio
+    UsuarioServicioImpl --> UsuarioRepositorio
+    DisponibilidadServicioImpl --> ReservaRepositorio
+
+    HotelServicioImpl --> AutorizacionServicio
+    ReservaServicioImpl --> AutorizacionServicio
+    HotelServicioImpl --> BloqueoEscrituras
+    ReservaServicioImpl --> BloqueoEscrituras
+    HotelServicioImpl --> FiltrosConsulta
+    VueloServicioImpl --> ComparadorCercaniaFecha
+    DisponibilidadServicioImpl --> OcupacionHotel
+
+    class AuthenticationEntryPoint {
+        <<interface>>
+    }
+    class AccessDeniedHandler {
+        <<interface>>
+    }
+    AuthenticationEntryPoint <|.. EscritorErrorSeguridad
+    AccessDeniedHandler <|.. EscritorErrorSeguridad
+    ConfiguracionSeguridad --> EscritorErrorSeguridad
     ConfiguracionSeguridad --> UsuarioDetallesServicio
-    UsuarioActualServicio --> UsuarioRepositorio
     UsuarioDetallesServicio --> UsuarioRepositorio
-    UsuarioDetallesServicio --> UsuarioAutenticado
+    UsuarioActualServicio --> UsuarioRepositorio
 ```
+
+### Mapeadores (DTO)
+
+```mermaid
+classDiagram
+    class MapeadorBase~E, R~ {
+        <<abstract>>
+        +aRespuesta(E) R*
+        +aRespuestas(List~E~) List~R~
+        +aPagina(Page~E~) PaginaRespuesta~R~
+    }
+    MapeadorBase <|-- HotelMapeador
+    MapeadorBase <|-- VueloMapeador
+    MapeadorBase <|-- SucursalMapeador
+    MapeadorBase <|-- TuristaMapeador
+    MapeadorBase <|-- ReservaMapeador
+    MapeadorBase <|-- UsuarioMapeador
+```
+
+`MapeadorBase` aplica el patrón Template Method: cada subclase solo dice cómo
+convertir un elemento y la base reutiliza esa conversión para listas y páginas.
