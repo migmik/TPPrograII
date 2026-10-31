@@ -20,6 +20,9 @@ public interface HotelRepositorio extends JpaRepository<Hotel, Integer> {
     @Query("select distinct h.ciudad from Hotel h where h.ciudad is not null order by h.ciudad")
     List<String> listarCiudades();
 
+    @Query("select distinct h.nombre from Hotel h where h.nombre is not null order by h.nombre")
+    List<String> listarNombres();
+
     @Query("select h from Hotel h where lower(h.ciudad) in :ciudades order by h.codigo")
     List<Hotel> buscarPorCiudad(@Param("ciudades") List<String> ciudades);
 

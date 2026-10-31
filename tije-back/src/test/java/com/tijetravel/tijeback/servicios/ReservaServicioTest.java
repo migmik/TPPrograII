@@ -202,25 +202,26 @@ class ReservaServicioTest {
         void buscaUnaPaginaPorTuristaSinConsultarTodasLasReservas() {
                 Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
                 Page<Reserva> pagina = new PageImpl<>(java.util.List.of(), PageRequest.of(0, 20), 0);
-                when(reservaRepositorio.findByTuristaCodigo(eq(1), any(Pageable.class))).thenReturn(pagina);
+                when(reservaRepositorio.buscarPagina(eq(null), eq(1), eq(null), eq(null), eq(null),
+                                eq(null), eq(null), eq(null), any(Pageable.class))).thenReturn(pagina);
 
                 Page<Reserva> resultado = servicio.paginaPara(
-                                vendedor, 1, null, null, null, null, 0, 20);
+                                vendedor, 1, null, null, null, null, null, null, 0, 20);
 
                 assertSame(pagina, resultado);
-                verify(reservaRepositorio).findByTuristaCodigo(eq(1), any(Pageable.class));
+                verify(reservaRepositorio).buscarPagina(eq(null), eq(1), eq(null), eq(null), eq(null),
+                                eq(null), eq(null), eq(null), any(Pageable.class));
                 verify(reservaRepositorio, never()).findAll(any(Pageable.class));
         }
 
         @Test
-        void rechazaFiltrosCombinadosYFechasIncompletas() {
+        void aceptaFiltrosCombinadosYFechasIncompletas() {
                 Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
-
-                assertThrows(IllegalArgumentException.class,
-                                () -> servicio.paginaPara(vendedor, 1, 100, null, null, null, 0, 20));
-                assertThrows(IllegalArgumentException.class,
-                                () -> servicio.paginaPara(vendedor, null, null, null,
-                                                LocalDate.of(2026, 10, 1), null, 0, 20));
+                servicio.paginaPara(vendedor, 1, null, 100, null, null, null, null, 0, 20);
+                servicio.paginaPara(vendedor, null, null, null, null,
+                                LocalDate.of(2026, 10, 1), null, null, 0, 20);
+                verify(reservaRepositorio).buscarPagina(eq(null), eq(1), eq(null), eq(100), eq(null),
+                                eq(null), eq(null), eq(null), any(Pageable.class));
                 verify(reservaRepositorio, never()).findAll(any(Pageable.class));
         }
 

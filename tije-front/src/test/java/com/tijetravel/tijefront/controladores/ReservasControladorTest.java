@@ -66,7 +66,7 @@ class ReservasControladorTest {
     void clienteConsultaSusReservasYCreaPeroNoEditaNiElimina() throws Exception {
         preparar("CLIENTE");
         var grupo = List.of(reserva());
-        when(reservasApi.listarPagina(null, null, null, null, null, 0, 20))
+        when(reservasApi.listarPagina(null, null, null, null, null, null, null, 0, 20))
             .thenReturn(new PaginaReservasRespuesta(grupo, 0, 1, false, false));
         mvc.perform(get("/reservas").session(sesion()))
             .andExpect(model().attribute("reservas", grupo))
@@ -108,7 +108,7 @@ class ReservasControladorTest {
     void buscaReservasPorVueloYPagina() throws Exception {
         preparar("VENDEDOR");
         var resultado = new PaginaReservasRespuesta(List.of(reserva()), 1, 3, true, true);
-        when(reservasApi.listarPagina(null, 100, null, null, null, 1, 20)).thenReturn(resultado);
+        when(reservasApi.listarPagina(null, null, 100, null, null, null, null, 1, 20)).thenReturn(resultado);
 
         mvc.perform(get("/reservas").param("numeroVuelo", "100").param("pagina", "1").session(sesion()))
                 .andExpect(view().name("reservas/lista"))
@@ -117,7 +117,7 @@ class ReservasControladorTest {
                 .andExpect(model().attribute("hayAnterior", true))
                 .andExpect(model().attribute("haySiguiente", true));
 
-        verify(reservasApi).listarPagina(null, 100, null, null, null, 1, 20);
+        verify(reservasApi).listarPagina(null, null, 100, null, null, null, null, 1, 20);
     }
 
     @Test

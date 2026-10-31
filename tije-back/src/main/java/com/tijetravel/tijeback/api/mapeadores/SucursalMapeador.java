@@ -12,6 +12,7 @@ public class SucursalMapeador {
         return new SucursalRespuesta(
                 sucursal.getCodigo(),
                 sucursal.getDireccion(),
-                sucursal.getTelefono());
+                sucursal.getTelefono(),
+                sucursal.getCiudad());
     }
 }

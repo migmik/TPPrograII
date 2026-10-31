@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -35,8 +36,10 @@ public class SucursalesControlador {
     }
 
     @GetMapping
-    public String listar(Model modelo) {
-        modelo.addAttribute("sucursales", sucursalesApi.listar());
+    public String listar(@RequestParam(required = false) String ciudad, Model modelo) {
+        modelo.addAttribute("ciudadBusqueda", ciudad);
+        modelo.addAttribute("ciudades", sucursalesApi.listarCiudades());
+        modelo.addAttribute("sucursales", sucursalesApi.listar(ciudad));
         return "sucursales/lista";
     }
 
@@ -80,6 +83,7 @@ public class SucursalesControlador {
         SucursalResumen actual = sucursalesApi.buscar(codigo);
         GuardarSucursalFormulario formulario = new GuardarSucursalFormulario();
         formulario.setDireccion(actual.getDireccion());
+        formulario.setCiudad(actual.getCiudad());
         formulario.setTelefono(actual.getTelefono());
         modelo.addAttribute("sucursal", formulario);
         modelo.addAttribute("codigo", codigo);

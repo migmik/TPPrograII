@@ -47,6 +47,8 @@ public class VuelosControlador {
         modelo.addAttribute("fechaDesde", fechaDesde);
         modelo.addAttribute("fechaHasta", fechaHasta);
         modelo.addAttribute("orden", orden);
+        modelo.addAttribute("origenes", vuelosApi.listarOrigenes());
+        modelo.addAttribute("destinos", vuelosApi.listarDestinos());
         if (fechaDesde != null && fechaHasta != null && fechaHasta.isBefore(fechaDesde)) {
             modelo.addAttribute("errorBusqueda", "La fecha final no puede ser anterior a la inicial.");
             return "vuelos/lista";

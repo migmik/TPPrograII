@@ -28,6 +28,16 @@ public class VuelosApiCliente {
         this.conexion = conexion;
     }
 
+    public List<String> listarOrigenes() { return opciones("/api/v1/vuelos/origenes"); }
+
+    public List<String> listarDestinos() { return opciones("/api/v1/vuelos/destinos"); }
+
+    private List<String> opciones(String ruta) {
+        String[] valores = clienteBackend.get().uri(ruta).retrieve().body(String[].class);
+        if (valores == null) throw new RestClientException("La API no devolvio las opciones de vuelos.");
+        return Arrays.asList(valores);
+    }
+
     public PaginaVuelosRespuesta listarPagina(String origen, String destino, LocalDate fechaDesde,
             LocalDate fechaHasta, String orden, int pagina, boolean personal) {
         RestClient cliente = personal ? conexion.getCliente() : clienteBackend;

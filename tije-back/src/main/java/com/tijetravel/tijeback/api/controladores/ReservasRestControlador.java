@@ -60,16 +60,19 @@ public class ReservasRestControlador {
         @GetMapping("/pagina")
         public PaginaRespuesta<ReservaRespuesta> listarPagina(
                         @RequestParam(required = false) Integer codigoTurista,
+                        @RequestParam(required = false) String dni,
                         @RequestParam(required = false) Integer numeroVuelo,
                         @RequestParam(required = false) Integer codigoHotel,
                         @RequestParam(required = false) LocalDate fechaDesde,
                         @RequestParam(required = false) LocalDate fechaHasta,
+                        @RequestParam(required = false) Boolean pagada,
                         @RequestParam(defaultValue = "0") int pagina,
                         @RequestParam(defaultValue = "20") int tamanio,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
                 Page<Reserva> resultado = reservaServicio.paginaPara(
-                                actor, codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
+                                actor, codigoTurista, dni, numeroVuelo, codigoHotel, fechaDesde, fechaHasta,
+                                pagada, pagina, tamanio);
                 return new PaginaRespuesta<>(
                                 resultado.getContent().stream().map(reservaMapeador::aRespuesta).toList(),
                                 resultado.getNumber(),

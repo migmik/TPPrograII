@@ -1,5 +1,6 @@
 package com.tijetravel.tijefront.controladores;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,7 +58,8 @@ class VuelosControladorTest {
         mvc.perform(get("/vuelos"))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeDoesNotExist("vuelos"));
-        verifyNoInteractions(vuelosApi);
+        verify(vuelosApi).listarOrigenes();
+        verify(vuelosApi).listarDestinos();
     }
 
     @Test

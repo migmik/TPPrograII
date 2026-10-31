@@ -14,15 +14,21 @@ import com.tijetravel.tijeback.modelos.Usuario;
 
 public interface UsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     @Query(value = """
-            select u from Usuario u left join fetch treat(u as Cliente).turista
+            select u from Usuario u left join fetch treat(u as Cliente).turista t
             where (:rol is null or u.rol = :rol)
+              and (:codigo is null or u.codigo = :codigo)
               and (:nombre is null or lower(u.nombreUsuario) like lower(concat('%', :nombre, '%')))
+              and (:dni is null or u.dni = :dni or t.dni = :dni)
             """, countQuery = """
-            select count(u) from Usuario u
+            select count(u) from Usuario u left join treat(u as Cliente).turista t
             where (:rol is null or u.rol = :rol)
+              and (:codigo is null or u.codigo = :codigo)
               and (:nombre is null or lower(u.nombreUsuario) like lower(concat('%', :nombre, '%')))
+              and (:dni is null or u.dni = :dni or t.dni = :dni)
             """)
-    Page<Usuario> buscarPagina(@Param("rol") RolUsuario rol, @Param("nombre") String nombre,
+    Page<Usuario> buscarPagina(@Param("rol") RolUsuario rol, @Param("codigo") Integer codigo,
+            @Param("nombre") String nombre,
+            @Param("dni") String dni,
             Pageable pagina);
     boolean existsByDni(String dni);
 

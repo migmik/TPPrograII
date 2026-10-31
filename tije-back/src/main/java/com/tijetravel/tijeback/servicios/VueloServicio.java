@@ -72,6 +72,10 @@ public class VueloServicio {
         return vueloRepositorio.findAll();
     }
 
+    public List<String> listarOrigenes() { return vueloRepositorio.listarOrigenes(); }
+
+    public List<String> listarDestinos() { return vueloRepositorio.listarDestinos(); }
+
     public Page<Vuelo> buscarPagina(String origen, String destino, LocalDate desde, LocalDate hasta,
             Pageable pagina) {
         return vueloRepositorio.buscarPagina(origen, destino,

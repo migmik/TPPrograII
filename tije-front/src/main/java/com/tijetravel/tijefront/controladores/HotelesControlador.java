@@ -46,6 +46,8 @@ public class HotelesControlador {
         modelo.addAttribute("ciudadBusqueda", ciudad);
         modelo.addAttribute("nombreBusqueda", nombre);
         modelo.addAttribute("orden", orden);
+        modelo.addAttribute("ciudades", hotelesApi.listarCiudades());
+        modelo.addAttribute("nombresHoteles", hotelesApi.listarNombres());
         if (busqueda || personal) {
             var resultado = hotelesApi.listarPagina(ciudad, nombre, orden, pagina, personal);
             modelo.addAttribute("hoteles", resultado.elementos());

@@ -20,16 +20,20 @@
                         </p>
                     </c:if>
                     <p><a href="<c:url value='/usuarios/nuevo'/>">Crear usuario</a></p>
-                    <form method="get" action="<c:url value='/usuarios'/>">
-                        <label for="rol">Tipo de usuario</label>
+                    <form class="filter-form" method="get" action="<c:url value='/usuarios'/>">
+                        <div class="filter-field"><label for="rol">Tipo de usuario</label>
                         <select id="rol" name="rol">
                             <option value="" <c:if test="${empty rolBusqueda}">selected</c:if>>Todos</option>
                             <option value="ADMINISTRADOR" <c:if test="${rolBusqueda == 'ADMINISTRADOR'}">selected</c:if>>Administradores</option>
                             <option value="VENDEDOR" <c:if test="${rolBusqueda == 'VENDEDOR'}">selected</c:if>>Vendedores</option>
                             <option value="CLIENTE" <c:if test="${rolBusqueda == 'CLIENTE'}">selected</c:if>>Clientes</option>
-                        </select>
-                        <label for="nombre">Nombre de usuario</label>
-                        <input id="nombre" name="nombre" type="search" value="<c:out value='${nombreBusqueda}'/>">
+                        </select></div>
+                        <div class="filter-field"><label for="codigo">Código de usuario</label>
+                        <input id="codigo" name="codigo" type="number" min="1" value="<c:out value='${codigoBusqueda}'/>"></div>
+                        <div class="filter-field"><label for="nombre">Nombre de usuario</label>
+                        <input id="nombre" name="nombre" type="search" value="<c:out value='${nombreBusqueda}'/>"></div>
+                        <div class="filter-field"><label for="dni">DNI</label>
+                        <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" value="<c:out value='${dniBusqueda}'/>"></div>
                         <button type="submit">Filtrar</button>
                         <a href="<c:url value='/usuarios'/>">Ver todos</a>
                     </form>
@@ -83,7 +87,9 @@
                             <c:if test="${totalPaginas > 1}">
                                 <form method="get" action="<c:url value='/usuarios'/>">
                                     <input type="hidden" name="rol" value="<c:out value='${rolBusqueda}'/>">
+                                    <input type="hidden" name="codigo" value="<c:out value='${codigoBusqueda}'/>">
                                     <input type="hidden" name="nombre" value="<c:out value='${nombreBusqueda}'/>">
+                                    <input type="hidden" name="dni" value="<c:out value='${dniBusqueda}'/>">
                                     <c:if test="${hayAnterior}"><button name="pagina" value="${pagina - 1}">Anterior</button></c:if>
                                     <span>Página <c:out value="${pagina + 1}" /> de <c:out value="${totalPaginas}" /></span>
                                     <c:if test="${haySiguiente}"><button name="pagina" value="${pagina + 1}">Siguiente</button></c:if>

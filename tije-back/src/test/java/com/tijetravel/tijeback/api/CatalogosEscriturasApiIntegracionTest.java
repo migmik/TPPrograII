@@ -95,7 +95,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                 .content("""
                                                 {
                                                   "direccion": "Av. Prueba 100",
-                                                  "telefono": "1111-1000"
+                                                  "telefono": "1111-1000", "ciudad": "Rosario"
                                                 }
                                                 """))
                                 .andExpect(status().isCreated())
@@ -117,7 +117,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                 .content("""
                                                 {
                                                   "direccion": "Av. Prueba 200",
-                                                  "telefono": "1111-2000"
+                                                  "telefono": "1111-2000", "ciudad": "Rosario"
                                                 }
                                                 """))
                                 .andExpect(status().isOk())
@@ -299,7 +299,7 @@ class CatalogosEscriturasApiIntegracionTest {
                                 .content("""
                                                 {
                                                   "direccion": "Av Corrientes 1234",
-                                                  "telefono": "otro"
+                                                  "telefono": "otro", "ciudad": "Buenos Aires"
                                                 }
                                                 """))
                                 .andExpect(status().isConflict())

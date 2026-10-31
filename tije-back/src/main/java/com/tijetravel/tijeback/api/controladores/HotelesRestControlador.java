@@ -72,6 +72,12 @@ public class HotelesRestControlador {
                                 .toList();
         }
 
+        @GetMapping("/ciudades")
+        public List<String> ciudades() { return hotelServicio.listarCiudades(); }
+
+        @GetMapping("/nombres")
+        public List<String> nombres() { return hotelServicio.listarNombres(); }
+
         @GetMapping("/pagina")
         public PaginaRespuesta<HotelRespuesta> listarPagina(
                         @RequestParam(required = false) String ciudad,

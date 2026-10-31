@@ -52,7 +52,7 @@ class ReservasApiClienteTest {
                         {"elementos":[],"pagina":2,"totalPaginas":3,"hayAnterior":true,"haySiguiente":false}
                         """, MediaType.APPLICATION_JSON));
 
-        PaginaReservasRespuesta pagina = cliente.listarPagina(4, null, null, null, null, 2, 20);
+        PaginaReservasRespuesta pagina = cliente.listarPagina(4, null, null, null, null, null, null, 2, 20);
 
         assertEquals(2, pagina.pagina());
         assertEquals(3, pagina.totalPaginas());

@@ -63,7 +63,9 @@ public class UsuariosRestControlador {
         @GetMapping("/pagina")
         public PaginaRespuesta<UsuarioRespuesta> listarPagina(
                         @RequestParam(required = false) RolUsuario rol,
+                        @RequestParam(required = false) Integer codigo,
                         @RequestParam(required = false) String nombre,
+                        @RequestParam(required = false) String dni,
                         @RequestParam(defaultValue = "0") int pagina,
                         @RequestParam(defaultValue = "20") int tamanio,
                         Authentication autenticacion) {
@@ -71,8 +73,12 @@ public class UsuariosRestControlador {
                         throw new IllegalArgumentException("Pagina o tamanio no valido");
                 if (nombre != null && (nombre.contains("%") || nombre.contains("_")))
                         throw new IllegalArgumentException("El filtro contiene caracteres no permitidos");
+                if (dni != null && !dni.isBlank() && !dni.trim().matches("[0-9]{7,8}"))
+                        throw new IllegalArgumentException("El DNI debe tener 7 u 8 digitos");
+                if (codigo != null && codigo < 1)
+                        throw new IllegalArgumentException("El codigo debe ser positivo");
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                Page<Usuario> resultado = usuarioServicio.buscarPaginaPara(actor, rol, nombre,
+                Page<Usuario> resultado = usuarioServicio.buscarPaginaPara(actor, rol, codigo, nombre, dni,
                                 PageRequest.of(pagina, tamanio, Sort.by("codigo")));
                 return new PaginaRespuesta<>(resultado.map(usuarioMapeador::aRespuesta).getContent(),
                                 resultado.getNumber(), resultado.getTotalPages(), resultado.hasPrevious(),
