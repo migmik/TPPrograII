@@ -1,5 +1,6 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.servicios.impl.HotelServicioImpl;
 import com.tijetravel.tijeback.DnisPrueba;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,7 +46,7 @@ class HotelServicioTest {
 
         @BeforeEach
         void prepararServicio() {
-                servicio = new HotelServicio(
+                servicio = new HotelServicioImpl(
                                 hotelRepositorio,
                                 reservaRepositorio,
                                 new AutorizacionServicio(),
