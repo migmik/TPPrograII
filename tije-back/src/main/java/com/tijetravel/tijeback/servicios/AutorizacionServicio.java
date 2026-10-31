@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 
 @Service
@@ -17,8 +18,7 @@ public class AutorizacionServicio {
         return codigo;
     }
 
-    public boolean perteneceAlGrupoFamiliar(Usuario actor,
-            com.tijetravel.tijeback.modelos.Turista turista) {
+    public boolean perteneceAlGrupoFamiliar(Usuario actor, Turista turista) {
         Integer codigo = codigoTitular(actor);
         return codigo.equals(turista.getCodigo()) || codigo.equals(turista.getCodigoTitular());
     }

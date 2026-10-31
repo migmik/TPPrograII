@@ -12,13 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.api.dto.BalanceRespuesta;
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.BalanceVentas;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Turista;
@@ -178,7 +178,7 @@ public class ReservaServicio {
         return reserva;
     }
 
-    public BalanceRespuesta balance(Usuario actor) {
+    public BalanceVentas balance(Usuario actor) {
         if (actor.getRol() != RolUsuario.ADMINISTRADOR) {
             throw new OperacionNoPermitidaException("Solo un administrador puede consultar el balance");
         }

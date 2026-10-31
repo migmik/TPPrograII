@@ -12,12 +12,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
+import com.tijetravel.tijeback.modelos.BalanceVentas;
 import com.tijetravel.tijeback.modelos.Reserva;
 
 public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
 
         @Query("""
-                select new com.tijetravel.tijeback.api.dto.BalanceRespuesta(
+                select new com.tijetravel.tijeback.modelos.BalanceVentas(
                     coalesce(sum(case when r.pagada = true then 1 else 0 end), 0),
                     coalesce(sum(case when r.pagada = true then r.precioVuelo else 0 end), 0),
                     coalesce(sum(case when r.pagada = true then r.precioHotel else 0 end), 0),
@@ -26,7 +27,7 @@ public interface ReservaRepositorio extends JpaRepository<Reserva, Integer> {
                     coalesce(sum(case when r.pagada = false then r.total else 0 end), 0))
                 from Reserva r
                 """)
-        com.tijetravel.tijeback.api.dto.BalanceRespuesta balancePagadas();
+        BalanceVentas balancePagadas();
 
         @EntityGraph("Reserva.completa")
         @Query("""
