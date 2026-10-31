@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.api.dto;
 
+import java.time.LocalDateTime;
+
 public record TuristaRespuesta(
                 Integer codigo,
                 String dni,
@@ -11,5 +13,7 @@ public record TuristaRespuesta(
                 String telefonoCelular,
                 Integer codigoSucursal,
                 Integer codigoTitular,
-                boolean titular) {
+                boolean titular,
+                LocalDateTime fechaCreacion,
+                LocalDateTime fechaBaja) {
 }

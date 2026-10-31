@@ -88,12 +88,12 @@ class UsuarioServicioTest {
                                 "admin", "clave", DnisPrueba.siguiente());
                 Vendedor vendedor = new Vendedor(
                                 "vendedor", "clave", DnisPrueba.siguiente());
-                when(usuarioRepositorio.findByRol(RolUsuario.VENDEDOR)).thenReturn(List.of(vendedor));
+                when(usuarioRepositorio.listarActivosPorRol(RolUsuario.VENDEDOR)).thenReturn(List.of(vendedor));
 
                 assertEquals(List.of(vendedor), servicio.listarPara(administrador, RolUsuario.VENDEDOR));
 
-                verify(usuarioRepositorio).findByRol(RolUsuario.VENDEDOR);
-                verify(usuarioRepositorio, never()).findAll();
+                verify(usuarioRepositorio).listarActivosPorRol(RolUsuario.VENDEDOR);
+                verify(usuarioRepositorio, never()).listarActivos();
         }
 
         @Test
@@ -181,12 +181,12 @@ class UsuarioServicioTest {
         }
 
         @Test
-        void usuarioNoPuedeEliminarseASiMismo() {
+        void usuarioNoPuedeDarseDeBajaASiMismo() {
                 Administrador administrador = new Administrador("admin", "clave", DnisPrueba.siguiente());
                 when(usuarioRepositorio.findById(1)).thenReturn(Optional.of(administrador));
 
                 try {
-                        servicio.eliminar(administrador, 1);
+                        servicio.darDeBaja(administrador, 1);
                         fail("Se esperaba OperacionNoPermitidaException");
                 } catch (OperacionNoPermitidaException esperada) {
                         // Es la excepcion que se esperaba.
@@ -196,14 +196,14 @@ class UsuarioServicioTest {
         }
 
         @Test
-        void noEliminaElUltimoAdministrador() {
+        void noDaDeBajaAlUltimoAdministrador() {
                 Administrador actor = new Administrador("admin-principal", "clave", DnisPrueba.siguiente());
                 Administrador objetivo = new Administrador("admin-secundario", "clave", DnisPrueba.siguiente());
                 when(usuarioRepositorio.findById(2)).thenReturn(Optional.of(objetivo));
-                when(usuarioRepositorio.countByRol(RolUsuario.ADMINISTRADOR)).thenReturn(1L);
+                when(usuarioRepositorio.countByRolAndFechaBajaIsNull(RolUsuario.ADMINISTRADOR)).thenReturn(1L);
 
                 try {
-                        servicio.eliminar(actor, 2);
+                        servicio.darDeBaja(actor, 2);
                         fail("Se esperaba OperacionNoPermitidaException");
                 } catch (OperacionNoPermitidaException esperada) {
                         // Es la excepcion que se esperaba.

@@ -153,7 +153,21 @@ public class VuelosRestControlador {
             @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        vueloServicio.eliminar(actor, numero);
+        vueloServicio.darDeBaja(actor, numero);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/bajas")
+    public List<VueloRespuesta> listarBajas(Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return vueloMapeador.aRespuestas(vueloServicio.listarBajasPara(actor));
+    }
+
+    @PostMapping("/{numero}/reactivar")
+    public VueloRespuesta reactivar(
+            @PathVariable @Positive(message = "El numero debe ser positivo") Integer numero,
+            Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.obtener(autenticacion);
+        return vueloMapeador.aRespuesta(vueloServicio.reactivar(actor, numero));
     }
 }

@@ -66,7 +66,7 @@ class HotelServicioTest {
 
         @Test
         void noReduceLaCapacidadPorDebajoDeLaOcupacionMaxima() {
-                when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(List.of(
+                when(reservaRepositorio.findByHotelCodigoAndFechaBajaIsNull(1)).thenReturn(List.of(
                                 reserva("ana@example.com", LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 4)),
                                 reserva("luis@example.com", LocalDate.of(2026, 10, 2), LocalDate.of(2026, 10, 3))));
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
@@ -89,7 +89,7 @@ class HotelServicioTest {
 
         @Test
         void permiteUnaCapacidadIgualALaOcupacionMaxima() {
-                when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(List.of(
+                when(reservaRepositorio.findByHotelCodigoAndFechaBajaIsNull(1)).thenReturn(List.of(
                                 reserva("ana@example.com", LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 4)),
                                 reserva("luis@example.com", LocalDate.of(2026, 10, 2), LocalDate.of(2026, 10, 3)),
                                 reserva("maria@example.com", LocalDate.of(2026, 10, 4), LocalDate.of(2026, 10, 5))));
@@ -110,7 +110,7 @@ class HotelServicioTest {
 
         @Test
         void aceptaLaMismaCiudadEscritaConAcento() {
-                when(reservaRepositorio.findByHotelCodigo(1)).thenReturn(List.of(
+                when(reservaRepositorio.findByHotelCodigoAndFechaBajaIsNull(1)).thenReturn(List.of(
                                 reserva("ana@example.com", LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 4))));
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 

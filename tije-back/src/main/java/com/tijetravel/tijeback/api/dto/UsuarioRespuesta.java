@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.api.dto;
 
+import java.time.LocalDateTime;
+
 import com.tijetravel.tijeback.enums.RolUsuario;
 
 public record UsuarioRespuesta(
@@ -7,5 +9,7 @@ public record UsuarioRespuesta(
                 String dni,
                 String nombreUsuario,
                 RolUsuario rol,
-                Integer codigoTurista) {
+                Integer codigoTurista,
+                LocalDateTime fechaCreacion,
+                LocalDateTime fechaBaja) {
 }

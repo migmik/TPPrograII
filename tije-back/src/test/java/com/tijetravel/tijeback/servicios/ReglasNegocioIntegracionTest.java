@@ -316,7 +316,7 @@ class ReglasNegocioIntegracionTest {
             }
             assertNotNull(fallo, "La segunda reserva tenia que fallar");
             assertInstanceOf(CapacidadExcedidaException.class, fallo.getCause());
-            assertEquals(1, reservaRepo.countByVueloNumeroAndClaseVuelo(d.vuelo(), ClaseVuelo.TURISTA));
+            assertEquals(1, reservaRepo.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(d.vuelo(), ClaseVuelo.TURISTA));
         } finally {
             confirmar.countDown();
             hilos.shutdownNow();

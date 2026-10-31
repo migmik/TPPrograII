@@ -16,6 +16,7 @@ import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.EntidadBase;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
@@ -69,9 +70,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
             throw new IllegalArgumentException("El campo rol es obligatorio");
         }
         String nombreNormalizado = ValidacionModelo.textoObligatorio(nombreUsuario, "nombreUsuario");
-        if (usuarioRepositorio.existsByNombreUsuarioIgnoreCase(nombreNormalizado)) {
-            throw new EntidadDuplicadaException("Ya existe el nombre de usuario indicado");
-        }
+        verificarNombreDisponible(nombreNormalizado, null);
 
         if (rol != RolUsuario.CLIENTE && codigoTurista != null) {
             throw new IllegalArgumentException("Solo un cliente puede asociarse a un turista");
@@ -82,7 +81,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
                 throw new IllegalArgumentException("Un cliente debe asociarse a un turista");
             }
             turista = turistaRepositorio.findById(codigoTurista).orElse(null);
-            if (turista == null) {
+            if (turista == null || !turista.estaActivo()) {
                 throw new EntidadNoEncontradaException("No se encontro el turista " + codigoTurista);
             }
             if (usuarioRepositorio.contarClientesPorTurista(codigoTurista) > 0) {
@@ -97,9 +96,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
             ValidacionModelo.dni(turista.getDni());
         } else {
             ValidacionModelo.dni(dni);
-            if (usuarioRepositorio.existsByDni(dni)) {
-                throw new EntidadDuplicadaException("Ya existe un empleado con ese DNI");
-            }
+            verificarDniDisponible(dni, null);
         }
         Usuario usuario = usuarioFactory.crear(
                 nombreNormalizado,
@@ -124,9 +121,9 @@ public class UsuarioServicioImpl implements UsuarioServicio {
     public List<Usuario> listarPara(Usuario actor, RolUsuario rol) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         if (rol == null) {
-            return usuarioRepositorio.findAll();
+            return usuarioRepositorio.listarActivos();
         }
-        return usuarioRepositorio.findByRol(rol);
+        return usuarioRepositorio.listarActivosPorRol(rol);
     }
 
     @Override
@@ -144,22 +141,21 @@ public class UsuarioServicioImpl implements UsuarioServicio {
             Integer codigoSucursal) {
         bloqueoEscrituras.adquirir();
         String nombreNormalizado = ValidacionModelo.textoObligatorio(nombreUsuario, "nombreUsuario");
-        if (usuarioRepositorio.existsByNombreUsuarioIgnoreCase(nombreNormalizado)) {
-            throw new EntidadDuplicadaException("Ya existe el nombre de usuario indicado");
-        }
+        verificarNombreDisponible(nombreNormalizado, null);
+        // Si la persona estuvo registrada y se dio de baja, puede volver a registrarse.
         String dniValidado = ValidacionModelo.dni(dni);
-        if (turistaRepositorio.existsByDni(dniValidado)) {
+        if (turistaRepositorio.existsByDniAndFechaBajaIsNull(dniValidado)) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese DNI");
         }
         String emailValidado = ValidacionModelo.email(email);
-        if (turistaRepositorio.existsByEmailIgnoreCase(emailValidado)) {
+        if (turistaRepositorio.existsByEmailIgnoreCaseAndFechaBajaIsNull(emailValidado)) {
             throw new EntidadDuplicadaException("Ya existe un turista con ese email");
         }
         if (codigoSucursal == null || codigoSucursal < 1) {
             throw new IllegalArgumentException("El codigo de sucursal debe ser positivo");
         }
         Sucursal sucursal = sucursalRepositorio.findById(codigoSucursal).orElse(null);
-        if (sucursal == null) {
+        if (sucursal == null || !sucursal.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro la sucursal " + codigoSucursal);
         }
 
@@ -177,7 +173,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
     private Usuario encontrarPorId(Integer codigo) {
         Usuario usuario = usuarioRepositorio.findById(codigo).orElse(null);
-        if (usuario == null) {
+        if (usuario == null || !usuario.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el usuario " + codigo);
         }
         return usuario;
@@ -199,16 +195,12 @@ public class UsuarioServicioImpl implements UsuarioServicio {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         bloqueoEscrituras.adquirir();
         String nombreNormalizado = ValidacionModelo.textoObligatorio(nombreUsuario, "nombreUsuario");
-        if (usuarioRepositorio.existsByNombreUsuarioIgnoreCaseAndCodigoNot(nombreNormalizado, codigo)) {
-            throw new EntidadDuplicadaException("Ya existe el nombre de usuario indicado");
-        }
+        verificarNombreDisponible(nombreNormalizado, codigo);
 
         Usuario usuario = encontrarPorId(codigo);
         if (usuario.tieneDniPropio()) {
             ValidacionModelo.dni(dni);
-            if (usuarioRepositorio.existsByDniAndCodigoNot(dni, codigo)) {
-                throw new EntidadDuplicadaException("Ya existe un empleado con ese DNI");
-            }
+            verificarDniDisponible(dni, codigo);
             usuario.actualizarDni(dni);
         } else if (dni != null && !dni.isBlank()) {
             throw new IllegalArgumentException("El DNI del cliente se modifica en su turista asociado");
@@ -221,18 +213,73 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer codigo) {
+    public void darDeBaja(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
         bloqueoEscrituras.adquirir();
         Usuario usuario = encontrarPorId(codigo);
         if (esMismoUsuario(actor, usuario)) {
-            throw new OperacionNoPermitidaException("Un usuario no puede eliminarse a si mismo");
+            throw new OperacionNoPermitidaException("Un usuario no puede darse de baja a si mismo");
         }
         if (usuario.getRol() == RolUsuario.ADMINISTRADOR
-                && usuarioRepositorio.countByRol(RolUsuario.ADMINISTRADOR) <= 1) {
-            throw new OperacionNoPermitidaException("No se puede eliminar el ultimo administrador");
+                && usuarioRepositorio.countByRolAndFechaBajaIsNull(RolUsuario.ADMINISTRADOR) <= 1) {
+            throw new OperacionNoPermitidaException("No se puede dar de baja al ultimo administrador");
         }
-        usuarioRepositorio.delete(usuario);
+        usuario.darDeBaja(EntidadBase.ahora());
+    }
+
+    @Override
+    public List<Usuario> listarBajasPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
+        return usuarioRepositorio.listarDadosDeBaja();
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Usuario reactivar(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_USUARIOS);
+        bloqueoEscrituras.adquirir();
+        Usuario usuario = usuarioRepositorio.findById(codigo).orElse(null);
+        if (usuario == null || usuario.estaActivo()) {
+            throw new EntidadNoEncontradaException("No hay un usuario dado de baja con el codigo " + codigo);
+        }
+        verificarNombreDisponible(usuario.getNombreUsuario(), codigo);
+        if (usuario.tieneDniPropio()) {
+            verificarDniDisponible(usuario.getDni(), codigo);
+        } else {
+            if (!usuario.getTurista().estaActivo()) {
+                throw new OperacionNoPermitidaException("El turista del cliente esta dado de baja");
+            }
+            if (usuarioRepositorio.contarClientesPorTurista(usuario.getCodigoTurista()) > 0) {
+                throw new EntidadDuplicadaException("El turista ya tiene otro usuario activo");
+            }
+        }
+        usuario.reactivar();
+        return usuario;
+    }
+
+    private void verificarNombreDisponible(String nombreUsuario, Integer codigoPropio) {
+        boolean ocupado;
+        if (codigoPropio == null) {
+            ocupado = usuarioRepositorio.existsByNombreUsuarioIgnoreCaseAndFechaBajaIsNull(nombreUsuario);
+        } else {
+            ocupado = usuarioRepositorio.existsByNombreUsuarioIgnoreCaseAndFechaBajaIsNullAndCodigoNot(
+                    nombreUsuario, codigoPropio);
+        }
+        if (ocupado) {
+            throw new EntidadDuplicadaException("Ya existe el nombre de usuario indicado");
+        }
+    }
+
+    private void verificarDniDisponible(String dni, Integer codigoPropio) {
+        boolean ocupado;
+        if (codigoPropio == null) {
+            ocupado = usuarioRepositorio.existsByDniAndFechaBajaIsNull(dni);
+        } else {
+            ocupado = usuarioRepositorio.existsByDniAndFechaBajaIsNullAndCodigoNot(dni, codigoPropio);
+        }
+        if (ocupado) {
+            throw new EntidadDuplicadaException("Ya existe un empleado con ese DNI");
+        }
     }
 
     private boolean esMismoUsuario(Usuario primero, Usuario segundo) {

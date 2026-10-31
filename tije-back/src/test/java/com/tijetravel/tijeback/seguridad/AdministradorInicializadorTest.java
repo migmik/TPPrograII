@@ -44,7 +44,7 @@ class AdministradorInicializadorTest {
 
     @Test
     void noAlteraElAdministradorExistenteAunqueFalteLaVariableNueva() {
-        when(usuarios.countByRol(RolUsuario.ADMINISTRADOR)).thenReturn(1L);
+        when(usuarios.countByRolAndFechaBajaIsNull(RolUsuario.ADMINISTRADOR)).thenReturn(1L);
         inicializador(null).run(new DefaultApplicationArguments());
         verify(usuarios, never()).save(any());
     }

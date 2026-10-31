@@ -15,6 +15,8 @@ public class UsuarioMapeador extends MapeadorBase<Usuario, UsuarioRespuesta> {
                 usuario.getDni(),
                 usuario.getNombreUsuario(),
                 usuario.getRol(),
-                usuario.getCodigoTurista());
+                usuario.getCodigoTurista(),
+                usuario.getFechaCreacion(),
+                usuario.getFechaBaja());
     }
 }

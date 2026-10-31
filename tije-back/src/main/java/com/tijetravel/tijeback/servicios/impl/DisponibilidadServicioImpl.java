@@ -34,18 +34,19 @@ public class DisponibilidadServicioImpl implements DisponibilidadServicio {
     @Override
     public int plazasDisponiblesVuelo(Integer numeroVuelo, ClaseVuelo claseVuelo) {
         Vuelo vuelo = vueloRepositorio.findById(numeroVuelo).orElse(null);
-        if (vuelo == null) {
+        if (vuelo == null || !vuelo.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el vuelo " + numeroVuelo);
         }
         int capacidad = capacidadDeClase(vuelo, claseVuelo);
-        long ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVuelo(numeroVuelo, claseVuelo);
+        long ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(
+                numeroVuelo, claseVuelo);
         return Math.max(0, capacidad - Math.toIntExact(ocupadas));
     }
 
     @Override
     public int plazasDisponiblesHotel(Integer codigoHotel, LocalDate fechaLlegada, LocalDate fechaPartida) {
         Hotel hotel = hotelRepositorio.findById(codigoHotel).orElse(null);
-        if (hotel == null) {
+        if (hotel == null || !hotel.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el hotel " + codigoHotel);
         }
         return plazasDisponiblesHotel(hotel, fechaLlegada, fechaPartida);
@@ -63,9 +64,10 @@ public class DisponibilidadServicioImpl implements DisponibilidadServicio {
         int capacidad = capacidadDeClase(vuelo, claseVuelo);
         long ocupadas;
         if (codigoReservaIgnorada == null) {
-            ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVuelo(vuelo.getNumero(), claseVuelo);
+            ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(
+                    vuelo.getNumero(), claseVuelo);
         } else {
-            ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVueloAndCodigoNot(
+            ocupadas = reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNullAndCodigoNot(
                     vuelo.getNumero(), claseVuelo, codigoReservaIgnorada);
         }
         if (ocupadas >= capacidad) {

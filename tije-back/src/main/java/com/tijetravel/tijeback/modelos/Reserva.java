@@ -21,7 +21,6 @@ import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @NamedEntityGraph(name = "Reserva.completa", attributeNodes = {
@@ -30,9 +29,8 @@ import jakarta.persistence.UniqueConstraint;
         @NamedAttributeNode("vuelo"),
         @NamedAttributeNode("hotel")
 }, subgraphs = @NamedSubgraph(name = "turistaConTitular", attributeNodes = @NamedAttributeNode("titular")))
-@Table(name = "reservas", uniqueConstraints = @UniqueConstraint(name = "uk_reserva_turista_vuelo", columnNames = {
-        "turista_codigo", "vuelo_numero" }))
-public class Reserva {
+@Table(name = "reservas")
+public class Reserva extends EntidadBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;

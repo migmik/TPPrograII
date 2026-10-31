@@ -81,7 +81,7 @@ class RecursosProtegidosApiIntegracionTest {
         @BeforeEach
         void prepararUsuariosYReservaExterna() {
                 Turista titular = turistaRepositorio.findById(1).get();
-                Usuario usuarioCliente = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_CLIENTE);
+                Usuario usuarioCliente = usuarioRepositorio.buscarActivoPorNombre(USUARIO_CLIENTE);
                 if (usuarioCliente == null) {
                         usuarioCliente = usuarioRepositorio.save(new Cliente(
                                         USUARIO_CLIENTE,
@@ -89,7 +89,7 @@ class RecursosProtegidosApiIntegracionTest {
                                         titular));
                 }
                 codigoUsuarioCliente = usuarioCliente.getCodigo();
-                if (usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_VENDEDOR) == null) {
+                if (usuarioRepositorio.buscarActivoPorNombre(USUARIO_VENDEDOR) == null) {
                         usuarioRepositorio.save(new Vendedor(
                                         USUARIO_VENDEDOR,
                                         codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));

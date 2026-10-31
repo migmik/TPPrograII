@@ -181,8 +181,8 @@ class EscriturasApiIntegracionTest {
                                 .with(csrf()))
                                 .andExpect(status().isNoContent());
 
-                assertFalse(reservaRepositorio.existsById(codigoReserva));
-                assertFalse(turistaRepositorio.existsById(turista.getCodigo()));
+                assertFalse(reservaRepositorio.findById(codigoReserva).get().estaActivo());
+                assertFalse(turistaRepositorio.findById(turista.getCodigo()).get().estaActivo());
         }
 
         @Test
@@ -208,7 +208,7 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(jsonPath("$.contrasenia").doesNotExist());
 
                 Usuario usuario = usuarioRepositorio
-                                .findByNombreUsuarioIgnoreCase("operador-nuevo");
+                                .buscarActivoPorNombre("operador-nuevo");
                 assertTrue(codificadorContrasenias.matches("ClaveOperador123!", usuario.getContrasenia()));
 
                 mockMvc.perform(put("/api/v1/usuarios/{codigo}", usuario.getCodigo())
@@ -235,7 +235,15 @@ class EscriturasApiIntegracionTest {
                                 .with(csrf()))
                                 .andExpect(status().isNoContent());
 
-                assertFalse(usuarioRepositorio.existsById(usuario.getCodigo()));
+                assertFalse(usuarioRepositorio.findById(usuario.getCodigo()).get().estaActivo());
+                // Un usuario dado de baja ya no puede iniciar sesion.
+                mockMvc.perform(post("/api/v1/autenticacion/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {"nombreUsuario":"operador-actualizado","contrasenia":"NuevaClaveOperador123!"}
+                                                """))
+                                .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -303,7 +311,7 @@ class EscriturasApiIntegracionTest {
                 MockHttpSession sesionAdmin = iniciarSesion(USUARIO_ADMIN, CONTRASENIA_ADMIN);
                 MockHttpSession sesionVendedor = iniciarSesion(USUARIO_VENDEDOR, CONTRASENIA_VENDEDOR);
                 Integer codigoAdmin = usuarioRepositorio
-                                .findByNombreUsuarioIgnoreCase(USUARIO_ADMIN)
+                                .buscarActivoPorNombre(USUARIO_ADMIN)
                                 .getCodigo();
 
                 mockMvc.perform(delete("/api/v1/usuarios/{codigo}", codigoAdmin)
@@ -312,11 +320,22 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
 
+                // La baja del titular arrastra a su familiar; el familiar no vuelve sin el titular.
                 mockMvc.perform(delete("/api/v1/turistas/{codigo}", 1)
+                                .session(sesionVendedor)
+                                .with(csrf()))
+                                .andExpect(status().isNoContent());
+                assertFalse(turistaRepositorio.findById(2).get().estaActivo());
+                mockMvc.perform(post("/api/v1/turistas/{codigo}/reactivar", 2)
                                 .session(sesionVendedor)
                                 .with(csrf()))
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
+                mockMvc.perform(post("/api/v1/turistas/{codigo}/reactivar", 1)
+                                .session(sesionVendedor)
+                                .with(csrf()))
+                                .andExpect(status().isOk());
+                assertTrue(turistaRepositorio.findById(2).get().estaActivo());
 
                 mockMvc.perform(post("/api/v1/turistas")
                                 .session(sesionVendedor)

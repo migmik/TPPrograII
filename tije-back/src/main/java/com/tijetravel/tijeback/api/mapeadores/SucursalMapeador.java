@@ -14,6 +14,8 @@ public class SucursalMapeador extends MapeadorBase<Sucursal, SucursalRespuesta> 
                 sucursal.getCodigo(),
                 sucursal.getDireccion(),
                 sucursal.getTelefono(),
-                sucursal.getCiudad());
+                sucursal.getCiudad(),
+                sucursal.getFechaCreacion(),
+                sucursal.getFechaBaja());
     }
 }

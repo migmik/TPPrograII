@@ -66,7 +66,7 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void autorizaPorElPermisoSinNecesitarRepetirElRolEnElFiltroWeb() throws Exception {
-                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO);
+                Usuario administrador = usuarioRepositorio.buscarActivoPorNombre(USUARIO);
                 List<SimpleGrantedAuthority> permisos = new ArrayList<>();
                 permisos.add(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name()));
                 UsernamePasswordAuthenticationToken autenticacion = UsernamePasswordAuthenticationToken.authenticated(
@@ -84,7 +84,7 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void creaElAdministradorInicialConContraseniaHasheada() {
-                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO);
+                Usuario administrador = usuarioRepositorio.buscarActivoPorNombre(USUARIO);
 
                 assertNotEquals(CONTRASENIA, administrador.getContrasenia());
                 assertTrue(administrador.getContrasenia().startsWith("{bcrypt}"));
@@ -152,7 +152,7 @@ class SeguridadApiIntegracionTest {
                                 .content(registro(nombreUsuario, dni, sucursal.getCodigo())))
                                 .andExpect(status().isCreated());
 
-                Usuario guardado = usuarioRepositorio.findByNombreUsuarioIgnoreCase(nombreUsuario);
+                Usuario guardado = usuarioRepositorio.buscarActivoPorNombre(nombreUsuario);
                 Cliente cliente = assertInstanceOf(Cliente.class, guardado);
                 assertEquals("CLIENTE", cliente.getRol().name());
                 assertTrue(cliente.getTurista().isTitular());
@@ -210,7 +210,7 @@ class SeguridadApiIntegracionTest {
         void impideQueUnVendedorAccedaALaAdministracionDeUsuarios() throws Exception {
                 String usuarioVendedor = "vendedor-pruebas";
                 String contraseniaVendedor = "ClaveVendedor123!";
-                if (usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor) == null) {
+                if (usuarioRepositorio.buscarActivoPorNombre(usuarioVendedor) == null) {
                         usuarioRepositorio.save(new Vendedor(
                                         usuarioVendedor,
                                         codificadorContrasenias.encode(contraseniaVendedor), DnisPrueba.siguiente()));

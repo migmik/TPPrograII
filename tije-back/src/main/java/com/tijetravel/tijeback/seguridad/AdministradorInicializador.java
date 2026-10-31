@@ -49,7 +49,7 @@ public class AdministradorInicializador implements ApplicationRunner {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void run(ApplicationArguments argumentos) {
         bloqueoEscrituras.adquirir();
-        if (usuarioRepositorio.countByRol(RolUsuario.ADMINISTRADOR) > 0) {
+        if (usuarioRepositorio.countByRolAndFechaBajaIsNull(RolUsuario.ADMINISTRADOR) > 0) {
             return;
         }
 
@@ -57,10 +57,10 @@ public class AdministradorInicializador implements ApplicationRunner {
         if (dni == null || !dni.matches("[0-9]{7,8}")) {
             throw new IllegalStateException("APP_ADMIN_DNI es obligatorio y debe tener 7 u 8 digitos");
         }
-        if (usuarioRepositorio.existsByDni(dni)) {
+        if (usuarioRepositorio.existsByDniAndFechaBajaIsNull(dni)) {
             throw new IllegalStateException("El DNI del administrador inicial ya esta en uso");
         }
-        if (usuarioRepositorio.existsByNombreUsuarioIgnoreCase(nombreNormalizado)) {
+        if (usuarioRepositorio.existsByNombreUsuarioIgnoreCaseAndFechaBajaIsNull(nombreNormalizado)) {
             throw new IllegalStateException(
                     "El nombre configurado para el administrador inicial ya esta en uso");
         }

@@ -173,6 +173,9 @@ public class ConfiguracionSeguridad {
                 "/api/v1/autenticacion/csrf",
                 "/error").permitAll();
 
+        // Los dados de baja piden sesion; el servicio controla el permiso de cada modulo.
+        reglas.requestMatchers(HttpMethod.GET, "/api/v1/*/bajas").authenticated();
+
         // Catalogo publico (el listado completo pide sesion y lo controla el servicio).
         reglas.requestMatchers(HttpMethod.GET, "/api/v1/hoteles", "/api/v1/vuelos").authenticated();
         reglas.requestMatchers(HttpMethod.GET,

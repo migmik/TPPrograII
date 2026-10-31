@@ -1,13 +1,17 @@
 package com.tijetravel.tijeback.api;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,11 +28,17 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.enums.ClaseVuelo;
+import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.modelos.Hotel;
+import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
+import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
+import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
@@ -58,6 +68,12 @@ class CatalogosEscriturasApiIntegracionTest {
 
         @Autowired
         private VueloRepositorio vueloRepositorio;
+
+        @Autowired
+        private ReservaRepositorio reservaRepositorio;
+
+        @Autowired
+        private TuristaRepositorio turistaRepositorio;
 
         @Autowired
         private UsuarioRepositorio usuarioRepositorio;
@@ -206,9 +222,23 @@ class CatalogosEscriturasApiIntegracionTest {
                                 .with(csrf()))
                                 .andExpect(status().isNoContent());
 
-                assertFalse(vueloRepositorio.existsById(9001));
-                assertFalse(hotelRepositorio.existsById(hotel.getCodigo()));
-                assertFalse(sucursalRepositorio.existsById(sucursal.getCodigo()));
+                // La baja es logica: las filas siguen en la base con su fecha de baja.
+                assertFalse(vueloRepositorio.findById(9001).get().estaActivo());
+                assertFalse(hotelRepositorio.findById(hotel.getCodigo()).get().estaActivo());
+                assertFalse(sucursalRepositorio.findById(sucursal.getCodigo()).get().estaActivo());
+                mockMvc.perform(get("/api/v1/sucursales/{codigo}", sucursal.getCodigo()))
+                                .andExpect(status().isNotFound());
+                mockMvc.perform(get("/api/v1/sucursales/bajas").session(sesion))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].codigo").value(sucursal.getCodigo()))
+                                .andExpect(jsonPath("$[0].fechaBaja").isNotEmpty());
+
+                mockMvc.perform(post("/api/v1/sucursales/{codigo}/reactivar", sucursal.getCodigo())
+                                .session(sesion)
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.fechaBaja").isEmpty());
+                assertTrue(sucursalRepositorio.findById(sucursal.getCodigo()).get().estaActivo());
         }
 
         @Test
@@ -302,13 +332,22 @@ class CatalogosEscriturasApiIntegracionTest {
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
 
-                mockMvc.perform(delete("/api/v1/hoteles/{codigo}", 2)
+                // Un hotel y un vuelo con reservas futuras no se pueden dar de baja.
+                LocalDate salida = LocalDate.now().plusDays(30);
+                Vuelo vueloFuturo = vueloRepositorio.save(new Vuelo(
+                                9100, salida.atTime(10, 0), "Buenos Aires", "Cordoba", 20, 15, 5));
+                Hotel hotelFuturo = hotelRepositorio.save(new Hotel(
+                                "Hotel Futuro", "Calle 1", "Cordoba", "351-0000", 10));
+                reservaRepositorio.save(new Reserva(turistaRepositorio.findById(1).get(), vueloFuturo, hotelFuturo,
+                                ClaseVuelo.TURISTA, TipoHospedaje.MEDIA_PENSION, salida, salida.plusDays(2)));
+
+                mockMvc.perform(delete("/api/v1/hoteles/{codigo}", hotelFuturo.getCodigo())
                                 .session(sesion)
                                 .with(csrf()))
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
 
-                mockMvc.perform(delete("/api/v1/vuelos/{numero}", 100)
+                mockMvc.perform(delete("/api/v1/vuelos/{numero}", 9100)
                                 .session(sesion)
                                 .with(csrf()))
                                 .andExpect(status().isForbidden())
@@ -346,6 +385,15 @@ class CatalogosEscriturasApiIntegracionTest {
                                                 """))
                                 .andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.error").value("CAPACIDAD_EXCEDIDA"));
+
+                // Si las reservas ya terminaron, el hotel se da de baja y las reservas lo siguen mostrando.
+                mockMvc.perform(delete("/api/v1/hoteles/{codigo}", 2)
+                                .session(sesion)
+                                .with(csrf()))
+                                .andExpect(status().isNoContent());
+                mockMvc.perform(get("/api/v1/reservas/{codigo}", 1).session(sesion))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.codigoHotel").value(2));
         }
 
         private MockHttpSession iniciarSesion(String usuario, String contrasenia) throws Exception {

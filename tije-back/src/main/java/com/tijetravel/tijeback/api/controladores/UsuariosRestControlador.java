@@ -110,7 +110,21 @@ public class UsuariosRestControlador {
                         @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                usuarioServicio.eliminar(actor, codigo);
+                usuarioServicio.darDeBaja(actor, codigo);
                 return ResponseEntity.noContent().build();
+        }
+
+        @GetMapping("/bajas")
+        public List<UsuarioRespuesta> listarBajas(Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return usuarioMapeador.aRespuestas(usuarioServicio.listarBajasPara(actor));
+        }
+
+        @PostMapping("/{codigo}/reactivar")
+        public UsuarioRespuesta reactivar(
+                        @PathVariable @Positive(message = "El codigo debe ser positivo") Integer codigo,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return usuarioMapeador.aRespuesta(usuarioServicio.reactivar(actor, codigo));
         }
 }

@@ -11,12 +11,13 @@ import com.tijetravel.tijeback.modelos.Usuario;
 /**
  * Operaciones sobre los hoteles de la agencia.
  *
- * Las altas, bajas y modificaciones requieren el permiso ADMINISTRAR_HOTELES y
- * lanzan OperacionNoPermitidaException si el actor no lo tiene.
+ * Las altas, bajas, modificaciones y reactivaciones requieren el permiso
+ * ADMINISTRAR_HOTELES y lanzan OperacionNoPermitidaException si el actor no lo
+ * tiene. Las consultas solo devuelven hoteles activos.
  */
 public interface HotelServicio {
 
-    /** @throws EntidadDuplicadaException si ya existe un hotel con ese nombre en la ciudad */
+    /** @throws EntidadDuplicadaException si ya existe un hotel activo con ese nombre en la ciudad */
     Hotel crear(Usuario actor, String nombre, String direccion, String ciudad, String telefono,
             int capacidadTotal, int precioNochePersona);
 
@@ -33,7 +34,7 @@ public interface HotelServicio {
     /** Hoteles de la ciudad con lugar para la cantidad de personas en esas fechas. */
     List<Hotel> buscarDisponibles(String ciudad, LocalDate fechaLlegada, LocalDate fechaPartida, int personas);
 
-    /** @throws EntidadNoEncontradaException si no existe el hotel */
+    /** @throws EntidadNoEncontradaException si no existe el hotel o esta dado de baja */
     Hotel encontrarPorId(Integer codigo);
 
     /**
@@ -43,6 +44,16 @@ public interface HotelServicio {
     Hotel modificar(Usuario actor, Integer codigo, String nombre, String direccion, String ciudad,
             String telefono, int capacidadTotal, int precioNochePersona);
 
-    /** @throws OperacionNoPermitidaException si el hotel tiene reservas */
-    void eliminar(Usuario actor, Integer codigo);
+    /**
+     * Baja logica. Las reservas que ya terminaron siguen mostrando el hotel.
+     *
+     * @throws OperacionNoPermitidaException si tiene reservas activas que todavia no terminaron
+     */
+    void darDeBaja(Usuario actor, Integer codigo);
+
+    /** Hoteles dados de baja, del mas reciente al mas antiguo. */
+    List<Hotel> listarBajasPara(Usuario actor);
+
+    /** @throws EntidadDuplicadaException si ya hay otro hotel activo con ese nombre en la ciudad */
+    Hotel reactivar(Usuario actor, Integer codigo);
 }

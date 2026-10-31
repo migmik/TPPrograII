@@ -100,7 +100,7 @@ class CargaRelacionesIntegracionTest {
 
     @Test
     void consultaReservasDelHotelConSusVuelosEnUnSoloSelect() {
-        List<Reserva> resultado = reservas.findByHotelCodigo(codigoHotel);
+        List<Reserva> resultado = reservas.findByHotelCodigoAndFechaBajaIsNull(codigoHotel);
 
         assertEquals(3, resultado.size());
         verificarDestinos(resultado);
@@ -111,7 +111,7 @@ class CargaRelacionesIntegracionTest {
 
     @Test
     void consultaReservasDelVueloConSusHotelesEnUnSoloSelect() {
-        List<Reserva> resultado = reservas.findByVueloNumero(numeroVuelo);
+        List<Reserva> resultado = reservas.findByVueloNumeroAndFechaBajaIsNull(numeroVuelo);
 
         assertEquals(3, resultado.size());
         verificarCiudadesDeHoteles(resultado);
@@ -155,7 +155,7 @@ class CargaRelacionesIntegracionTest {
 
     @Test
     void listaTodosLosRolesYCargaLosTuristasEnUnSoloSelect() {
-        List<Usuario> resultado = usuarios.findAll();
+        List<Usuario> resultado = usuarios.listarActivos();
 
         assertEquals(5, resultado.size());
         assertEquals(3, contarPorRol(resultado, RolUsuario.CLIENTE));
@@ -183,7 +183,7 @@ class CargaRelacionesIntegracionTest {
     @ParameterizedTest
     @ValueSource(strings = { "CLIENTE1", "ADMINISTRADOR", "VENDEDOR" })
     void encuentraParaLoginSinDistinguirMayusculasYConTuristaCargado(String nombre) {
-        Usuario resultado = usuarios.findByNombreUsuarioIgnoreCase(nombre);
+        Usuario resultado = usuarios.buscarActivoPorNombre(nombre);
 
         assertTrue(nombre.equalsIgnoreCase(resultado.getNombreUsuario()));
         assertEquals(1, estadisticas.getPrepareStatementCount());
@@ -194,7 +194,7 @@ class CargaRelacionesIntegracionTest {
     @Test
     void devuelveVacioCuandoNoExisteElUsuario() {
         assertTrue(usuarios.findById(-1).isEmpty());
-        assertNull(usuarios.findByNombreUsuarioIgnoreCase("inexistente"));
+        assertNull(usuarios.buscarActivoPorNombre("inexistente"));
         assertEquals(2, estadisticas.getPrepareStatementCount());
     }
 

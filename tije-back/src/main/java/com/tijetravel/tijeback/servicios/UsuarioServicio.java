@@ -37,6 +37,19 @@ public interface UsuarioServicio {
     Usuario modificarCredenciales(Usuario actor, Integer codigo, String nombreUsuario, String contrasenia,
             String dni);
 
-    /** @throws OperacionNoPermitidaException si es el propio actor o el ultimo administrador */
-    void eliminar(Usuario actor, Integer codigo);
+    /**
+     * Baja logica: el usuario ya no puede iniciar sesion.
+     *
+     * @throws OperacionNoPermitidaException si es el propio actor o el ultimo administrador
+     */
+    void darDeBaja(Usuario actor, Integer codigo);
+
+    /** Usuarios dados de baja, del mas reciente al mas antiguo. */
+    List<Usuario> listarBajasPara(Usuario actor);
+
+    /**
+     * @throws EntidadDuplicadaException si el nombre de usuario o el DNI ya los usa otro usuario activo
+     * @throws OperacionNoPermitidaException si es un cliente y su turista esta dado de baja
+     */
+    Usuario reactivar(Usuario actor, Integer codigo);
 }

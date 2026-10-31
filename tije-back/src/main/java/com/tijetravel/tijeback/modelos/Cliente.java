@@ -13,7 +13,7 @@ import jakarta.persistence.OneToOne;
 @DiscriminatorValue("CLIENTE")
 public class Cliente extends Usuario {
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "turista_codigo", unique = true)
+    @JoinColumn(name = "turista_codigo")
     private Turista turista;
 
     protected Cliente() {

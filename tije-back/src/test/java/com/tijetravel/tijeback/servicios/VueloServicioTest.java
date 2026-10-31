@@ -53,7 +53,7 @@ class VueloServicioTest {
 
         @Test
         void noReducePlazasPorDebajoDeLasReservasRegistradas() {
-                when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.TURISTA))
+                when(reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(100, ClaseVuelo.TURISTA))
                                 .thenReturn(6L);
 
                 try {
@@ -66,9 +66,9 @@ class VueloServicioTest {
 
         @Test
         void permiteCapacidadIgualALasReservasRegistradas() {
-                when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.TURISTA))
+                when(reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(100, ClaseVuelo.TURISTA))
                                 .thenReturn(5L);
-                when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.PRIMERA))
+                when(reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(100, ClaseVuelo.PRIMERA))
                                 .thenReturn(2L);
 
                 Vuelo modificado = modificarVuelo(5, 2);

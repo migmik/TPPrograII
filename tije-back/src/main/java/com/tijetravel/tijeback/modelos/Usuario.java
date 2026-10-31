@@ -20,16 +20,16 @@ import jakarta.persistence.Table;
 @Table(name = "usuarios")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tipo_usuario")
-public abstract class Usuario {
+public abstract class Usuario extends EntidadBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
 
-    @Column(name = "nombre_usuario", nullable = false, unique = true)
+    @Column(name = "nombre_usuario", nullable = false)
     private String nombreUsuario;
 
     // Solo los empleados guardan su DNI aca; el del cliente esta en su turista.
-    @Column(length = 8, unique = true)
+    @Column(length = 8)
     private String dni;
 
     @JsonIgnore

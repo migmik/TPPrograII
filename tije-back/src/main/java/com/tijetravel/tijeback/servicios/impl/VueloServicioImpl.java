@@ -19,6 +19,7 @@ import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.EntidadBase;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.ValidacionModelo;
@@ -56,8 +57,13 @@ public class VueloServicioImpl implements VueloServicio {
             int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         bloqueoEscrituras.adquirir();
-        if (vueloRepositorio.existsById(numero)) {
+        Vuelo existente = vueloRepositorio.findById(numero).orElse(null);
+        if (existente != null && existente.estaActivo()) {
             throw new EntidadDuplicadaException("Ya existe el vuelo " + numero);
+        }
+        if (existente != null) {
+            throw new EntidadDuplicadaException(
+                    "El vuelo " + numero + " esta dado de baja; se puede reactivar desde los dados de baja");
         }
         Vuelo vuelo = new Vuelo(
                 numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
@@ -68,7 +74,7 @@ public class VueloServicioImpl implements VueloServicio {
     public List<Vuelo> listarPara(Usuario actor, String orden) {
         autorizacion.verificarPermiso(actor, Permiso.VER_CATALOGO_COMPLETO,
                 "Solo el personal puede consultar el catalogo completo");
-        return vueloRepositorio.findAll(ordenar(orden));
+        return vueloRepositorio.findByFechaBajaIsNull(ordenar(orden));
     }
 
     @Override
@@ -132,7 +138,7 @@ public class VueloServicioImpl implements VueloServicio {
     @Override
     public Vuelo encontrarPorId(Integer numero) {
         Vuelo vuelo = vueloRepositorio.findById(numero).orElse(null);
-        if (vuelo == null) {
+        if (vuelo == null || !vuelo.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el vuelo " + numero);
         }
         return vuelo;
@@ -150,8 +156,10 @@ public class VueloServicioImpl implements VueloServicio {
         }
         String destinoNormalizado = ValidacionModelo.textoObligatorio(destino, "destino");
 
-        long reservasTurista = reservaRepositorio.countByVueloNumeroAndClaseVuelo(numero, ClaseVuelo.TURISTA);
-        long reservasPrimera = reservaRepositorio.countByVueloNumeroAndClaseVuelo(numero, ClaseVuelo.PRIMERA);
+        long reservasTurista = reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(
+                numero, ClaseVuelo.TURISTA);
+        long reservasPrimera = reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(
+                numero, ClaseVuelo.PRIMERA);
         if (plazasTurista < reservasTurista || plazasPrimera < reservasPrimera) {
             throw new CapacidadExcedidaException(
                     "Las plazas no pueden ser menores que las reservas ya registradas");
@@ -159,7 +167,7 @@ public class VueloServicioImpl implements VueloServicio {
 
         // Las reservas ya hechas tienen que seguir coincidiendo con la fecha y el destino del vuelo.
         LocalDate nuevaFecha = fechaYHora.toLocalDate();
-        for (Reserva reserva : reservaRepositorio.findByVueloNumero(numero)) {
+        for (Reserva reserva : reservaRepositorio.findByVueloNumeroAndFechaBajaIsNull(numero)) {
             if (!reserva.getFechaLlegada().equals(nuevaFecha)
                     || !CiudadConsulta.misma(reserva.getHotel().getCiudad(), destinoNormalizado)) {
                 throw new OperacionNoPermitidaException(
@@ -173,14 +181,35 @@ public class VueloServicioImpl implements VueloServicio {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer numero) {
+    public void darDeBaja(Usuario actor, Integer numero) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
         bloqueoEscrituras.adquirir();
         Vuelo vuelo = encontrarPorId(numero);
-        if (reservaRepositorio.existsByVueloNumero(numero)) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un vuelo que tiene reservas");
+        if (reservaRepositorio.existsByVueloNumeroAndFechaBajaIsNullAndFechaLlegadaGreaterThanEqual(
+                numero, LocalDate.now())) {
+            throw new OperacionNoPermitidaException(
+                    "No se puede dar de baja un vuelo que todavia no salio y tiene reservas");
         }
-        vueloRepositorio.delete(vuelo);
+        vuelo.darDeBaja(EntidadBase.ahora());
+    }
+
+    @Override
+    public List<Vuelo> listarBajasPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
+        return vueloRepositorio.findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Vuelo reactivar(Usuario actor, Integer numero) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_VUELOS);
+        bloqueoEscrituras.adquirir();
+        Vuelo vuelo = vueloRepositorio.findById(numero).orElse(null);
+        if (vuelo == null || vuelo.estaActivo()) {
+            throw new EntidadNoEncontradaException("No hay un vuelo dado de baja con el numero " + numero);
+        }
+        vuelo.reactivar();
+        return vuelo;
     }
 
     private void validarBusqueda(LocalDate fecha, int personas) {

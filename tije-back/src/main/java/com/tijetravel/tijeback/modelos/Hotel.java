@@ -6,12 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "hoteles", uniqueConstraints = @UniqueConstraint(name = "uk_hotel_nombre_ciudad", columnNames = {
-        "nombre", "ciudad" }))
-public class Hotel {
+@Table(name = "hoteles")
+public class Hotel extends EntidadBase {
     public static final int PRECIO_MINIMO = 25000;
     public static final int PRECIO_MAXIMO = 55000;
     @Id

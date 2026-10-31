@@ -120,7 +120,7 @@ class ReservaServicioTest {
         @Test
         void rechazaReservaCuandoLaClaseDelVueloEstaCompleta() {
                 prepararBusquedas();
-                when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.TURISTA))
+                when(reservaRepositorio.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(100, ClaseVuelo.TURISTA))
                                 .thenReturn(1L);
 
                 try {
@@ -144,7 +144,7 @@ class ReservaServicioTest {
                 when(turistaRepositorio.findById(1)).thenReturn(Optional.of(turista));
                 when(vueloRepositorio.findById(100)).thenReturn(Optional.of(vuelo));
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
-                when(reservaRepositorio.existsByTuristaCodigoAndVueloNumero(1, 100))
+                when(reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNull(1, 100))
                                 .thenReturn(true);
 
                 try {

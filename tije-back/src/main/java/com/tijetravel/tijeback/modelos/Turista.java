@@ -12,13 +12,13 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "turistas")
-public class Turista {
+public class Turista extends EntidadBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
 
     // Nullable solo para registros anteriores a la incorporacion del DNI.
-    @Column(length = 8, unique = true)
+    @Column(length = 8)
     private String dni;
 
     @Column(nullable = false)
@@ -30,7 +30,7 @@ public class Turista {
     @Column(nullable = false)
     private String direccion;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(name = "telefono_fijo", nullable = false)
