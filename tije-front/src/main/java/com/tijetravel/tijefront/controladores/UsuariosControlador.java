@@ -29,19 +29,17 @@ import com.tijetravel.tijefront.formularios.ModificarUsuarioFormulario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/usuarios")
-public class UsuariosControlador {
-    private final AutenticacionApiCliente autenticacionApi;
+public class UsuariosControlador extends ControladorAdministracion {
     private final UsuariosApiCliente usuariosApi;
     private final TuristasApiCliente turistasApi;
 
     public UsuariosControlador(AutenticacionApiCliente autenticacionApi,
             UsuariosApiCliente usuariosApi, TuristasApiCliente turistasApi) {
-        this.autenticacionApi = autenticacionApi;
+        super(autenticacionApi);
         this.usuariosApi = usuariosApi;
         this.turistasApi = turistasApi;
     }
@@ -248,22 +246,6 @@ public class UsuariosControlador {
         return codigo.equals(usuario.getCodigo());
     }
 
-    private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null) {
-            return "redirect:/login";
-        }
-        SesionRespuesta usuario = autenticacionApi.obtenerSesion();
-        sesion.setAttribute("usuarioActual", usuario);
-        modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
-            respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar usuarios.");
-            return "error";
-        }
-        return null;
-    }
-
     private List<TuristaResumen> turistasSinCuenta() {
         return turistasApi.listarTitularesSinCuenta();
     }
@@ -309,5 +291,10 @@ public class UsuariosControlador {
             errores.rejectValue("contrasenia", "contrasenia.bytes",
                     "La contraseña es demasiado larga al codificarla. Usá menos caracteres.");
         }
+    }
+
+    @Override
+    protected String recursoGestionado() {
+        return "usuarios";
     }
 }

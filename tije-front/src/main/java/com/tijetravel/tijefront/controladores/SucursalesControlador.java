@@ -15,23 +15,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.SucursalesApiCliente;
-import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.SucursalResumen;
 import com.tijetravel.tijefront.formularios.GuardarSucursalFormulario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/sucursales")
-public class SucursalesControlador {
-    private final AutenticacionApiCliente autenticacionApi;
+public class SucursalesControlador extends ControladorAdministracion {
     private final SucursalesApiCliente sucursalesApi;
 
     public SucursalesControlador(AutenticacionApiCliente autenticacionApi, SucursalesApiCliente sucursalesApi) {
-        this.autenticacionApi = autenticacionApi;
+        super(autenticacionApi);
         this.sucursalesApi = sucursalesApi;
     }
 
@@ -149,37 +146,13 @@ public class SucursalesControlador {
         return "redirect:/sucursales";
     }
 
-    private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null)
-            return "redirect:/login";
-        SesionRespuesta usuario = autenticacionApi.obtenerSesion();
-        sesion.setAttribute("usuarioActual", usuario);
-        modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
-            respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar sucursales.");
-            return "error";
-        }
-        return null;
+    @Override
+    protected String recursoGestionado() {
+        return "sucursales";
     }
 
-    private String mostrarError(RestClientResponseException error, HttpServletResponse respuesta, Model modelo,
-            String vista, String mensajeConflicto) {
-        int estado = error.getStatusCode().value();
-        if (estado != 400 && estado != 403 && estado != 409)
-            throw error;
-        respuesta.setStatus(estado);
-        modelo.addAttribute("errorGestion", estado == 400 ? "La API rechazó los datos. Revisá los campos."
-                : estado == 403 ? "La API no permite esta operación. Revisá tus permisos y los datos relacionados."
-                        : mensajeConflicto);
-        return vista;
-    }
-
-    private String mostrarConexionIncierta(HttpServletResponse respuesta, Model modelo, String vista) {
-        respuesta.setStatus(503);
-        modelo.addAttribute("errorGestion",
-                "No pudimos confirmar la operación. Consultá el listado antes de intentarlo nuevamente.");
-        return vista;
+    @Override
+    protected String mensajeOperacionNoPermitida() {
+        return "La API no permite esta operación. Revisá tus permisos y los datos relacionados.";
     }
 }
