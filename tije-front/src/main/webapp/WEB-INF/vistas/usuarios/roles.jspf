@@ -1,16 +1,20 @@
 <%@ page pageEncoding="UTF-8" %>
-<details class="roles-resumen">
-    <summary>¿Qué puede hacer cada rol?</summary>
-    <ul>
+<%-- Ayuda chica al lado del campo Rol: se abre con el signo de pregunta. --%>
+<details class="ayuda">
+    <summary title="¿Qué puede hacer cada rol?" aria-label="¿Qué puede hacer cada rol?">?</summary>
+    <div class="ayuda__texto">
         <c:forEach items="${roles}" var="rolDisponible">
-            <li><strong><c:out value="${rolDisponible.nombre}" /></strong>:
-                <c:set var="separador" value="" />
-                <c:forEach items="${permisos}" var="permiso">
-                    <c:if test="${rolDisponible.tienePermiso(permiso.nombre)}"><c:out value="${separador}" /><c:out value="${permiso.descripcion}" /><c:set var="separador" value=", " /></c:if>
-                </c:forEach>
-                <c:if test="${empty rolDisponible.permisos}">sin permisos</c:if>.
-            </li>
+            <p><strong><c:out value="${rolDisponible.nombre}" /></strong>:
+                <c:choose>
+                    <c:when test="${fn:length(rolDisponible.permisos) == fn:length(permisos)}">todos los permisos</c:when>
+                    <c:when test="${empty rolDisponible.permisos}">sin permisos</c:when>
+                    <c:otherwise>
+                        <%-- Todo en una linea para que no queden espacios antes de las comas --%>
+                        <c:set var="separador" value="" />
+                        <c:forEach items="${permisos}" var="permiso"><c:if test="${rolDisponible.tienePermiso(permiso.nombre)}"><c:out value="${separador}" /><c:out value="${permiso.descripcion}" /><c:set var="separador" value=", " /></c:if></c:forEach>
+                    </c:otherwise>
+                </c:choose>
+            </p>
         </c:forEach>
-    </ul>
-    <p><a href="<c:url value='/roles'/>">Editar los permisos de los roles</a></p>
+    </div>
 </details>

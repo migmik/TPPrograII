@@ -19,8 +19,12 @@
                             <c:out value="${mensajeExito}" />
                         </p>
                     </c:if>
-                    <p><a href="<c:url value='/usuarios/nuevo'/>">Crear usuario</a> |
-                        <a href="<c:url value='/roles'/>">Roles y permisos</a> | <a href="<c:url value='/bajas/usuarios'/>">Ver dados de baja</a></p>
+                    <c:set var="rutaModulo" value="usuarios" />
+                    <c:set var="estadoListado" value="activos" />
+                    <c:set var="verBajas" value="true" />
+                    <c:set var="textoAgregar" value="Agregar usuario" />
+                    <c:set var="urlAgregar" value="/usuarios/nuevo" />
+                    <%@ include file="../fragmentos/barra-listado.jspf" %>
                     <form class="filter-form" method="get" action="<c:url value='/usuarios'/>">
                         <div class="filter-field"><label for="codigoRol">Rol</label>
                         <select id="codigoRol" name="codigoRol">

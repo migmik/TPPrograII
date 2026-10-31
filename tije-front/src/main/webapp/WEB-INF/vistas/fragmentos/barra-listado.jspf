@@ -1,0 +1,29 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Barra de arriba de cada listado: Activos / Dados de baja y el boton para agregar.
+     Antes de incluirla se definen con c:set:
+       rutaModulo    ruta del listado, por ejemplo "hoteles"
+       estadoListado "activos" o "bajas"
+       verBajas      true si el usuario puede ver los dados de baja
+       textoAgregar  texto del boton (vacio para no mostrarlo)
+       urlAgregar    a donde lleva el boton --%>
+<c:if test="${verBajas or not empty textoAgregar}">
+    <div class="barra-listado">
+        <c:if test="${verBajas}">
+            <nav class="filtro-estado" aria-label="Estado de los registros">
+                <c:choose>
+                    <c:when test="${estadoListado == 'bajas'}">
+                        <a href="<c:url value='/${rutaModulo}'/>">Activos</a>
+                        <a href="<c:url value='/bajas/${rutaModulo}'/>" aria-current="page">Dados de baja</a>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="<c:url value='/${rutaModulo}'/>" aria-current="page">Activos</a>
+                        <a href="<c:url value='/bajas/${rutaModulo}'/>">Dados de baja</a>
+                    </c:otherwise>
+                </c:choose>
+            </nav>
+        </c:if>
+        <c:if test="${not empty textoAgregar}">
+            <a class="button" href="<c:url value='${urlAgregar}'/>"><c:out value="${textoAgregar}" /></a>
+        </c:if>
+    </div>
+</c:if>

@@ -475,6 +475,25 @@ table {
     background: #fff;
 }
 
+/* En pantallas anchas la tabla ocupa todo el ancho y el texto se parte en vez de cortarse.
+   En el celular sigue con desplazamiento horizontal. */
+@media (min-width: 701px) {
+    table {
+        display: table;
+        white-space: normal;
+    }
+
+    /* Si las acciones no entran en una linea, bajan alineadas a la izquierda */
+    td a {
+        white-space: nowrap;
+        margin: .1rem .5rem .1rem 0;
+    }
+
+    td a + a {
+        margin-left: 0;
+    }
+}
+
 caption {
     text-align: left;
     font-weight: 700;
@@ -760,12 +779,13 @@ section[aria-label="Resultado de disponibilidad"] {
 }
 
 /* Inicio con resultados: el buscador queda arriba y compacto */
+/* Con resultados el buscador queda centrado en el fondo azul: mismo espacio arriba y abajo */
 .search-hero--compacta {
-    padding-top: 0;
+    padding-block: clamp(1.25rem, 3vw, 2rem);
 }
 
 .search-hero--compacta .search-panel {
-    margin-top: 0;
+    margin: 0;
 }
 
 .combinaciones .combinacion {
@@ -803,26 +823,75 @@ section[aria-label="Resultado de disponibilidad"] {
     color: #316d91;
 }
 
-/* Activos / dados de baja */
-.filtro-estado {
+/* Barra de los listados: Activos / Dados de baja y el boton para agregar */
+.barra-listado {
     display: flex;
-    gap: .5rem;
-    margin: 0 0 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 0 0 1.25rem;
 }
 
-.filtro-estado a,
-.filtro-estado span {
-    padding: .35rem .8rem;
-    border: 1px solid #c8dbe6;
-    border-radius: 999px;
+.filtro-estado {
+    display: inline-flex;
+    border: 1px solid #316d91;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.filtro-estado a {
+    padding: .5rem 1rem;
+    color: #316d91;
+    background: #fff;
     font-weight: 600;
     text-decoration: none;
 }
 
-.filtro-estado span[aria-current] {
+.filtro-estado a + a {
+    border-left: 1px solid #316d91;
+}
+
+.filtro-estado a:hover {
+    background: #eaf4f9;
+}
+
+.filtro-estado a[aria-current] {
     color: #fff;
     background: #316d91;
-    border-color: #316d91;
+}
+
+/* Casillas y opciones: no usan el ancho completo de los otros campos */
+input[type="checkbox"],
+input[type="radio"] {
+    display: inline-block;
+    width: 1.1rem;
+    height: 1.1rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 auto;
+    accent-color: #316d91;
+}
+
+fieldset {
+    margin: 0 0 1.1rem;
+    padding: .8rem 1rem;
+    border: 1px solid #c8dbe6;
+    border-radius: 8px;
+}
+
+legend {
+    padding: 0 .3rem;
+    font-weight: 600;
+}
+
+fieldset label {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: .35rem 0;
+    font-weight: normal;
 }
 
 /* Roles y permisos */
@@ -831,35 +900,83 @@ section[aria-label="Resultado de disponibilidad"] {
     padding-left: 1.1rem;
 }
 
-.permisos-casillas {
-    display: grid;
-    gap: .4rem;
-    border: 1px solid #c8dbe6;
-    border-radius: 8px;
-    padding: .8rem 1rem;
-}
-
-.permisos-casillas label {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    font-weight: normal;
-}
-
 .permisos-casillas small {
     color: #5b7184;
 }
 
-.roles-resumen {
-    margin: .25rem 0 1rem;
-    padding: .6rem .9rem;
-    background: #f2f6f9;
-    border-radius: 8px;
+/* Campo con un signo de pregunta que abre una ayuda chica */
+.campo {
+    margin: 0 0 1.1rem;
 }
 
-.roles-resumen summary {
+.campo-con-ayuda {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-bottom: .35rem;
+}
+
+.campo-con-ayuda label {
+    margin: 0;
+}
+
+.ayuda {
+    position: relative;
+}
+
+.ayuda summary {
+    display: grid;
+    place-items: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background: #316d91;
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: 600;
+    list-style: none;
+}
+
+.ayuda summary::-webkit-details-marker {
+    display: none;
+}
+
+.ayuda__texto {
+    position: absolute;
+    z-index: 5;
+    top: 1.6rem;
+    left: 0;
+    width: min(320px, 80vw);
+    padding: .6rem .8rem;
+    background: #fff;
+    border: 1px solid #c8dbe6;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(20, 50, 70, .15);
+    font-size: .85rem;
+}
+
+.ayuda__texto p {
+    margin: 0 0 .4rem;
+}
+
+/* Resultados de la busqueda del inicio */
+.search-results__aviso {
+    margin: 0 0 .5rem;
+    color: #526b7c;
+    font-size: .92rem;
+}
+
+.search-results__booking + .search-results__columns {
+    margin-top: 1.5rem;
+}
+
+.search-results__booking .combinaciones li {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.combinaciones .search-results__reserve-link {
+    justify-self: start;
 }
 
 @media (max-width: 700px) {

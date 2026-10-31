@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" session="false" %>
     <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+    <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
         <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
             <!DOCTYPE html>
             <html lang="es">
@@ -43,8 +44,11 @@
                                     autocomplete="new-password" showPassword="false" />
                                 <form:errors path="contrasenia" cssClass="error" />
                             </p>
-                            <p>
-                                <form:label path="codigoRol">Rol</form:label>
+                            <div class="campo">
+                                <div class="campo-con-ayuda">
+                                    <form:label path="codigoRol">Rol</form:label>
+                                    <%@ include file="roles.jspf" %>
+                                </div>
                                 <form:select path="codigoRol" required="required">
                                     <form:option value="" label="Elegí un rol" />
                                     <c:forEach items="${roles}" var="rol">
@@ -55,8 +59,7 @@
                                     </c:forEach>
                                 </form:select>
                                 <form:errors path="codigoRol" cssClass="error" />
-                            </p>
-                            <%@ include file="roles.jspf" %>
+                            </div>
                             <p>
                                 <form:label path="codigoTurista">Turista asociado</form:label>
                                 <form:select path="codigoTurista" aria-describedby="ayudaTurista">

@@ -26,8 +26,9 @@
             </c:otherwise>
         </c:choose>
     </div>
-    <c:if test="${not empty usuarioActual}">
-        <%-- Segunda fila: solo lo que permite el rol del usuario. --%>
+    <c:if test="${not empty usuarioActual and (usuarioActual.tienePermiso('CONSULTAR')
+            or usuarioActual.tienePermiso('VER_BALANCE') or usuarioActual.tienePermiso('ADMINISTRAR_USUARIOS'))}">
+        <%-- Segunda fila: solo lo que permite el rol del usuario. Si no tiene nada no se muestra. --%>
         <nav class="site-nav-gestion" aria-label="Opciones de tu rol">
             <div class="site-nav-gestion__inner">
                 <c:if test="${usuarioActual.tienePermiso('CONSULTAR')}">
@@ -42,27 +43,12 @@
                         </c:otherwise>
                     </c:choose>
                 </c:if>
-                <c:if test="${usuarioActual.tienePermiso('CREAR_RESERVAS')}">
-                    <a href="<c:url value='/reservas/nueva'/>">Nueva reserva</a>
-                </c:if>
-                <c:if test="${usuarioActual.tienePermiso('ADMINISTRAR_TURISTAS')}">
-                    <a href="<c:url value='/turistas/nuevo'/>">Nuevo turista</a>
-                </c:if>
+                <%-- Los botones para agregar quedan en cada listado, no aca. --%>
                 <c:if test="${usuarioActual.tienePermiso('VER_BALANCE')}">
                     <a href="<c:url value='/reservas/balance'/>">Balance</a>
                 </c:if>
-                <c:if test="${usuarioActual.tienePermiso('ADMINISTRAR_HOTELES')}">
-                    <a href="<c:url value='/hoteles/nuevo'/>">Nuevo hotel</a>
-                </c:if>
-                <c:if test="${usuarioActual.tienePermiso('ADMINISTRAR_VUELOS')}">
-                    <a href="<c:url value='/vuelos/nuevo'/>">Nuevo vuelo</a>
-                </c:if>
-                <c:if test="${usuarioActual.tienePermiso('ADMINISTRAR_SUCURSALES')}">
-                    <a href="<c:url value='/sucursales/nuevo'/>">Nueva sucursal</a>
-                </c:if>
                 <c:if test="${usuarioActual.tienePermiso('ADMINISTRAR_USUARIOS')}">
                     <a href="<c:url value='/usuarios'/>">Usuarios</a>
-                    <a href="<c:url value='/roles'/>">Roles y permisos</a>
                 </c:if>
             </div>
         </nav>

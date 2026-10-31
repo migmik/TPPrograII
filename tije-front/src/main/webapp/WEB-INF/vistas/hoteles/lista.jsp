@@ -14,6 +14,13 @@
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main>
                     <h1>Hoteles</h1>
+                    <c:set var="gestionaModulo" value="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_HOTELES')}" />
+                    <c:set var="rutaModulo" value="hoteles" />
+                    <c:set var="estadoListado" value="activos" />
+                    <c:set var="verBajas" value="${gestionaModulo}" />
+                    <c:set var="textoAgregar" value="${gestionaModulo ? 'Agregar hotel' : ''}" />
+                    <c:set var="urlAgregar" value="/hoteles/nuevo" />
+                    <%@ include file="../fragmentos/barra-listado.jspf" %>
                     <form class="filter-form" method="get" action="<c:url value='/hoteles'/>">
                         <div class="filter-field"><label for="ciudad">Ciudad</label>
                         <select id="ciudad" name="ciudad"><option value="">Todas</option><c:forEach items="${ciudades}" var="opcion"><option value="<c:out value='${opcion}'/>" ${ciudadBusqueda == opcion ? 'selected' : ''}><c:out value="${opcion}"/></option></c:forEach></select></div>
@@ -24,9 +31,6 @@
                         <select id="orden" name="orden"><option value="codigo">Código</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select></div>
                         <button type="submit">Buscar</button>
                     </form>
-                    <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_HOTELES')}">
-                        <p><a href="<c:url value='/hoteles/nuevo'/>">Agregar hotel</a> | <a href="<c:url value='/bajas/hoteles'/>">Ver dados de baja</a></p>
-                    </c:if>
                     <c:if test="${not empty mensajeExito}">
                         <p role="status">
                             <c:out value="${mensajeExito}" />
@@ -74,7 +78,7 @@
                                                     <a
                                                         href="<c:url value='/hoteles/${hotel.codigo}/editar'/>">Editar</a>
                                                     <a
-                                                        href="<c:url value='/hoteles/${hotel.codigo}/eliminar'/>">Eliminar</a>
+                                                        href="<c:url value='/hoteles/${hotel.codigo}/eliminar'/>">Dar de baja</a>
                                                 </td>
                                             </c:if>
                                         </tr>
