@@ -1,5 +1,6 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.servicios.impl.VueloServicioImpl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -33,7 +34,7 @@ class VueloServicioTest {
 
         @BeforeEach
         void prepararServicio() {
-                servicio = new VueloServicio(
+                servicio = new VueloServicioImpl(
                                 vueloRepositorio,
                                 reservaRepositorio,
                                 new AutorizacionServicio(),

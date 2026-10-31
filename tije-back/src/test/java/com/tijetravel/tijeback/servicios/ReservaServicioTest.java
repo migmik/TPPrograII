@@ -1,5 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
+import com.tijetravel.tijeback.servicios.impl.ReservaServicioImpl;
+import com.tijetravel.tijeback.servicios.impl.DisponibilidadServicioImpl;
 import com.tijetravel.tijeback.DnisPrueba;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -63,13 +65,13 @@ class ReservaServicioTest {
 
         @BeforeEach
         void prepararServicio() {
-                servicio = new ReservaServicio(
+                servicio = new ReservaServicioImpl(
                                 reservaRepositorio,
                                 turistaRepositorio,
                                 vueloRepositorio,
                                 hotelRepositorio,
                                 new AutorizacionServicio(),
-                                new DisponibilidadServicio(reservaRepositorio, vueloRepositorio, hotelRepositorio),
+                                new DisponibilidadServicioImpl(reservaRepositorio, vueloRepositorio, hotelRepositorio),
                                 org.mockito.Mockito.mock(BloqueoEscrituras.class));
 
                 sucursal = conCodigo(new Sucursal("Av. Siempre Viva 100", "1234"), "codigo", 1);

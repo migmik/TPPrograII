@@ -1,4 +1,4 @@
-package com.tijetravel.tijeback.servicios;
+package com.tijetravel.tijeback.servicios.impl;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
