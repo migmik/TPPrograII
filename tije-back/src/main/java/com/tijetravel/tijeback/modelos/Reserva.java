@@ -111,30 +111,45 @@ public class Reserva {
             TipoHospedaje tipoHospedaje,
             LocalDate fechaLlegada,
             LocalDate fechaPartida) {
-        validarFechas(fechaLlegada, fechaPartida);
-        this.turista = ValidacionModelo.obligatorio(turista, "turista");
-        if (this.sucursalContratacion == null) {
-            this.sucursalContratacion = ValidacionModelo.obligatorio(
-                    turista.getSucursalContratacion(), "sucursalContratacion");
-        }
-        this.vuelo = ValidacionModelo.obligatorio(vuelo, "vuelo");
-        this.hotel = ValidacionModelo.obligatorio(hotel, "hotel");
-        this.claseVuelo = ValidacionModelo.obligatorio(claseVuelo, "claseVuelo");
-        this.tipoHospedaje = ValidacionModelo.obligatorio(tipoHospedaje, "tipoHospedaje");
-        this.fechaLlegada = fechaLlegada;
-        this.fechaPartida = fechaPartida;
         if (pagada) {
             throw new IllegalStateException("Una reserva pagada no se puede modificar");
         }
-        this.precioVuelo = vuelo.getPrecio() * (claseVuelo == ClaseVuelo.PRIMERA ? 110 : 100) / 100;
+        validarFechas(fechaLlegada, fechaPartida);
+        ValidacionModelo.obligatorio(turista, "turista");
+        ValidacionModelo.obligatorio(vuelo, "vuelo");
+        ValidacionModelo.obligatorio(hotel, "hotel");
+        ValidacionModelo.obligatorio(claseVuelo, "claseVuelo");
+        ValidacionModelo.obligatorio(tipoHospedaje, "tipoHospedaje");
+        if (this.sucursalContratacion == null) {
+            ValidacionModelo.obligatorio(turista.getSucursalContratacion(), "sucursalContratacion");
+        }
+
+        // El precio se calcula antes de asignar para no dejar la reserva a medio modificar.
+        long nuevoPrecioVuelo = aplicarRecargo(vuelo.getPrecio(), claseVuelo.getPorcentajeRecargo());
         long noches = ChronoUnit.DAYS.between(fechaLlegada, fechaPartida);
-        long hotelBase = noches * hotel.getPrecioNochePersona();
-        long hotelFinal = hotelBase * (tipoHospedaje == TipoHospedaje.PENSION_COMPLETA ? 105 : 100) / 100;
-        if (hotelFinal > Integer.MAX_VALUE - precioVuelo) {
+        long nuevoPrecioHotel = aplicarRecargo(noches * hotel.getPrecioNochePersona(),
+                tipoHospedaje.getPorcentajeRecargo());
+        if (nuevoPrecioHotel > Integer.MAX_VALUE - nuevoPrecioVuelo) {
             throw new IllegalArgumentException("La estadía excede el importe máximo permitido");
         }
-        this.precioHotel = (int) hotelFinal;
+
+        if (this.sucursalContratacion == null) {
+            this.sucursalContratacion = turista.getSucursalContratacion();
+        }
+        this.turista = turista;
+        this.vuelo = vuelo;
+        this.hotel = hotel;
+        this.claseVuelo = claseVuelo;
+        this.tipoHospedaje = tipoHospedaje;
+        this.fechaLlegada = fechaLlegada;
+        this.fechaPartida = fechaPartida;
+        this.precioVuelo = (int) nuevoPrecioVuelo;
+        this.precioHotel = (int) nuevoPrecioHotel;
         this.total = precioVuelo + precioHotel;
+    }
+
+    private static long aplicarRecargo(long importe, int porcentaje) {
+        return importe * (100 + porcentaje) / 100;
     }
 
     public void confirmarPago() {

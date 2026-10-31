@@ -11,6 +11,7 @@ import jakarta.persistence.UniqueConstraint;
 @Entity
 @Table(name = "sucursales", uniqueConstraints = @UniqueConstraint(name = "uk_sucursal_direccion", columnNames = "direccion"))
 public class Sucursal {
+    public static final String CIUDAD_SIN_ESPECIFICAR = "Sin especificar";
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
@@ -28,21 +29,20 @@ public class Sucursal {
     }
 
     public Sucursal(String direccion, String telefono) {
-        this(direccion, telefono, "Sin especificar");
+        this(direccion, telefono, CIUDAD_SIN_ESPECIFICAR);
     }
 
     public Sucursal(String direccion, String telefono, String ciudad) {
         actualizarDatos(direccion, telefono, ciudad);
     }
 
-    public void actualizarDatos(String direccion, String telefono) {
-        actualizarDatos(direccion, telefono, this.ciudad);
-    }
-
     public void actualizarDatos(String direccion, String telefono, String ciudad) {
-        this.direccion = ValidacionModelo.textoObligatorio(direccion, "direccion");
-        this.telefono = ValidacionModelo.textoObligatorio(telefono, "telefono");
-        this.ciudad = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
+        String direccionValidada = ValidacionModelo.textoObligatorio(direccion, "direccion");
+        String telefonoValidado = ValidacionModelo.textoObligatorio(telefono, "telefono");
+        String ciudadValidada = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
+        this.direccion = direccionValidada;
+        this.telefono = telefonoValidado;
+        this.ciudad = ciudadValidada;
     }
 
     public Integer getCodigo() {
@@ -53,7 +53,9 @@ public class Sucursal {
         return direccion;
     }
 
-    public String getCiudad() { return ciudad; }
+    public String getCiudad() {
+        return ciudad;
+    }
 
     public String getTelefono() {
         return telefono;

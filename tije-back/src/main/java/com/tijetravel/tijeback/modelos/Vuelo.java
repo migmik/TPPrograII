@@ -13,6 +13,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "vuelos")
 public class Vuelo {
+    public static final int PRECIO_MINIMO = 150000;
+    public static final int PRECIO_MAXIMO = 300000;
     @Id
     private Integer numero;
 
@@ -49,22 +51,12 @@ public class Vuelo {
             int totalPlazas,
             int plazasTurista,
             int plazasPrimera) {
-        this(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, 150000);
+        this(numero, fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, PRECIO_MINIMO);
     }
 
     public Vuelo(int numero, LocalDateTime fechaYHora, String origen, String destino,
             int totalPlazas, int plazasTurista, int plazasPrimera, int precio) {
         this.numero = ValidacionModelo.enteroPositivo(numero, "numero");
-        actualizarDatos(fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
-    }
-
-    public void actualizarDatos(
-            LocalDateTime fechaYHora,
-            String origen,
-            String destino,
-            int totalPlazas,
-            int plazasTurista,
-            int plazasPrimera) {
         actualizarDatos(fechaYHora, origen, destino, totalPlazas, plazasTurista, plazasPrimera, precio);
     }
 
@@ -77,16 +69,19 @@ public class Vuelo {
         if (plazasTurista + plazasPrimera > totalPlazas) {
             throw new IllegalArgumentException("Las plazas por clase no pueden superar el total del vuelo");
         }
+        String origenValidado = ValidacionModelo.textoObligatorio(origen, "origen");
+        String destinoValidado = ValidacionModelo.textoObligatorio(destino, "destino");
+        if (precio < PRECIO_MINIMO || precio > PRECIO_MAXIMO || precio % 10000 != 0) {
+            throw new IllegalArgumentException("El precio del vuelo debe estar entre " + PRECIO_MINIMO + " y "
+                    + PRECIO_MAXIMO + " y ser multiplo de 10000");
+        }
 
         this.fechaYHora = fechaYHora;
-        this.origen = ValidacionModelo.textoObligatorio(origen, "origen");
-        this.destino = ValidacionModelo.textoObligatorio(destino, "destino");
+        this.origen = origenValidado;
+        this.destino = destinoValidado;
         this.totalPlazas = totalPlazas;
         this.plazasTurista = plazasTurista;
         this.plazasPrimera = plazasPrimera;
-        if (precio < 150000 || precio > 300000 || precio % 10000 != 0) {
-            throw new IllegalArgumentException("El precio del vuelo debe estar entre 150000 y 300000 y ser multiplo de 10000");
-        }
         this.precio = precio;
     }
 
