@@ -2,7 +2,6 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
 import java.util.List;
-import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,12 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.CrearTuristaSolicitud;
 import com.tijetravel.tijeback.api.dto.ModificarTuristaSolicitud;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.TuristaRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.TuristaMapeador;
-import com.tijetravel.tijeback.servicios.TuristaServicio;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
+import com.tijetravel.tijeback.servicios.TuristaServicio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;

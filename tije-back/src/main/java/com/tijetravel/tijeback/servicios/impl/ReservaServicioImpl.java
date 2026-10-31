@@ -7,8 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
@@ -28,8 +28,8 @@ import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 import com.tijetravel.tijeback.servicios.AutorizacionServicio;
 import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
-import com.tijetravel.tijeback.servicios.ReservaServicio;
 import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
+import com.tijetravel.tijeback.servicios.ReservaServicio;
 
 @Service
 @Transactional(readOnly = true)

@@ -1,8 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
-import jakarta.servlet.http.HttpSession;
-import com.tijetravel.tijefront.dto.PaginaTuristasRespuesta;
 import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,14 +9,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.SucursalesApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
+import com.tijetravel.tijefront.dto.PaginaTuristasRespuesta;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.TuristaRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarTuristaFormulario;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
