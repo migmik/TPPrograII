@@ -136,6 +136,13 @@ class CatalogosApiIntegracionTest {
                 .queryParam("sugerencias", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+
+        // Sin fecha busca los proximos vuelos; el de los datos de prueba ya salio
+        mockMvc.perform(get("/api/v1/vuelos/buscar")
+                .queryParam("origen", "Buenos Aires").queryParam("destino", "Cordoba")
+                .queryParam("personas", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

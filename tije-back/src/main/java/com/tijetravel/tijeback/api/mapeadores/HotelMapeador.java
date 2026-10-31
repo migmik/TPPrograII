@@ -17,6 +17,8 @@ public class HotelMapeador extends MapeadorBase<Hotel, HotelRespuesta> {
                 hotel.getCiudad(),
                 hotel.getTelefono(),
                 hotel.getCapacidadTotal(),
-                hotel.getPrecioNochePersona());
+                hotel.getPrecioNochePersona(),
+                hotel.getFechaCreacion(),
+                hotel.getFechaBaja());
     }
 }

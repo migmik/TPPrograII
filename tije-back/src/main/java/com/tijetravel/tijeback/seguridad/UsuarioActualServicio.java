@@ -26,12 +26,16 @@ public class UsuarioActualServicio {
         return usuario;
     }
 
-    /** Devuelve el usuario de la sesion o null si la consulta es anonima. */
+    /** Devuelve el usuario de la sesion, o null si la consulta es anonima o el usuario se dio de baja. */
     public Usuario buscar(Authentication autenticacion) {
         if (autenticacion == null || !(autenticacion.getPrincipal() instanceof UsuarioAutenticado)) {
             return null;
         }
         UsuarioAutenticado principal = (UsuarioAutenticado) autenticacion.getPrincipal();
-        return usuarioRepositorio.findById(principal.getCodigo()).orElse(null);
+        Usuario usuario = usuarioRepositorio.findById(principal.getCodigo()).orElse(null);
+        if (usuario == null || !usuario.estaActivo()) {
+            return null;
+        }
+        return usuario;
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.HttpClientErrorException;
 
+import com.tijetravel.tijefront.SesionesPrueba;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.SucursalesApiCliente;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
@@ -113,7 +114,7 @@ class SucursalesControladorTest {
 
     private SesionRespuesta usuario(String rol) {
         SesionRespuesta usuario = new SesionRespuesta();
-        usuario.setRol(rol);
+        SesionesPrueba.asignar(usuario, rol);
         return usuario;
     }
 }

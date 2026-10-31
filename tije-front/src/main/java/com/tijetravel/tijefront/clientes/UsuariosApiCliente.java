@@ -24,10 +24,11 @@ public class UsuariosApiCliente {
         return listar(null);
     }
 
-    public PaginaUsuariosRespuesta listarPagina(String rol, Integer codigo, String nombre, String dni, int pagina) {
+    public PaginaUsuariosRespuesta listarPagina(Integer codigoRol, Integer codigo, String nombre, String dni,
+            int pagina) {
         RutaConsulta ruta = new RutaConsulta("/api/v1/usuarios/pagina")
                 .parametro("pagina", pagina).parametro("tamanio", 20)
-                .parametro("rol", rol).parametro("codigo", codigo)
+                .parametro("codigoRol", codigoRol).parametro("codigo", codigo)
                 .parametro("nombre", nombre).parametro("dni", dni);
         PaginaUsuariosRespuesta resultado = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve().body(PaginaUsuariosRespuesta.class);
@@ -35,8 +36,8 @@ public class UsuariosApiCliente {
         return resultado;
     }
 
-    public List<UsuarioRespuesta> listar(String rol) {
-        RutaConsulta ruta = new RutaConsulta("/api/v1/usuarios").parametro("rol", rol);
+    public List<UsuarioRespuesta> listar(Integer codigoRol) {
+        RutaConsulta ruta = new RutaConsulta("/api/v1/usuarios").parametro("codigoRol", codigoRol);
         UsuarioRespuesta[] usuarios = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve().body(UsuarioRespuesta[].class);
         if (usuarios == null) {

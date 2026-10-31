@@ -17,6 +17,7 @@ import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
 import com.tijetravel.tijeback.modelos.BalanceVentas;
+import com.tijetravel.tijeback.modelos.EntidadBase;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Turista;
@@ -80,7 +81,7 @@ public class ReservaServicioImpl implements ReservaServicio {
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
 
-        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumero(codigoTurista, numeroVuelo)) {
+        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNull(codigoTurista, numeroVuelo)) {
             throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
         }
         validarCompatibilidad(vuelo, hotel, fechaLlegada);
@@ -105,7 +106,7 @@ public class ReservaServicioImpl implements ReservaServicio {
         if (codigoGrupoFamiliar != null) {
             return reservaRepositorio.listarPorTitularYFamiliares(codigoGrupoFamiliar);
         }
-        return reservaRepositorio.findAll(Sort.by("codigo"));
+        return reservaRepositorio.findByFechaBajaIsNull(Sort.by("codigo"));
     }
 
     @Override
@@ -182,7 +183,7 @@ public class ReservaServicioImpl implements ReservaServicio {
         Vuelo vuelo = encontrarVuelo(numeroVuelo);
         Hotel hotel = encontrarHotel(codigoHotel);
 
-        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndCodigoNot(
+        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNullAndCodigoNot(
                 codigoTurista, numeroVuelo, codigoReserva)) {
             throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
         }
@@ -203,14 +204,45 @@ public class ReservaServicioImpl implements ReservaServicio {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer codigoReserva) {
+    public void darDeBaja(Usuario actor, Integer codigoReserva) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
         bloqueoEscrituras.adquirir();
         Reserva reserva = encontrarPorId(codigoReserva);
         if (reserva.isPagada()) {
-            throw new OperacionNoPermitidaException("Una reserva pagada no se puede eliminar");
+            throw new OperacionNoPermitidaException("Una reserva pagada no se puede dar de baja");
         }
-        reservaRepositorio.delete(reserva);
+        reserva.darDeBaja(EntidadBase.ahora());
+    }
+
+    @Override
+    public List<Reserva> listarBajasPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
+        return reservaRepositorio.findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Reserva reactivar(Usuario actor, Integer codigoReserva) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
+        bloqueoEscrituras.adquirir();
+        Reserva reserva = reservaRepositorio.findById(codigoReserva).orElse(null);
+        if (reserva == null || reserva.estaActivo()) {
+            throw new EntidadNoEncontradaException("No hay una reserva dada de baja con el codigo " + codigoReserva);
+        }
+        if (!reserva.getTurista().estaActivo() || !reserva.getVuelo().estaActivo()
+                || !reserva.getHotel().estaActivo()) {
+            throw new OperacionNoPermitidaException(
+                    "Para reactivar la reserva, el turista, el vuelo y el hotel tienen que estar activos");
+        }
+        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndFechaBajaIsNull(
+                reserva.getTurista().getCodigo(), reserva.getVuelo().getNumero())) {
+            throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
+        }
+        disponibilidadServicio.verificarCapacidadVuelo(reserva.getVuelo(), reserva.getClaseVuelo(), codigoReserva);
+        disponibilidadServicio.verificarCapacidadHotel(reserva.getHotel(), reserva.getFechaLlegada(),
+                reserva.getFechaPartida(), codigoReserva);
+        reserva.reactivar();
+        return reserva;
     }
 
     private void validarCompatibilidad(Vuelo vuelo, Hotel hotel, LocalDate fechaLlegada) {
@@ -224,7 +256,7 @@ public class ReservaServicioImpl implements ReservaServicio {
 
     private Reserva encontrarPorId(Integer codigo) {
         Reserva reserva = reservaRepositorio.findById(codigo).orElse(null);
-        if (reserva == null) {
+        if (reserva == null || !reserva.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro la reserva " + codigo);
         }
         return reserva;
@@ -232,7 +264,7 @@ public class ReservaServicioImpl implements ReservaServicio {
 
     private Turista encontrarTurista(Integer codigo) {
         Turista turista = turistaRepositorio.findById(codigo).orElse(null);
-        if (turista == null) {
+        if (turista == null || !turista.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el turista " + codigo);
         }
         return turista;
@@ -240,7 +272,7 @@ public class ReservaServicioImpl implements ReservaServicio {
 
     private Vuelo encontrarVuelo(Integer numero) {
         Vuelo vuelo = vueloRepositorio.findById(numero).orElse(null);
-        if (vuelo == null) {
+        if (vuelo == null || !vuelo.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el vuelo " + numero);
         }
         return vuelo;
@@ -248,7 +280,7 @@ public class ReservaServicioImpl implements ReservaServicio {
 
     private Hotel encontrarHotel(Integer codigo) {
         Hotel hotel = hotelRepositorio.findById(codigo).orElse(null);
-        if (hotel == null) {
+        if (hotel == null || !hotel.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el hotel " + codigo);
         }
         return hotel;

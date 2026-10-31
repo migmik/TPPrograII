@@ -7,14 +7,19 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.tijetravel.tijeback.modelos.Sucursal;
 
+/** Las consultas devuelven solo sucursales activas, salvo las que dicen "Baja". */
 public interface SucursalRepositorio extends JpaRepository<Sucursal, Integer> {
 
-    List<Sucursal> findByCiudadIgnoreCaseOrderByCodigo(String ciudad);
+    List<Sucursal> findByFechaBajaIsNullOrderByCodigo();
 
-    @Query("select distinct s.ciudad from Sucursal s order by s.ciudad")
+    List<Sucursal> findByCiudadIgnoreCaseAndFechaBajaIsNullOrderByCodigo(String ciudad);
+
+    List<Sucursal> findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+
+    @Query("select distinct s.ciudad from Sucursal s where s.fechaBaja is null order by s.ciudad")
     List<String> listarCiudades();
 
-    boolean existsByDireccionIgnoreCase(String direccion);
+    boolean existsByDireccionIgnoreCaseAndFechaBajaIsNull(String direccion);
 
-    boolean existsByDireccionIgnoreCaseAndCodigoNot(String direccion, Integer codigo);
+    boolean existsByDireccionIgnoreCaseAndFechaBajaIsNullAndCodigoNot(String direccion, Integer codigo);
 }

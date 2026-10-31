@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
@@ -77,8 +78,8 @@ class ModelosTest {
 
         @Test
         void mantieneElPolimorfismoDePermisos() {
-                Administrador administrador = new Administrador("admin", "clave", DnisPrueba.siguiente());
-                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+                Empleado administrador = new Empleado("admin", "clave", DnisPrueba.siguiente(), RolesPrueba.administrador());
+                Empleado vendedor = new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor());
 
                 assertTrue(administrador.tienePermiso(Permiso.ADMINISTRAR_USUARIOS));
                 assertTrue(vendedor.tienePermiso(Permiso.ADMINISTRAR_RESERVAS));
@@ -128,7 +129,7 @@ class ModelosTest {
                                 titular);
 
                 try {
-                        new Cliente("cliente", "clave", familiar);
+                        new Cliente("cliente", "clave", familiar, RolesPrueba.cliente());
                         fail("Se esperaba IllegalArgumentException");
                 } catch (IllegalArgumentException esperada) {
                         // Es la excepcion que se esperaba.
@@ -144,8 +145,8 @@ class ModelosTest {
                 ReflectionTestUtils.setField(titular, "codigo", 1);
                 ReflectionTestUtils.setField(familiar, "codigo", 2);
                 ReflectionTestUtils.setField(otro, "codigo", 3);
-                Cliente cliente = new Cliente("cliente", "clave", titular);
-                Vendedor vendedor = new Vendedor("vendedor", "clave", DnisPrueba.siguiente());
+                Cliente cliente = new Cliente("cliente", "clave", titular, RolesPrueba.cliente());
+                Empleado vendedor = new Empleado("vendedor", "clave", DnisPrueba.siguiente(), RolesPrueba.vendedor());
 
                 assertTrue(cliente.puedeVerTurista(titular));
                 assertTrue(cliente.puedeVerTurista(familiar));

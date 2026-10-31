@@ -13,7 +13,8 @@ import com.tijetravel.tijeback.modelos.Usuario;
 
 /**
  * Operaciones sobre las reservas de vuelo y hotel. Un cliente solo puede
- * reservar y consultar para su grupo familiar.
+ * reservar y consultar para su grupo familiar. Las consultas solo devuelven
+ * reservas activas; una reserva dada de baja no ocupa lugar ni suma en el balance.
  */
 public interface ReservaServicio {
 
@@ -51,6 +52,20 @@ public interface ReservaServicio {
             Integer codigoHotel, ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada,
             LocalDate fechaPartida);
 
-    /** @throws OperacionNoPermitidaException si la reserva ya esta pagada */
-    void eliminar(Usuario actor, Integer codigoReserva);
+    /**
+     * Baja logica: la reserva libera su lugar en el vuelo y en el hotel.
+     *
+     * @throws OperacionNoPermitidaException si la reserva ya esta pagada
+     */
+    void darDeBaja(Usuario actor, Integer codigoReserva);
+
+    /** Reservas dadas de baja, de la mas reciente a la mas antigua. Requiere ADMINISTRAR_RESERVAS. */
+    List<Reserva> listarBajasPara(Usuario actor);
+
+    /**
+     * @throws OperacionNoPermitidaException si el turista, el vuelo o el hotel estan dados de baja
+     * @throws CapacidadExcedidaException si ya no hay lugar en el vuelo o en el hotel
+     * @throws EntidadDuplicadaException si el turista ya tiene otra reserva activa en ese vuelo
+     */
+    Reserva reactivar(Usuario actor, Integer codigoReserva);
 }

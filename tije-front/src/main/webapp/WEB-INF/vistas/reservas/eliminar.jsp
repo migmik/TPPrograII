@@ -12,13 +12,13 @@
 <body>
     <%@ include file="../fragmentos/navegacion.jspf" %>
     <main class="compact-page">
-        <h1>Eliminar reserva</h1>
+        <h1>Dar de baja reserva</h1>
         <%@ include file="resumen.jspf" %>
         <p>Esta acción elimina la reserva y libera sus plazas. No elimina al turista, el vuelo ni el hotel. No se puede deshacer.</p>
         <c:if test="${not empty errorOperacion}"><p class="error" role="alert"><c:out value="${errorOperacion}"/></p></c:if>
         <form method="post" action="<c:url value='/reservas/${reserva.codigo}/eliminar'/>">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-            <button type="submit">Confirmar eliminación</button>
+            <button type="submit">Confirmar baja</button>
         </form>
         <p><a href="<c:url value='/reservas'/>">Cancelar y volver al listado</a></p>
     </main>

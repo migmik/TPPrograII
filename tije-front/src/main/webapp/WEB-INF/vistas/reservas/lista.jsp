@@ -23,9 +23,12 @@
                         <c:if test="${!puedeGestionar}">
                             <p>Estas son las reservas de tu grupo familiar.</p>
                         </c:if>
-                        <c:if test="${puedeCrear}">
-                            <p><a href="<c:url value='/reservas/nueva'/>">Crear reserva</a></p>
-                        </c:if>
+                        <c:set var="rutaModulo" value="reservas" />
+                        <c:set var="estadoListado" value="activos" />
+                        <c:set var="verBajas" value="${puedeGestionar}" />
+                        <c:set var="textoAgregar" value="${puedeCrear and not usuarioActual.cliente ? 'Agregar reserva' : ''}" />
+                        <c:set var="urlAgregar" value="/reservas/nueva" />
+                        <%@ include file="../fragmentos/barra-listado.jspf" %>
                         <form class="filter-form" method="get" action="<c:url value='/reservas'/>">
                             <div class="filter-field"><label for="codigoTurista">Código de turista</label>
                             <input id="codigoTurista" name="codigoTurista" type="number" min="1"
@@ -59,14 +62,14 @@
                                     <caption>Reservas disponibles para tu cuenta</caption>
                                     <thead>
                                         <tr>
-                                            <th scope="col">Código</th>
-                                            <th scope="col">Turista y DNI</th>
+                                            <th scope="col">Cod</th>
+                                            <th scope="col">Nombre</th>
+                                            <th scope="col">DNI</th>
                                             <th scope="col">Vuelo</th>
                                             <th scope="col">Hotel</th>
                                             <th scope="col">Llegada</th>
                                             <th scope="col">Partida</th>
                                             <th scope="col">Total</th>
-                                            <th scope="col">Pago</th>
                                             <th scope="col">Acciones</th>
                                         </tr>
                                     </thead>
@@ -78,10 +81,11 @@
                                                     <c:out value="${reserva.codigo}" />
                                                 </td>
                                                 <td>
-                                                    <c:out value="${reserva.codigoTurista}" /> -
                                                     <c:out value="${turista.nombre}" />
-                                                    <c:out value="${turista.apellido}" /> (DNI:
-                                                    <c:out value="${turista.dni}" default="pendiente" />)
+                                                    <c:out value="${turista.apellido}" />
+                                                </td>
+                                                <td>
+                                                    <c:out value="${turista.dni}" default="Pendiente" />
                                                 </td>
                                                 <td><a href="<c:url value='/vuelos/${reserva.numeroVuelo}'/>">
                                                         <c:out value="${reserva.numeroVuelo}" />
@@ -96,15 +100,13 @@
                                                     <c:out value="${reserva.fechaPartidaFormateada}" />
                                                 </td>
                                                 <td>$<c:out value="${reserva.total}" /></td>
-                                                <td>${reserva.pagada ? 'Pagado' : 'Pendiente'}</td>
                                                 <td>
-                                                    <a href="<c:url value='/reservas/${reserva.codigo}'/>">Ver
-                                                        detalle</a>
+                                                    <a href="<c:url value='/reservas/${reserva.codigo}'/>">Detalles</a>
                                                     <c:if test="${puedeGestionar and not reserva.pagada}">
                                                         | <a
                                                             href="<c:url value='/reservas/${reserva.codigo}/editar'/>">Editar</a>
                                                         | <a
-                                                            href="<c:url value='/reservas/${reserva.codigo}/eliminar'/>">Eliminar</a>
+                                                            href="<c:url value='/reservas/${reserva.codigo}/eliminar'/>">Baja</a>
                                                     </c:if>
                                                 </td>
                                             </tr>

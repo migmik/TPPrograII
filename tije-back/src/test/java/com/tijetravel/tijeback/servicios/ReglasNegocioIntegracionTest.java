@@ -21,6 +21,7 @@ import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.enums.*;
 import com.tijetravel.tijeback.excepciones.*;
 import com.tijetravel.tijeback.modelos.*;
@@ -31,7 +32,7 @@ import com.tijetravel.tijeback.repositorios.*;
 class ReglasNegocioIntegracionTest {
     private static final AtomicInteger SECUENCIA = new AtomicInteger(5000);
     private static final LocalDate DIA = LocalDate.of(2027, 2, 1);
-    private final Usuario admin = new Administrador("operador", "hash", DnisPrueba.siguiente());
+    private final Usuario admin = new Empleado("operador", "hash", DnisPrueba.siguiente(), RolesPrueba.administrador());
 
     @Autowired
     ReservaServicio reservas;
@@ -43,6 +44,8 @@ class ReglasNegocioIntegracionTest {
     TuristaServicio turistas;
     @Autowired
     UsuarioServicio usuarios;
+    @Autowired
+    com.tijetravel.tijeback.repositorios.RolRepositorio roles;
     @Autowired
     DisponibilidadServicio disponibilidad;
     @Autowired
@@ -171,7 +174,7 @@ class ReglasNegocioIntegracionTest {
     void listaElTitularYFamiliaresSinIncluirOtroGrupo() {
         Datos d = preparar(5, 10);
         preparar(5, 10);
-        Cliente cliente = new Cliente("cliente", "hash", turistaRepo.findById(d.titular()).get());
+        Cliente cliente = new Cliente("cliente", "hash", turistaRepo.findById(d.titular()).get(), RolesPrueba.cliente());
         Set<Integer> codigos = new HashSet<>();
         for (Turista turista : turistas.listarPara(cliente, null, null)) {
             codigos.add(turista.getCodigo());
@@ -224,7 +227,8 @@ class ReglasNegocioIntegracionTest {
                 reservaRepo.findById(anterior.getCodigo()).get().getSucursalContratacion().getCodigo());
         assertEquals(nueva, reservar(d, d.titular()).getSucursalContratacion().getCodigo());
         try {
-            usuarios.crear(admin, "invalido", "clave", RolUsuario.VENDEDOR, d.titular(), null);
+            usuarios.crear(admin, "invalido", "clave",
+                    roles.findByNombreIgnoreCaseAndFechaBajaIsNull("Vendedor").getCodigo(), d.titular(), null);
             fail("Se esperaba IllegalArgumentException");
         } catch (IllegalArgumentException esperada) {
             // Es la excepcion que se esperaba.
@@ -316,7 +320,7 @@ class ReglasNegocioIntegracionTest {
             }
             assertNotNull(fallo, "La segunda reserva tenia que fallar");
             assertInstanceOf(CapacidadExcedidaException.class, fallo.getCause());
-            assertEquals(1, reservaRepo.countByVueloNumeroAndClaseVuelo(d.vuelo(), ClaseVuelo.TURISTA));
+            assertEquals(1, reservaRepo.countByVueloNumeroAndClaseVueloAndFechaBajaIsNull(d.vuelo(), ClaseVuelo.TURISTA));
         } finally {
             confirmar.countDown();
             hilos.shutdownNow();

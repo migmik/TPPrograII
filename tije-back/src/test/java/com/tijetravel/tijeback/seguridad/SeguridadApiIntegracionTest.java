@@ -36,8 +36,10 @@ import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Empleado;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
+import com.tijetravel.tijeback.repositorios.RolRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @SpringBootTest(properties = {
@@ -56,6 +58,9 @@ class SeguridadApiIntegracionTest {
         private MockMvc mockMvc;
 
         @Autowired
+        private RolRepositorio rolRepositorio;
+
+        @Autowired
         private UsuarioRepositorio usuarioRepositorio;
 
         @Autowired
@@ -66,7 +71,7 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void autorizaPorElPermisoSinNecesitarRepetirElRolEnElFiltroWeb() throws Exception {
-                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO);
+                Usuario administrador = usuarioRepositorio.buscarActivoPorNombre(USUARIO);
                 List<SimpleGrantedAuthority> permisos = new ArrayList<>();
                 permisos.add(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name()));
                 UsernamePasswordAuthenticationToken autenticacion = UsernamePasswordAuthenticationToken.authenticated(
@@ -84,7 +89,7 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void creaElAdministradorInicialConContraseniaHasheada() {
-                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO);
+                Usuario administrador = usuarioRepositorio.buscarActivoPorNombre(USUARIO);
 
                 assertNotEquals(CONTRASENIA, administrador.getContrasenia());
                 assertTrue(administrador.getContrasenia().startsWith("{bcrypt}"));
@@ -127,7 +132,9 @@ class SeguridadApiIntegracionTest {
                 mockMvc.perform(get("/api/v1/autenticacion/sesion").session(sesion))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.nombreUsuario").value(USUARIO))
-                                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
+                                .andExpect(jsonPath("$.rol").value("Administrador"))
+                                .andExpect(jsonPath("$.tipoUsuario").value("EMPLEADO"))
+                                .andExpect(jsonPath("$.permisos[9]").value("ADMINISTRAR_USUARIOS"));
         }
 
         @Test
@@ -152,9 +159,9 @@ class SeguridadApiIntegracionTest {
                                 .content(registro(nombreUsuario, dni, sucursal.getCodigo())))
                                 .andExpect(status().isCreated());
 
-                Usuario guardado = usuarioRepositorio.findByNombreUsuarioIgnoreCase(nombreUsuario);
+                Usuario guardado = usuarioRepositorio.buscarActivoPorNombre(nombreUsuario);
                 Cliente cliente = assertInstanceOf(Cliente.class, guardado);
-                assertEquals("CLIENTE", cliente.getRol().name());
+                assertEquals("Cliente", cliente.getRol().getNombre());
                 assertTrue(cliente.getTurista().isTitular());
                 assertEquals(dni, cliente.getTurista().getDni());
         }
@@ -210,10 +217,10 @@ class SeguridadApiIntegracionTest {
         void impideQueUnVendedorAccedaALaAdministracionDeUsuarios() throws Exception {
                 String usuarioVendedor = "vendedor-pruebas";
                 String contraseniaVendedor = "ClaveVendedor123!";
-                if (usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor) == null) {
-                        usuarioRepositorio.save(new Vendedor(
+                if (usuarioRepositorio.buscarActivoPorNombre(usuarioVendedor) == null) {
+                        usuarioRepositorio.save(new Empleado(
                                         usuarioVendedor,
-                                        codificadorContrasenias.encode(contraseniaVendedor), DnisPrueba.siguiente()));
+                                        codificadorContrasenias.encode(contraseniaVendedor), DnisPrueba.siguiente(), rol("Vendedor")));
                 }
 
                 MvcResult login = iniciarSesion(usuarioVendedor, contraseniaVendedor);
@@ -262,5 +269,10 @@ class SeguridadApiIntegracionTest {
                                   "codigoSucursal": %d
                                 }
                                 """.formatted(nombreUsuario, dni, dni, codigoSucursal);
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

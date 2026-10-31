@@ -3,26 +3,31 @@
 Trabajo práctico de Programación II para administrar una cadena de agencias de
 viajes. Permite gestionar sucursales, hoteles, vuelos, turistas, reservas y usuarios.
 
-El backend está implementado y probado con MySQL. El frontend permite consultar y administrar sucursales, hoteles y vuelos, consultar disponibilidad,
-inicio y cierre de sesión, una pantalla de cuenta y listado, creación, edición y eliminación de usuarios
-para administradores. También permite gestionar turistas como administrador o
-vendedor, gestionar reservas y consultar el grupo familiar y sus reservas como cliente.
+El backend está implementado y probado con MySQL. El frontend permite consultar y
+administrar sucursales, hoteles, vuelos, turistas, reservas, usuarios y roles según
+los permisos de cada usuario, y consultar el grupo familiar y sus reservas como cliente.
 
 ## Funcionalidades
 
 - Búsqueda de vuelos y hoteles con filtros, orden por precio y resultados paginados.
 - Combinaciones de vuelo y hotel disponibles desde la página de inicio.
-- Alta, modificación y eliminación de datos según los permisos del usuario.
+- Alta, modificación y baja lógica de datos según los permisos del usuario. Los
+  registros dados de baja se pueden ver y reactivar.
+- Roles editables: cada rol es un conjunto de permisos (uno por módulo) que se
+  tildan desde la pantalla de roles.
 - Reservas con control de fechas, destino y plazas disponibles.
 - Gestión de turistas titulares y sus familiares.
 - Registro público de clientes asociado a un nuevo turista titular.
 - Inicio y cierre de sesión.
 
-| Usuario | Qué puede hacer |
+| Rol inicial | Qué puede hacer |
 |---|---|
-| Administrador | Administrar todos los recursos. |
+| Administrador | Administrar todos los recursos, usuarios y roles. |
 | Vendedor | Administrar turistas y reservas. |
-| Cliente | Consultar su grupo familiar y sus reservas. |
+| Cliente | Consultar su grupo familiar y reservar para él. |
+
+Se pueden crear más roles, por ejemplo "Hotelero" con solo el permiso de
+administrar hoteles.
 
 Las búsquedas de hoteles y vuelos pueden consultarse sin iniciar sesión. El listado
 completo queda reservado a vendedores y administradores. Las sucursales son públicas.
@@ -56,23 +61,28 @@ api/mapeadores      Convierten entidades en DTOs (MapeadorBase)
 api/errores         Traduce las excepciones a respuestas HTTP
 servicios           Interfaces con el contrato de cada servicio
 servicios/impl      Implementaciones con las reglas de negocio
-servicios/usuarios  Fabrica de usuarios segun el rol
+servicios/usuarios  Fabrica de usuarios segun el tipo (empleado o cliente)
 repositorios        Acceso a la base con Spring Data JPA
 modelos             Entidades JPA y sus validaciones
 excepciones         Excepciones del negocio
 seguridad           Spring Security, sesion y usuario actual
 ```
 
-Cada tipo de usuario define sus permisos; Spring Security y los servicios usan
-esa misma definición. Los servicios agrupan cada cambio en una transacción:
+Los permisos de cada usuario salen de su rol; Spring Security y los servicios usan
+esa misma definición y se vuelven a leer en cada pedido, así un cambio de rol se
+aplica sin cerrar sesión. Los servicios agrupan cada cambio en una transacción:
 JPA guarda las modificaciones al finalizar, o las revierte si ocurre un error.
 
 ### Diseño
 
 - **Interfaces:** los controladores dependen de las interfaces de servicio
   (`HotelServicio`, `ReservaServicio`, ...) y Spring inyecta la implementación.
-- **Polimorfismo:** `Administrador`, `Vendedor` y `Cliente` redefinen
-  `tienePermiso` y `puedeVerTurista`, así los servicios no preguntan por el rol.
+- **Polimorfismo:** `Empleado` y `Cliente` redefinen `getTipoUsuario`,
+  `puedeVerTurista` y `getCodigoGrupoFamiliar`, así los servicios no preguntan
+  por el tipo de usuario. `ModuloBajas` (frontend) es un enum con un método
+  distinto en cada valor.
+- **Herencia:** todas las entidades heredan de `EntidadBase` (fecha de creación
+  y de baja).
 - **Patrones:** Factory + Strategy para crear usuarios (`UsuarioFactory` y
   `CreadorUsuario`), Template Method en `MapeadorBase`, Builder en `RutaConsulta`
   (frontend), Repository y DTO.

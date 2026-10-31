@@ -14,7 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.DnisPrueba;
-import com.tijetravel.tijeback.enums.RolUsuario;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.modelos.*;
 import com.tijetravel.tijeback.modelos.Usuario;
@@ -30,31 +30,33 @@ class DniIntegracionTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired UsuarioServicio usuariosServicio;
     @Autowired UsuarioRepositorio usuarios;
-    private final Administrador admin = new Administrador("admin", "hash", DnisPrueba.siguiente());
+    @Autowired RolRepositorio roles;
+    private final Empleado admin = new Empleado("admin", "hash", DnisPrueba.siguiente(), RolesPrueba.administrador());
 
     @Test
     void empleadosRequierenDniYNoPuedenRepetirElDeOtroEmpleado() {
-        Usuario vendedor = usuariosServicio.crear(admin, "vendedor-dni", "clave", RolUsuario.VENDEDOR, null, "34567890");
+        Usuario vendedor = usuariosServicio.crear(admin, "vendedor-dni", "clave", rol("Vendedor"), null, "34567890");
         assertEquals("34567890", vendedor.getDni());
         try {
             usuariosServicio.crear(admin, "sin-dni", "clave",
-                    RolUsuario.ADMINISTRADOR, null, null);
+                    rol("Administrador"), null, null);
             fail("Se esperaba IllegalArgumentException");
         } catch (IllegalArgumentException esperada) {
             // Es la excepcion que se esperaba.
         }
         try {
             usuariosServicio.crear(admin, "otro-dni", "clave",
-                    RolUsuario.ADMINISTRADOR, null, "34567890");
+                    rol("Administrador"), null, "34567890");
             fail("Se esperaba EntidadDuplicadaException");
         } catch (EntidadDuplicadaException esperada) {
             // Es la excepcion que se esperaba.
         }
-        usuariosServicio.modificarCredenciales(admin, vendedor.getCodigo(), "vendedor-dni", "otra-clave", "34567890");
-        Usuario otro = usuariosServicio.crear(admin, "otro", "clave", RolUsuario.ADMINISTRADOR, null, "45678901");
+        usuariosServicio.modificar(admin, vendedor.getCodigo(), "vendedor-dni", "otra-clave", "34567890",
+                rol("Vendedor"));
+        Usuario otro = usuariosServicio.crear(admin, "otro", "clave", rol("Administrador"), null, "45678901");
         try {
-            usuariosServicio.modificarCredenciales(admin,
-                    otro.getCodigo(), "otro", "clave", "34567890");
+            usuariosServicio.modificar(admin,
+                    otro.getCodigo(), "otro", "clave", "34567890", rol("Administrador"));
             fail("Se esperaba EntidadDuplicadaException");
         } catch (EntidadDuplicadaException esperada) {
             // Es la excepcion que se esperaba.
@@ -66,15 +68,15 @@ class DniIntegracionTest {
     void clienteConsultaDniDelTuristaSinUnaSegundaCopia() {
         Integer sucursal = sucursales.save(new Sucursal("Calle DNI", "1")).getCodigo();
         Turista titular = servicio.crearTitular(admin, "12345678", "Ana", "Perez", "Calle", "ana@example.test", "1", "2", sucursal);
-        Usuario cliente = usuariosServicio.crear(admin, "cliente-dni", "clave", RolUsuario.CLIENTE, titular.getCodigo(), null);
+        Usuario cliente = usuariosServicio.crear(admin, "cliente-dni", "clave", rol("Cliente"), titular.getCodigo(), null);
         assertEquals("12345678", cliente.getDni());
         usuarios.flush();
         assertNull(jdbc.queryForObject("SELECT dni FROM usuarios WHERE codigo=?", String.class, cliente.getCodigo()));
         servicio.modificar(admin, titular.getCodigo(), "23456789", "Ana", "Perez", "Calle", "ana@example.test", "1", "2", sucursal);
         assertEquals("23456789", cliente.getDni());
         try {
-            usuariosServicio.modificarCredenciales(admin,
-                    cliente.getCodigo(), "cliente-dni", "clave", "34567890");
+            usuariosServicio.modificar(admin,
+                    cliente.getCodigo(), "cliente-dni", "clave", "34567890", rol("Cliente"));
             fail("Se esperaba IllegalArgumentException");
         } catch (IllegalArgumentException esperada) {
             // Es la excepcion que se esperaba.
@@ -83,8 +85,8 @@ class DniIntegracionTest {
 
     @Test
     void mysqlImpideRepetirDocumentoDeEmpleadoOAlmacenarOtraCopiaEnCliente() {
-        Usuario uno = usuariosServicio.crear(admin, "uno", "clave", RolUsuario.VENDEDOR, null, "34567890");
-        Usuario dos = usuariosServicio.crear(admin, "dos", "clave", RolUsuario.ADMINISTRADOR, null, "45678901");
+        Usuario uno = usuariosServicio.crear(admin, "uno", "clave", rol("Vendedor"), null, "34567890");
+        Usuario dos = usuariosServicio.crear(admin, "dos", "clave", rol("Administrador"), null, "45678901");
         usuarios.flush();
         try {
             jdbc.update("UPDATE usuarios SET dni=? WHERE codigo=?", uno.getDni(), dos.getCodigo());
@@ -162,5 +164,10 @@ class DniIntegracionTest {
         } catch (DataIntegrityViolationException esperada) {
             // Es la excepcion que se esperaba.
         }
+    }
+
+    /** Codigo del rol que crea la migracion V11. */
+    private Integer rol(String nombre) {
+        return roles.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre).getCodigo();
     }
 }

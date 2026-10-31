@@ -37,30 +37,64 @@ flowchart TB
 
 ```mermaid
 classDiagram
+    class EntidadBase {
+        <<abstract>>
+        -LocalDateTime fechaCreacion
+        -LocalDateTime fechaBaja
+        +darDeBaja(LocalDateTime)
+        +reactivar()
+        +estaActivo() boolean
+        +seDioDeBajaJuntoCon(EntidadBase) boolean
+    }
     class Usuario {
         <<abstract>>
         -Integer codigo
         -String nombreUsuario
         -String contrasenia
         -String dni
-        -RolUsuario rol
+        +getTipoUsuario() TipoUsuario*
+        +cambiarRol(Rol)
         +actualizarCredenciales()
         +tienePermiso(Permiso) boolean
         +puedeVerTurista(Turista) boolean
         +getCodigoGrupoFamiliar() Integer
         +tieneDniPropio() boolean
     }
-    class Administrador {
-        +tienePermiso(Permiso) boolean
-    }
-    class Vendedor {
-        +tienePermiso(Permiso) boolean
+    class Empleado {
+        +getTipoUsuario() TipoUsuario
     }
     class Cliente {
-        +tienePermiso(Permiso) boolean
+        +getTipoUsuario() TipoUsuario
         +puedeVerTurista(Turista) boolean
         +getCodigoGrupoFamiliar() Integer
         +tieneDniPropio() boolean
+    }
+    class Rol {
+        -Integer codigo
+        -String nombre
+        -TipoUsuario tipoUsuario
+        -Set~Permiso~ permisos
+        +actualizar(String, List~Permiso~)
+        +tienePermiso(Permiso) boolean
+    }
+    class TipoUsuario {
+        <<enumeration>>
+        EMPLEADO
+        CLIENTE
+        +admite(Permiso) boolean
+    }
+    class Permiso {
+        <<enumeration>>
+        CONSULTAR
+        CREAR_RESERVAS
+        VER_CATALOGO_COMPLETO
+        VER_BALANCE
+        ADMINISTRAR_TURISTAS
+        ADMINISTRAR_RESERVAS
+        ADMINISTRAR_SUCURSALES
+        ADMINISTRAR_HOTELES
+        ADMINISTRAR_VUELOS
+        ADMINISTRAR_USUARIOS
     }
     class Turista {
         -Integer codigo
@@ -121,9 +155,18 @@ classDiagram
         +getPorcentajeRecargo() int
     }
 
-    Usuario <|-- Administrador
-    Usuario <|-- Vendedor
+    EntidadBase <|-- Usuario
+    EntidadBase <|-- Rol
+    EntidadBase <|-- Turista
+    EntidadBase <|-- Sucursal
+    EntidadBase <|-- Hotel
+    EntidadBase <|-- Vuelo
+    EntidadBase <|-- Reserva
+    Usuario <|-- Empleado
     Usuario <|-- Cliente
+    Usuario --> Rol
+    Rol --> TipoUsuario
+    Rol --> Permiso
     Cliente --> Turista
     Turista --> Sucursal : sucursalContratacion
     Turista --> Turista : titular
@@ -135,9 +178,14 @@ classDiagram
     Reserva --> TipoHospedaje
 ```
 
-Cada subclase de `Usuario` redefine `tienePermiso`. `Cliente` además redefine
-`puedeVerTurista` y `getCodigoGrupoFamiliar` para limitarse a su grupo familiar,
-así los servicios no preguntan por el rol (polimorfismo).
+Los permisos de un usuario salen de su `Rol`, que se edita desde la aplicación
+(por ejemplo un rol "Hotelero" que solo administra hoteles). `TipoUsuario` limita
+qué permisos puede recibir un rol de clientes. `Cliente` redefine `puedeVerTurista`
+y `getCodigoGrupoFamiliar` para limitarse a su grupo familiar, así los servicios no
+preguntan por el tipo de usuario (polimorfismo).
+
+Todas las entidades heredan de `EntidadBase`: las bajas son lógicas y guardan la
+fecha, para conservar el historial y poder reactivar.
 
 ## Componentes
 
@@ -196,8 +244,7 @@ classDiagram
     class CreadorUsuario {
         <<interface>>
     }
-    CreadorUsuario <|.. CreadorAdministrador
-    CreadorUsuario <|.. CreadorVendedor
+    CreadorUsuario <|.. CreadorEmpleado
     CreadorUsuario <|.. CreadorCliente
 ```
 

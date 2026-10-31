@@ -16,6 +16,7 @@ import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
 import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
 import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
+import com.tijetravel.tijeback.modelos.EntidadBase;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Usuario;
@@ -56,10 +57,7 @@ public class HotelServicioImpl implements HotelServicio {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
         bloqueoEscrituras.adquirir();
         Hotel hotel = new Hotel(nombre, direccion, ciudad, telefono, capacidadTotal, precioNochePersona);
-        if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCase(
-                hotel.getNombre(), hotel.getCiudad())) {
-            throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
-        }
+        verificarNombreDisponible(hotel.getNombre(), hotel.getCiudad(), null);
         return hotelRepositorio.save(hotel);
     }
 
@@ -67,7 +65,7 @@ public class HotelServicioImpl implements HotelServicio {
     public List<Hotel> listarPara(Usuario actor, String orden) {
         autorizacion.verificarPermiso(actor, Permiso.VER_CATALOGO_COMPLETO,
                 "Solo el personal puede consultar el catalogo completo");
-        return hotelRepositorio.findAll(ordenar(orden));
+        return hotelRepositorio.findByFechaBajaIsNull(ordenar(orden));
     }
 
     @Override
@@ -112,7 +110,7 @@ public class HotelServicioImpl implements HotelServicio {
     @Override
     public Hotel encontrarPorId(Integer codigo) {
         Hotel hotel = hotelRepositorio.findById(codigo).orElse(null);
-        if (hotel == null) {
+        if (hotel == null || !hotel.estaActivo()) {
             throw new EntidadNoEncontradaException("No se encontro el hotel " + codigo);
         }
         return hotel;
@@ -126,13 +124,10 @@ public class HotelServicioImpl implements HotelServicio {
         bloqueoEscrituras.adquirir();
         String nombreNormalizado = ValidacionModelo.textoObligatorio(nombre, "nombre");
         String ciudadNormalizada = ValidacionModelo.textoObligatorio(ciudad, "ciudad");
-        if (hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCaseAndCodigoNot(
-                nombreNormalizado, ciudadNormalizada, codigo)) {
-            throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
-        }
+        verificarNombreDisponible(nombreNormalizado, ciudadNormalizada, codigo);
         Hotel hotel = encontrarPorId(codigo);
 
-        List<Reserva> reservas = reservaRepositorio.findByHotelCodigo(codigo);
+        List<Reserva> reservas = reservaRepositorio.findByHotelCodigoAndFechaBajaIsNull(codigo);
         for (Reserva reserva : reservas) {
             if (!CiudadConsulta.misma(reserva.getVuelo().getDestino(), ciudadNormalizada)) {
                 throw new OperacionNoPermitidaException("La ciudad dejaría reservas incompatibles con su vuelo");
@@ -151,14 +146,48 @@ public class HotelServicioImpl implements HotelServicio {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer codigo) {
+    public void darDeBaja(Usuario actor, Integer codigo) {
         autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
         bloqueoEscrituras.adquirir();
         Hotel hotel = encontrarPorId(codigo);
-        if (reservaRepositorio.existsByHotelCodigo(codigo)) {
-            throw new OperacionNoPermitidaException("No se puede eliminar un hotel que tiene reservas");
+        if (reservaRepositorio.existsByHotelCodigoAndFechaBajaIsNullAndFechaPartidaAfter(codigo, LocalDate.now())) {
+            throw new OperacionNoPermitidaException(
+                    "No se puede dar de baja un hotel con reservas que todavia no terminaron");
         }
-        hotelRepositorio.delete(hotel);
+        hotel.darDeBaja(EntidadBase.ahora());
+    }
+
+    @Override
+    public List<Hotel> listarBajasPara(Usuario actor) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
+        return hotelRepositorio.findByFechaBajaIsNotNullOrderByFechaBajaDesc();
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Hotel reactivar(Usuario actor, Integer codigo) {
+        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_HOTELES);
+        bloqueoEscrituras.adquirir();
+        Hotel hotel = hotelRepositorio.findById(codigo).orElse(null);
+        if (hotel == null || hotel.estaActivo()) {
+            throw new EntidadNoEncontradaException("No hay un hotel dado de baja con el codigo " + codigo);
+        }
+        verificarNombreDisponible(hotel.getNombre(), hotel.getCiudad(), codigo);
+        hotel.reactivar();
+        return hotel;
+    }
+
+    private void verificarNombreDisponible(String nombre, String ciudad, Integer codigoPropio) {
+        boolean ocupado;
+        if (codigoPropio == null) {
+            ocupado = hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCaseAndFechaBajaIsNull(nombre, ciudad);
+        } else {
+            ocupado = hotelRepositorio.existsByNombreIgnoreCaseAndCiudadIgnoreCaseAndFechaBajaIsNullAndCodigoNot(
+                    nombre, ciudad, codigoPropio);
+        }
+        if (ocupado) {
+            throw new EntidadDuplicadaException("Ya existe ese hotel en la ciudad indicada");
+        }
     }
 
     private Sort ordenar(String orden) {

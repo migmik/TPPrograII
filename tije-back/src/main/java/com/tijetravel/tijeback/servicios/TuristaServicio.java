@@ -11,7 +11,8 @@ import com.tijetravel.tijeback.modelos.Usuario;
  * Operaciones sobre los turistas. Un turista titular pertenece a una sucursal
  * y sus familiares heredan esa sucursal.
  *
- * Las altas, bajas y modificaciones requieren el permiso ADMINISTRAR_TURISTAS.
+ * Las altas, bajas, modificaciones y reactivaciones requieren el permiso
+ * ADMINISTRAR_TURISTAS. Las consultas solo devuelven turistas activos.
  * Un cliente solo puede consultar a los turistas de su grupo familiar.
  */
 public interface TuristaServicio {
@@ -52,6 +53,21 @@ public interface TuristaServicio {
     Turista modificar(Usuario actor, Integer codigo, String dni, String nombre, String apellido, String direccion,
             String email, String telefonoFijo, String telefonoCelular, Integer codigoSucursal);
 
-    /** @throws OperacionNoPermitidaException si tiene reservas, familiares o un usuario asociado */
-    void eliminar(Usuario actor, Integer codigo);
+    /**
+     * Baja logica. Si es titular se da de baja todo el grupo: familiares, su usuario
+     * cliente y las reservas sin pagar. Las reservas pagadas quedan como historial.
+     */
+    void darDeBaja(Usuario actor, Integer codigo);
+
+    /** Turistas dados de baja, del mas reciente al mas antiguo. */
+    List<Turista> listarBajasPara(Usuario actor);
+
+    /**
+     * Reactiva el turista y, si es titular, lo que se dio de baja junto con el. Las
+     * reservas solo vuelven si todavia hay lugar en el vuelo y en el hotel.
+     *
+     * @throws OperacionNoPermitidaException si es un familiar y su titular sigue dado de baja
+     * @throws EntidadDuplicadaException si otra persona activa ya usa el DNI o el email
+     */
+    Turista reactivar(Usuario actor, Integer codigo);
 }

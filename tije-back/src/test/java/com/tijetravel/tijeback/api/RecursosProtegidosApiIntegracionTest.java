@@ -29,12 +29,14 @@ import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Reserva;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
+import com.tijetravel.tijeback.repositorios.RolRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
@@ -56,6 +58,9 @@ class RecursosProtegidosApiIntegracionTest {
 
         @Autowired
         private MockMvc mockMvc;
+
+        @Autowired
+        private RolRepositorio rolRepositorio;
 
         @Autowired
         private UsuarioRepositorio usuarioRepositorio;
@@ -81,18 +86,18 @@ class RecursosProtegidosApiIntegracionTest {
         @BeforeEach
         void prepararUsuariosYReservaExterna() {
                 Turista titular = turistaRepositorio.findById(1).get();
-                Usuario usuarioCliente = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_CLIENTE);
+                Usuario usuarioCliente = usuarioRepositorio.buscarActivoPorNombre(USUARIO_CLIENTE);
                 if (usuarioCliente == null) {
                         usuarioCliente = usuarioRepositorio.save(new Cliente(
                                         USUARIO_CLIENTE,
                                         codificadorContrasenias.encode(CONTRASENIA_CLIENTE),
-                                        titular));
+                                        titular, rol("Cliente")));
                 }
                 codigoUsuarioCliente = usuarioCliente.getCodigo();
-                if (usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_VENDEDOR) == null) {
-                        usuarioRepositorio.save(new Vendedor(
+                if (usuarioRepositorio.buscarActivoPorNombre(USUARIO_VENDEDOR) == null) {
+                        usuarioRepositorio.save(new Empleado(
                                         USUARIO_VENDEDOR,
-                                        codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
+                                        codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente(), rol("Vendedor")));
                 }
 
                 List<Reserva> reservasDelTurista = reservaRepositorio.findByTuristaCodigo(3);
@@ -257,10 +262,10 @@ class RecursosProtegidosApiIntegracionTest {
                 mockMvc.perform(get("/api/v1/turistas/sin-cuenta").session(admin))
                                 .andExpect(status().isOk());
                 mockMvc.perform(get("/api/v1/usuarios/pagina").session(admin)
-                                .param("rol", "VENDEDOR").param("tamanio", "1"))
+                                .param("codigoRol", rol("Vendedor").getCodigo().toString()).param("tamanio", "1"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.elementos.length()").value(1))
-                                .andExpect(jsonPath("$.elementos[0].rol").value("VENDEDOR"));
+                                .andExpect(jsonPath("$.elementos[0].rol").value("Vendedor"));
         }
 
         @Test
@@ -311,5 +316,10 @@ class RecursosProtegidosApiIntegracionTest {
                                   "contrasenia": "%s"
                                 }
                                 """.formatted(usuario, contrasenia);
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

@@ -3,34 +3,54 @@
     <div class="site-header__inner">
         <a class="brand" href="<c:url value='/'/>"><span class="brand-mark" aria-hidden="true">⛱</span>Tije Travel</a>
         <nav class="site-nav" aria-label="Navegación principal">
-            <a href="<c:url value='/'/>">Inicio</a>
             <a href="<c:url value='/hoteles'/>">Hoteles</a>
             <a href="<c:url value='/vuelos'/>">Vuelos</a>
             <a href="<c:url value='/sucursales'/>">Sucursales</a>
-            <c:choose>
-                <c:when test="${not empty usuarioActual}">
-                    <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
-                    <a href="<c:url value='/turistas'/>">Turistas</a>
-                    <a href="<c:url value='/reservas'/>">Reservas</a>
-                    <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}"><a href="<c:url value='/reservas/balance'/>">Balance</a></c:if>
-                    <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
-                        <a href="<c:url value='/usuarios'/>">Usuarios</a>
-                    </c:if>
-                </c:when>
-            </c:choose>
         </nav>
-        <c:if test="${empty usuarioActual}">
-            <div class="site-auth-actions">
-                <a class="site-auth-actions__login" href="<c:url value='/login'/>">Iniciar sesión</a>
-                <a class="site-auth-actions__register" href="<c:url value='/registro'/>">Crear cuenta</a>
-            </div>
-        </c:if>
-        <c:if test="${not empty usuarioActual}">
-            <span class="site-user"><c:out value="${usuarioActual.nombreUsuario}"/></span>
-            <form class="logout-form" method="post" action="<c:url value='/logout'/>">
-                <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">
-                <button type="submit">Cerrar sesión</button>
-            </form>
-        </c:if>
+        <c:choose>
+            <c:when test="${empty usuarioActual}">
+                <div class="site-auth-actions">
+                    <a class="site-auth-actions__login" href="<c:url value='/login'/>">Iniciar sesión</a>
+                    <a class="site-auth-actions__register" href="<c:url value='/registro'/>">Crear cuenta</a>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="site-auth-actions">
+                    <a class="site-auth-actions__cuenta" href="<c:url value='/cuenta'/>">Mi cuenta</a>
+                    <span class="site-user"><c:out value="${usuarioActual.nombreUsuario}"/></span>
+                    <form class="logout-form" method="post" action="<c:url value='/logout'/>">
+                        <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">
+                        <button type="submit">Cerrar sesión</button>
+                    </form>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </div>
+    <c:if test="${not empty usuarioActual and (usuarioActual.tienePermiso('CONSULTAR')
+            or usuarioActual.tienePermiso('VER_BALANCE') or usuarioActual.tienePermiso('ADMINISTRAR_USUARIOS'))}">
+        <%-- Segunda fila: solo lo que permite el rol del usuario. Si no tiene nada no se muestra. --%>
+        <nav class="site-nav-gestion" aria-label="Opciones de tu rol">
+            <div class="site-nav-gestion__inner">
+                <c:if test="${usuarioActual.tienePermiso('CONSULTAR')}">
+                    <c:choose>
+                        <c:when test="${usuarioActual.cliente}">
+                            <a href="<c:url value='/reservas'/>">Mis reservas</a>
+                            <a href="<c:url value='/turistas'/>">Mi grupo familiar</a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="<c:url value='/reservas'/>">Reservas</a>
+                            <a href="<c:url value='/turistas'/>">Turistas</a>
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
+                <%-- Los botones para agregar quedan en cada listado, no aca. --%>
+                <c:if test="${usuarioActual.tienePermiso('VER_BALANCE')}">
+                    <a href="<c:url value='/reservas/balance'/>">Balance</a>
+                </c:if>
+                <c:if test="${usuarioActual.tienePermiso('ADMINISTRAR_USUARIOS')}">
+                    <a href="<c:url value='/usuarios'/>">Usuarios</a>
+                </c:if>
+            </div>
+        </nav>
+    </c:if>
 </header>

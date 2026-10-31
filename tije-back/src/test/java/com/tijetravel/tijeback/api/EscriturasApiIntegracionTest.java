@@ -27,9 +27,11 @@ import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Empleado;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
+import com.tijetravel.tijeback.repositorios.RolRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @SpringBootTest(properties = {
@@ -53,6 +55,9 @@ class EscriturasApiIntegracionTest {
         private MockMvc mockMvc;
 
         @Autowired
+        private RolRepositorio rolRepositorio;
+
+        @Autowired
         private UsuarioRepositorio usuarioRepositorio;
 
         @Autowired
@@ -70,10 +75,10 @@ class EscriturasApiIntegracionTest {
                 usuarioRepositorio.save(new Cliente(
                                 USUARIO_CLIENTE,
                                 codificadorContrasenias.encode(CONTRASENIA_CLIENTE),
-                                titular));
-                usuarioRepositorio.save(new Vendedor(
+                                titular, rol("Cliente")));
+                usuarioRepositorio.save(new Empleado(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente(), rol("Vendedor")));
         }
 
         @Test
@@ -181,8 +186,8 @@ class EscriturasApiIntegracionTest {
                                 .with(csrf()))
                                 .andExpect(status().isNoContent());
 
-                assertFalse(reservaRepositorio.existsById(codigoReserva));
-                assertFalse(turistaRepositorio.existsById(turista.getCodigo()));
+                assertFalse(reservaRepositorio.findById(codigoReserva).get().estaActivo());
+                assertFalse(turistaRepositorio.findById(turista.getCodigo()).get().estaActivo());
         }
 
         @Test
@@ -197,18 +202,19 @@ class EscriturasApiIntegracionTest {
                                                 {
                                                   "nombreUsuario": "operador-nuevo",
                                                   "contrasenia": "ClaveOperador123!",
-                                                  "dni": "74567890", "rol": "VENDEDOR"
+                                                  "dni": "74567890", "codigoRol": %d
                                                 }
-                                                """))
+                                                """.formatted(rol("Vendedor").getCodigo())))
                                 .andExpect(status().isCreated())
                                 .andExpect(header().string("Location", org.hamcrest.Matchers.matchesPattern(
                                                 "/api/v1/usuarios/\\d+")))
                                 .andExpect(jsonPath("$.nombreUsuario").value("operador-nuevo"))
-                                .andExpect(jsonPath("$.rol").value("VENDEDOR"))
+                                .andExpect(jsonPath("$.rol").value("Vendedor"))
+                                .andExpect(jsonPath("$.tipoUsuario").value("EMPLEADO"))
                                 .andExpect(jsonPath("$.contrasenia").doesNotExist());
 
                 Usuario usuario = usuarioRepositorio
-                                .findByNombreUsuarioIgnoreCase("operador-nuevo");
+                                .buscarActivoPorNombre("operador-nuevo");
                 assertTrue(codificadorContrasenias.matches("ClaveOperador123!", usuario.getContrasenia()));
 
                 mockMvc.perform(put("/api/v1/usuarios/{codigo}", usuario.getCodigo())
@@ -219,9 +225,10 @@ class EscriturasApiIntegracionTest {
                                                 {
                                                   "nombreUsuario": "operador-actualizado",
                                                   "dni": "74567890",
-                                                  "contrasenia": "NuevaClaveOperador123!"
+                                                  "contrasenia": "NuevaClaveOperador123!",
+                                                  "codigoRol": %d
                                                 }
-                                                """))
+                                                """.formatted(rol("Vendedor").getCodigo())))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.nombreUsuario").value("operador-actualizado"))
                                 .andExpect(jsonPath("$.contrasenia").doesNotExist());
@@ -235,7 +242,15 @@ class EscriturasApiIntegracionTest {
                                 .with(csrf()))
                                 .andExpect(status().isNoContent());
 
-                assertFalse(usuarioRepositorio.existsById(usuario.getCodigo()));
+                assertFalse(usuarioRepositorio.findById(usuario.getCodigo()).get().estaActivo());
+                // Un usuario dado de baja ya no puede iniciar sesion.
+                mockMvc.perform(post("/api/v1/autenticacion/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                                {"nombreUsuario":"operador-actualizado","contrasenia":"NuevaClaveOperador123!"}
+                                                """))
+                                .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -303,7 +318,7 @@ class EscriturasApiIntegracionTest {
                 MockHttpSession sesionAdmin = iniciarSesion(USUARIO_ADMIN, CONTRASENIA_ADMIN);
                 MockHttpSession sesionVendedor = iniciarSesion(USUARIO_VENDEDOR, CONTRASENIA_VENDEDOR);
                 Integer codigoAdmin = usuarioRepositorio
-                                .findByNombreUsuarioIgnoreCase(USUARIO_ADMIN)
+                                .buscarActivoPorNombre(USUARIO_ADMIN)
                                 .getCodigo();
 
                 mockMvc.perform(delete("/api/v1/usuarios/{codigo}", codigoAdmin)
@@ -312,11 +327,22 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
 
+                // La baja del titular arrastra a su familiar; el familiar no vuelve sin el titular.
                 mockMvc.perform(delete("/api/v1/turistas/{codigo}", 1)
+                                .session(sesionVendedor)
+                                .with(csrf()))
+                                .andExpect(status().isNoContent());
+                assertFalse(turistaRepositorio.findById(2).get().estaActivo());
+                mockMvc.perform(post("/api/v1/turistas/{codigo}/reactivar", 2)
                                 .session(sesionVendedor)
                                 .with(csrf()))
                                 .andExpect(status().isForbidden())
                                 .andExpect(jsonPath("$.error").value("OPERACION_NO_PERMITIDA"));
+                mockMvc.perform(post("/api/v1/turistas/{codigo}/reactivar", 1)
+                                .session(sesionVendedor)
+                                .with(csrf()))
+                                .andExpect(status().isOk());
+                assertTrue(turistaRepositorio.findById(2).get().estaActivo());
 
                 mockMvc.perform(post("/api/v1/turistas")
                                 .session(sesionVendedor)
@@ -373,5 +399,10 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(status().isOk())
                                 .andReturn();
                 return (MockHttpSession) resultado.getRequest().getSession(false);
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

@@ -11,17 +11,16 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Usuario;
 
+/** Datos del usuario que Spring Security guarda en la sesion. Las autoridades son sus permisos. */
 public final class UsuarioAutenticado implements UserDetails, CredentialsContainer {
     @Serial
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final Integer codigo;
     private final String nombreUsuario;
     private String contrasenia;
-    private final RolUsuario rol;
     private final Integer codigoTurista;
     private final List<GrantedAuthority> autoridades;
 
@@ -29,20 +28,18 @@ public final class UsuarioAutenticado implements UserDetails, CredentialsContain
             Integer codigo,
             String nombreUsuario,
             String contrasenia,
-            RolUsuario rol,
             Integer codigoTurista,
             List<GrantedAuthority> autoridades) {
         this.codigo = codigo;
         this.nombreUsuario = nombreUsuario;
         this.contrasenia = contrasenia;
-        this.rol = rol;
         this.codigoTurista = codigoTurista;
         this.autoridades = List.copyOf(autoridades);
     }
 
     public static UsuarioAutenticado desde(Usuario usuario) {
         List<GrantedAuthority> autoridades = new ArrayList<>();
-        autoridades.add(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
+        autoridades.add(new SimpleGrantedAuthority("ROLE_" + usuario.getTipoUsuario().name()));
         for (Permiso permiso : Permiso.values()) {
             if (usuario.tienePermiso(permiso)) {
                 autoridades.add(new SimpleGrantedAuthority(permiso.name()));
@@ -53,7 +50,6 @@ public final class UsuarioAutenticado implements UserDetails, CredentialsContain
                 usuario.getCodigo(),
                 usuario.getNombreUsuario(),
                 usuario.getContrasenia(),
-                usuario.getRol(),
                 usuario.getCodigoTurista(),
                 autoridades);
     }
@@ -70,10 +66,6 @@ public final class UsuarioAutenticado implements UserDetails, CredentialsContain
     @Override
     public String getPassword() {
         return contrasenia;
-    }
-
-    public RolUsuario getRol() {
-        return rol;
     }
 
     public Integer getCodigoTurista() {

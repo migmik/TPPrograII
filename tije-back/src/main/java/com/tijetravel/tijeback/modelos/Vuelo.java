@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "vuelos")
-public class Vuelo {
+public class Vuelo extends EntidadBase {
     public static final int PRECIO_MINIMO = 150000;
     public static final int PRECIO_MAXIMO = 300000;
     @Id
