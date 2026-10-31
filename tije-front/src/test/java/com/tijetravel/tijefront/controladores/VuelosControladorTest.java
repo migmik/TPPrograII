@@ -23,6 +23,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
+import com.tijetravel.tijefront.SesionesPrueba;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
 import com.tijetravel.tijefront.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijefront.dto.PaginaVuelosRespuesta;
@@ -65,7 +66,7 @@ class VuelosControladorTest {
     @Test
     void vendedorPuedeVerPrimeraPaginaSinFiltros() throws Exception {
         SesionRespuesta usuario = new SesionRespuesta();
-        usuario.setRol("VENDEDOR");
+        SesionesPrueba.asignar(usuario, "VENDEDOR");
         MockHttpSession sesion = new MockHttpSession();
         sesion.setAttribute("usuarioActual", usuario);
         List<VueloRespuesta> vuelos = List.of(new VueloRespuesta());

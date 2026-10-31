@@ -22,6 +22,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.tijetravel.tijefront.SesionesPrueba;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.HotelesGestionApiCliente;
@@ -85,7 +86,7 @@ class HotelesGestionControladorTest {
 
     private SesionRespuesta usuario(String rol) {
         SesionRespuesta usuario = new SesionRespuesta();
-        usuario.setRol(rol);
+        SesionesPrueba.asignar(usuario, rol);
         return usuario;
     }
 }

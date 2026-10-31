@@ -27,7 +27,7 @@
                         <select id="orden" name="orden"><option value="numero">Número</option><option value="precioAsc" ${orden == 'precioAsc' ? 'selected' : ''}>Menor precio</option><option value="precioDesc" ${orden == 'precioDesc' ? 'selected' : ''}>Mayor precio</option></select></div>
                         <button type="submit">Buscar</button>
                     </form>
-                    <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                    <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_VUELOS')}">
                         <p><a href="<c:url value='/vuelos/nuevo'/>">Agregar vuelo</a></p>
                     </c:if>
                     <c:if test="${not empty mensajeExito}">
@@ -56,7 +56,7 @@
                                         <th scope="col">Fecha y hora</th>
                                         <th scope="col">Precio por persona</th>
                                         <th scope="col">Consulta</th>
-                                        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                                        <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_VUELOS')}">
                                             <th scope="col">Administrar</th>
                                         </c:if>
                                     </tr>
@@ -79,7 +79,7 @@
                                             <td>$<c:out value="${vuelo.precio}" /></td>
                                             <td><a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver detalle y
                                                     disponibilidad</a></td>
-                                            <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                                            <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_VUELOS')}">
                                                 <td>
                                                     <a href="<c:url value='/vuelos/${vuelo.numero}/editar'/>">Editar</a>
                                                     <a

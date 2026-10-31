@@ -1,6 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -18,9 +19,11 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
+import com.tijetravel.tijefront.clientes.RolesApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
 import com.tijetravel.tijefront.clientes.UsuariosApiCliente;
 import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
+import com.tijetravel.tijefront.dto.RolRespuesta;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.dto.UsuarioRespuesta;
@@ -36,16 +39,18 @@ import jakarta.validation.Valid;
 public class UsuariosControlador extends ControladorAdministracion {
     private final UsuariosApiCliente usuariosApi;
     private final TuristasApiCliente turistasApi;
+    private final RolesApiCliente rolesApi;
 
     public UsuariosControlador(AutenticacionApiCliente autenticacionApi,
-            UsuariosApiCliente usuariosApi, TuristasApiCliente turistasApi) {
+            UsuariosApiCliente usuariosApi, TuristasApiCliente turistasApi, RolesApiCliente rolesApi) {
         super(autenticacionApi);
         this.usuariosApi = usuariosApi;
         this.turistasApi = turistasApi;
+        this.rolesApi = rolesApi;
     }
 
     @GetMapping
-    public String listar(@RequestParam(required = false) String rol,
+    public String listar(@RequestParam(required = false) Integer codigoRol,
             @RequestParam(required = false) Integer codigo,
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) String dni,
@@ -55,13 +60,15 @@ public class UsuariosControlador extends ControladorAdministracion {
         if (salida != null) {
             return salida;
         }
-        PaginaUsuariosRespuesta resultado = usuariosApi.listarPagina(rol, codigo, nombre, dni, Math.max(0, pagina));
+        PaginaUsuariosRespuesta resultado = usuariosApi.listarPagina(codigoRol, codigo, nombre, dni,
+                Math.max(0, pagina));
         modelo.addAttribute("usuarios", resultado.elementos());
         modelo.addAttribute("pagina", resultado.pagina());
         modelo.addAttribute("totalPaginas", resultado.totalPaginas());
         modelo.addAttribute("hayAnterior", resultado.hayAnterior());
         modelo.addAttribute("haySiguiente", resultado.haySiguiente());
-        modelo.addAttribute("rolBusqueda", rol == null ? "" : rol.trim());
+        modelo.addAttribute("roles", rolesApi.listar());
+        modelo.addAttribute("rolBusqueda", codigoRol);
         modelo.addAttribute("codigoBusqueda", codigo);
         modelo.addAttribute("nombreBusqueda", nombre == null ? "" : nombre.trim());
         modelo.addAttribute("dniBusqueda", dni == null ? "" : dni.trim());
@@ -76,6 +83,7 @@ public class UsuariosControlador extends ControladorAdministracion {
         }
         modelo.addAttribute("usuario", new CrearUsuarioFormulario());
         modelo.addAttribute("turistasDisponibles", turistasSinCuenta());
+        cargarRoles(modelo, rolesApi.listar());
         return "usuarios/nuevo";
     }
 
@@ -89,8 +97,10 @@ public class UsuariosControlador extends ControladorAdministracion {
                 return salida;
             }
             List<TuristaResumen> disponibles = turistasSinCuenta();
+            List<RolRespuesta> roles = rolesApi.listar();
             modelo.addAttribute("turistasDisponibles", disponibles);
-            validarFormulario(formulario, errores, disponibles);
+            cargarRoles(modelo, roles);
+            validarFormulario(formulario, errores, disponibles, roles);
             if (errores.hasErrors()) {
                 return "usuarios/nuevo";
             }
@@ -130,10 +140,13 @@ public class UsuariosControlador extends ControladorAdministracion {
         UsuarioRespuesta usuario = usuariosApi.buscar(codigo);
         ModificarUsuarioFormulario formulario = new ModificarUsuarioFormulario();
         formulario.setNombreUsuario(usuario.getNombreUsuario());
-        if (!"CLIENTE".equals(usuario.getRol()))
+        formulario.setCodigoRol(usuario.getCodigoRol());
+        if (!usuario.isCliente()) {
             formulario.setDni(usuario.getDni());
+        }
         modelo.addAttribute("cuenta", usuario);
         modelo.addAttribute("usuario", formulario);
+        cargarRolesCompatibles(modelo, usuario);
         return "usuarios/editar";
     }
 
@@ -149,8 +162,12 @@ public class UsuariosControlador extends ControladorAdministracion {
             }
             UsuarioRespuesta cuenta = usuariosApi.buscar(codigo);
             modelo.addAttribute("cuenta", cuenta);
-            validarDni(cuenta.getRol(), formulario.getDni(), errores);
+            List<RolRespuesta> compatibles = cargarRolesCompatibles(modelo, cuenta);
+            validarDni(cuenta.isCliente(), formulario.getDni(), errores);
             validarLongitudContrasenia(formulario.getContrasenia(), errores);
+            if (!errores.hasFieldErrors("codigoRol") && buscarRol(compatibles, formulario.getCodigoRol()) == null) {
+                errores.rejectValue("codigoRol", "rol.incompatible", "Elegí un rol para este tipo de usuario.");
+            }
             if (errores.hasErrors()) {
                 return "usuarios/editar";
             }
@@ -159,13 +176,17 @@ public class UsuariosControlador extends ControladorAdministracion {
                 usuariosApi.modificar(codigo, formulario);
             } catch (RestClientResponseException error) {
                 int estado = error.getStatusCode().value();
-                if (estado != 400 && estado != 409) {
+                if (estado != 400 && estado != 403 && estado != 409) {
                     throw error;
                 }
                 respuesta.setStatus(estado);
-                modelo.addAttribute("errorEdicion", estado == 409
-                        ? "Ya existe un usuario con ese nombre o DNI. Revisá los datos."
-                        : "La API rechazó los datos. Revisá el nombre y la nueva contraseña.");
+                String mensaje = "La API rechazó los datos. Revisá el nombre, el rol y la contraseña.";
+                if (estado == 409) {
+                    mensaje = "Ya existe un usuario con ese nombre o DNI. Revisá los datos.";
+                } else if (estado == 403) {
+                    mensaje = "No podés pasarte a un rol que no administre usuarios.";
+                }
+                modelo.addAttribute("errorEdicion", mensaje);
                 return "usuarios/editar";
             } catch (ResourceAccessException error) {
                 respuesta.setStatus(503);
@@ -174,7 +195,7 @@ public class UsuariosControlador extends ControladorAdministracion {
                 return "usuarios/editar";
             }
             if (esMiCuenta(codigo, solicitud)) {
-                // Después de cambiar las propias credenciales se ingresa nuevamente.
+                // Después de cambiar la propia cuenta se ingresa nuevamente.
                 boolean salidaConfirmada = true;
                 try {
                     autenticacionApi.cerrarSesion();
@@ -186,7 +207,7 @@ public class UsuariosControlador extends ControladorAdministracion {
                 return salidaConfirmada ? "redirect:/login?credencialesActualizadas"
                         : "redirect:/login?credencialesActualizadas&salidaLocal";
             }
-            redireccion.addFlashAttribute("mensajeExito", "Credenciales actualizadas correctamente.");
+            redireccion.addFlashAttribute("mensajeExito", "Usuario actualizado correctamente.");
             return "redirect:/usuarios";
         } finally {
             formulario.setContrasenia("");
@@ -228,16 +249,16 @@ public class UsuariosControlador extends ControladorAdministracion {
             }
             respuesta.setStatus(estado);
             modelo.addAttribute("errorEliminacion", estado == 403
-                    ? "El backend no permite eliminar esta cuenta. Verificá tus permisos; no se puede eliminar la propia cuenta ni al último administrador."
-                    : "No se pudo eliminar la cuenta porque está relacionada con otros datos.");
+                    ? "El backend no permite dar de baja esta cuenta. No se puede dar de baja la propia cuenta ni al último usuario que administra usuarios."
+                    : "No se pudo dar de baja la cuenta porque está relacionada con otros datos.");
             return "usuarios/eliminar";
         } catch (ResourceAccessException error) {
             respuesta.setStatus(503);
             modelo.addAttribute("errorEliminacion",
-                    "No pudimos confirmar la eliminación. Consultá el listado antes de volver a intentarlo.");
+                    "No pudimos confirmar la baja. Consultá el listado antes de volver a intentarlo.");
             return "usuarios/eliminar";
         }
-        redireccion.addFlashAttribute("mensajeExito", "Usuario eliminado correctamente.");
+        redireccion.addFlashAttribute("mensajeExito", "Usuario dado de baja correctamente.");
         return "redirect:/usuarios";
     }
 
@@ -250,14 +271,46 @@ public class UsuariosControlador extends ControladorAdministracion {
         return turistasApi.listarTitularesSinCuenta();
     }
 
+    /** Roles para elegir al crear y los permisos para mostrar que puede hacer cada uno. */
+    private void cargarRoles(Model modelo, List<RolRespuesta> roles) {
+        modelo.addAttribute("roles", roles);
+        modelo.addAttribute("permisos", rolesApi.listarPermisos());
+    }
+
+    /** Al editar solo se ofrecen roles del mismo tipo de usuario que la cuenta. */
+    private List<RolRespuesta> cargarRolesCompatibles(Model modelo, UsuarioRespuesta cuenta) {
+        List<RolRespuesta> compatibles = new ArrayList<>();
+        for (RolRespuesta rol : rolesApi.listar()) {
+            if (rol.isParaClientes() == cuenta.isCliente()) {
+                compatibles.add(rol);
+            }
+        }
+        cargarRoles(modelo, compatibles);
+        return compatibles;
+    }
+
+    private RolRespuesta buscarRol(List<RolRespuesta> roles, Integer codigoRol) {
+        for (RolRespuesta rol : roles) {
+            if (rol.getCodigo().equals(codigoRol)) {
+                return rol;
+            }
+        }
+        return null;
+    }
+
     private void validarFormulario(CrearUsuarioFormulario formulario, BindingResult errores,
-            List<TuristaResumen> disponibles) {
-        validarDni(formulario.getRol(), formulario.getDni(), errores);
+            List<TuristaResumen> disponibles, List<RolRespuesta> roles) {
         validarLongitudContrasenia(formulario.getContrasenia(), errores);
-        if (errores.hasFieldErrors("rol") || errores.hasFieldErrors("codigoTurista")) {
+        if (errores.hasFieldErrors("codigoRol") || errores.hasFieldErrors("codigoTurista")) {
             return;
         }
-        if ("CLIENTE".equals(formulario.getRol())) {
+        RolRespuesta rol = buscarRol(roles, formulario.getCodigoRol());
+        if (rol == null) {
+            errores.rejectValue("codigoRol", "rol.inexistente", "Elegí un rol de la lista.");
+            return;
+        }
+        validarDni(rol.isParaClientes(), formulario.getDni(), errores);
+        if (rol.isParaClientes()) {
             boolean encontrado = false;
             for (TuristaResumen turista : disponibles) {
                 if (turista.getCodigo().equals(formulario.getCodigoTurista())) {
@@ -271,23 +324,28 @@ public class UsuariosControlador extends ControladorAdministracion {
             }
         } else if (formulario.getCodigoTurista() != null) {
             errores.rejectValue("codigoTurista", "turista.noCorresponde",
-                    "Para un administrador o vendedor dejá el turista sin seleccionar.");
+                    "Para un empleado dejá el turista sin seleccionar.");
         }
     }
 
-    private void validarDni(String rol, String dni, BindingResult errores) {
-        if (errores.hasFieldErrors("dni"))
+    private void validarDni(boolean esCliente, String dni, BindingResult errores) {
+        if (errores.hasFieldErrors("dni")) {
             return;
-        if ("CLIENTE".equals(rol)) {
-            if (dni != null)
+        }
+        if (esCliente) {
+            if (dni != null) {
                 errores.rejectValue("dni", "dni.delTurista", "Para un cliente dejá el DNI vacío: se toma del turista.");
+            }
         } else if (dni == null) {
-            errores.rejectValue("dni", "dni.obligatorio", "Ingresá el DNI del administrador o vendedor.");
+            errores.rejectValue("dni", "dni.obligatorio", "Ingresá el DNI del empleado.");
         }
     }
 
     private void validarLongitudContrasenia(String contrasenia, BindingResult errores) {
-        if (!errores.hasFieldErrors("contrasenia") && contrasenia.getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (contrasenia == null || errores.hasFieldErrors("contrasenia")) {
+            return;
+        }
+        if (contrasenia.getBytes(StandardCharsets.UTF_8).length > 72) {
             errores.rejectValue("contrasenia", "contrasenia.bytes",
                     "La contraseña es demasiado larga al codificarla. Usá menos caracteres.");
         }
@@ -296,5 +354,10 @@ public class UsuariosControlador extends ControladorAdministracion {
     @Override
     protected String recursoGestionado() {
         return "usuarios";
+    }
+
+    @Override
+    protected String permisoRequerido() {
+        return "ADMINISTRAR_USUARIOS";
     }
 }

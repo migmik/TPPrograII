@@ -36,7 +36,7 @@
                                 <c:out value="${hotel.capacidadTotal}" /> plazas
                             </dd>
                         </dl>
-                        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                        <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_HOTELES')}">
                             <p>
                                 <a href="<c:url value='/hoteles/${hotel.codigo}/editar'/>">Editar hotel</a>
                                 <a href="<c:url value='/hoteles/${hotel.codigo}/eliminar'/>">Eliminar hotel</a>

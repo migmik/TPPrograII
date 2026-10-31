@@ -14,13 +14,10 @@
             <body>
                 <%@ include file="../fragmentos/navegacion.jspf" %>
                     <main>
-                        <h1>Editar credenciales</h1>
+                        <h1>Editar usuario</h1>
                         <p>Cuenta:
-                            <c:out value="${cuenta.codigo}" />. Rol:
-                            <c:out value="${cuenta.rol}" />.
-                        </p>
-                        <p>Esta operación cambia el nombre, la contraseña y el DNI de empleados. El rol y el turista
-                            asociado se mantienen.
+                            <c:out value="${cuenta.codigo}" />. Rol actual:
+                            <strong><c:out value="${cuenta.rol}" /></strong>.
                         </p>
                         <c:if test="${cuenta.codigo == usuarioActual.codigo}">
                             <p>Estás editando tu cuenta. Al guardar tendrás que iniciar sesión nuevamente.</p>
@@ -33,7 +30,7 @@
                         <c:url var="urlEditar" value="/usuarios/${cuenta.codigo}/editar" />
                         <form:form method="post" action="${urlEditar}" modelAttribute="usuario" htmlEscape="true">
                             <c:choose>
-                                <c:when test="${cuenta.rol == 'CLIENTE'}">
+                                <c:when test="${cuenta.cliente}">
                                     <p>DNI del turista:
                                         <c:out value="${cuenta.dni}" default="DNI pendiente" />. Se modifica desde
                                         Turistas.
@@ -46,7 +43,6 @@
                                             maxlength="8" />
                                         <form:errors path="dni" cssClass="error" />
                                     </p>
-                                    <p>Ingresá el DNI real del administrador o vendedor.</p>
                                 </c:otherwise>
                             </c:choose>
 
@@ -57,13 +53,24 @@
                                 <form:errors path="nombreUsuario" cssClass="error" />
                             </p>
                             <p>
+                                <form:label path="codigoRol">Rol</form:label>
+                                <form:select path="codigoRol" required="required">
+                                    <c:forEach items="${roles}" var="rol">
+                                        <form:option value="${rol.codigo}">
+                                            <c:out value="${rol.nombre}" />
+                                        </form:option>
+                                    </c:forEach>
+                                </form:select>
+                                <form:errors path="codigoRol" cssClass="error" />
+                            </p>
+                            <%@ include file="roles.jspf" %>
+                            <p>
                                 <form:label path="contrasenia">Nueva contraseña</form:label>
-                                <form:password path="contrasenia" required="required" maxlength="72"
+                                <form:password path="contrasenia" maxlength="72"
                                     autocomplete="new-password" showPassword="false" />
                                 <form:errors path="contrasenia" cssClass="error" />
                             </p>
-                            <p>Ingresá una contraseña nueva para guardar. Si hay un error, deberás volver a escribirla.
-                            </p>
+                            <p>Dejala vacía para conservar la contraseña actual.</p>
                             <button type="submit">Guardar cambios</button>
                         </form:form>
                         <p><a href="<c:url value='/usuarios'/>">Cancelar y volver al listado</a></p>

@@ -1,7 +1,7 @@
 package com.tijetravel.tijefront.formularios;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
@@ -25,9 +25,9 @@ public class CrearUsuarioFormulario {
     @Size(max = 72, message = "La contraseña no puede superar 72 caracteres.")
     private String contrasenia;
 
-    @NotBlank(message = "Elegí un rol.")
-    @Pattern(regexp = "ADMINISTRADOR|VENDEDOR|CLIENTE", message = "Elegí un rol válido.")
-    private String rol;
+    @NotNull(message = "Elegí un rol.")
+    @Positive(message = "Elegí un rol válido.")
+    private Integer codigoRol;
 
     @Positive(message = "El código del turista debe ser positivo.")
     private Integer codigoTurista;
@@ -48,12 +48,12 @@ public class CrearUsuarioFormulario {
         this.contrasenia = contrasenia;
     }
 
-    public String getRol() {
-        return rol;
+    public Integer getCodigoRol() {
+        return codigoRol;
     }
 
-    public void setRol(String rol) {
-        this.rol = rol;
+    public void setCodigoRol(Integer codigoRol) {
+        this.codigoRol = codigoRol;
     }
 
     public Integer getCodigoTurista() {

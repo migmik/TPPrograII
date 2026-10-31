@@ -1,6 +1,7 @@
 package com.tijetravel.tijefront.clientes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,23 +45,25 @@ class UsuariosApiClienteTest {
     @Test
     void leeUsuariosYSuRelacionConElTurista() {
         servidor.expect(requestTo("http://backend/api/v1/usuarios")).andRespond(withSuccess("""
-                [{"codigo":2,"nombreUsuario":"ana","rol":"CLIENTE","codigoTurista":3}]
+                [{"codigo":2,"nombreUsuario":"ana","rol":"Cliente","codigoRol":3,"tipoUsuario":"CLIENTE","codigoTurista":3}]
                 """, MediaType.APPLICATION_JSON));
         UsuarioRespuesta respuesta = usuarios.listar().get(0);
         assertEquals("ana", respuesta.getNombreUsuario());
-        assertEquals("CLIENTE", respuesta.getRol());
+        assertEquals("Cliente", respuesta.getRol());
+        assertEquals(3, respuesta.getCodigoRol());
+        assertTrue(respuesta.isCliente());
         assertEquals(3, respuesta.getCodigoTurista());
         servidor.verify();
     }
 
     @Test
     void filtraUsuariosPorRol() {
-        servidor.expect(requestTo("http://backend/api/v1/usuarios?rol=VENDEDOR"))
+        servidor.expect(requestTo("http://backend/api/v1/usuarios?codigoRol=2"))
                 .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess("[{\"codigo\":2,\"nombreUsuario\":\"ventas\",\"rol\":\"VENDEDOR\"}]",
+                .andRespond(withSuccess("[{\"codigo\":2,\"nombreUsuario\":\"ventas\",\"rol\":\"Vendedor\"}]",
                         MediaType.APPLICATION_JSON));
 
-        assertEquals("VENDEDOR", usuarios.listar("VENDEDOR").get(0).getRol());
+        assertEquals("Vendedor", usuarios.listar(2).get(0).getRol());
         servidor.verify();
     }
 
@@ -73,13 +76,13 @@ class UsuariosApiClienteTest {
         servidor.expect(requestTo("http://backend/api/v1/usuarios")).andExpect(method(HttpMethod.POST))
                 .andExpect(header("X-CSRF-TOKEN", "token-de-prueba"))
                 .andExpect(content().json("""
-                        {"nombreUsuario":"ana","contrasenia":"clave","rol":"CLIENTE","codigoTurista":3}
+                        {"nombreUsuario":"ana","contrasenia":"clave","codigoRol":3,"codigoTurista":3}
                         """))
                 .andRespond(withStatus(HttpStatus.CREATED));
         CrearUsuarioFormulario formulario = new CrearUsuarioFormulario();
         formulario.setNombreUsuario("ana");
         formulario.setContrasenia("clave");
-        formulario.setRol("CLIENTE");
+        formulario.setCodigoRol(3);
         formulario.setCodigoTurista(3);
         usuarios.crear(formulario);
         servidor.verify();

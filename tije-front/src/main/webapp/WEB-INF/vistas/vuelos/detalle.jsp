@@ -35,7 +35,7 @@
                             <c:out value="${vuelo.totalPlazas}" /> plazas
                         </dd>
                     </dl>
-                    <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                    <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_VUELOS')}">
                         <p>
                             <a href="<c:url value='/vuelos/${vuelo.numero}/editar'/>">Editar vuelo</a>
                             <a href="<c:url value='/vuelos/${vuelo.numero}/eliminar'/>">Eliminar vuelo</a>

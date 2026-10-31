@@ -155,4 +155,9 @@ public class SucursalesControlador extends ControladorAdministracion {
     protected String mensajeOperacionNoPermitida() {
         return "La API no permite esta operación. Revisá tus permisos y los datos relacionados.";
     }
+
+    @Override
+    protected String permisoRequerido() {
+        return "ADMINISTRAR_SUCURSALES";
+    }
 }

@@ -19,14 +19,15 @@
                             <c:out value="${mensajeExito}" />
                         </p>
                     </c:if>
-                    <p><a href="<c:url value='/usuarios/nuevo'/>">Crear usuario</a></p>
+                    <p><a href="<c:url value='/usuarios/nuevo'/>">Crear usuario</a> |
+                        <a href="<c:url value='/roles'/>">Roles y permisos</a></p>
                     <form class="filter-form" method="get" action="<c:url value='/usuarios'/>">
-                        <div class="filter-field"><label for="rol">Tipo de usuario</label>
-                        <select id="rol" name="rol">
+                        <div class="filter-field"><label for="codigoRol">Rol</label>
+                        <select id="codigoRol" name="codigoRol">
                             <option value="" <c:if test="${empty rolBusqueda}">selected</c:if>>Todos</option>
-                            <option value="ADMINISTRADOR" <c:if test="${rolBusqueda == 'ADMINISTRADOR'}">selected</c:if>>Administradores</option>
-                            <option value="VENDEDOR" <c:if test="${rolBusqueda == 'VENDEDOR'}">selected</c:if>>Vendedores</option>
-                            <option value="CLIENTE" <c:if test="${rolBusqueda == 'CLIENTE'}">selected</c:if>>Clientes</option>
+                            <c:forEach items="${roles}" var="rol">
+                                <option value="${rol.codigo}" <c:if test="${rolBusqueda == rol.codigo}">selected</c:if>><c:out value="${rol.nombre}" /></option>
+                            </c:forEach>
                         </select></div>
                         <div class="filter-field"><label for="codigo">Código de usuario</label>
                         <input id="codigo" name="codigo" type="number" min="1" value="<c:out value='${codigoBusqueda}'/>"></div>
@@ -74,10 +75,10 @@
                                             </td>
                                             <td>
                                                 <a href="<c:url value='/usuarios/${usuario.codigo}/editar'/>">Editar
-                                                    credenciales</a>
+                                                    usuario y rol</a>
                                                 <c:if test="${usuario.codigo != usuarioActual.codigo}">
                                                     | <a
-                                                        href="<c:url value='/usuarios/${usuario.codigo}/eliminar'/>">Eliminar</a>
+                                                        href="<c:url value='/usuarios/${usuario.codigo}/eliminar'/>">Dar de baja</a>
                                                 </c:if>
                                             </td>
                                         </tr>
@@ -86,7 +87,7 @@
                             </table>
                             <c:if test="${totalPaginas > 1}">
                                 <form method="get" action="<c:url value='/usuarios'/>">
-                                    <input type="hidden" name="rol" value="<c:out value='${rolBusqueda}'/>">
+                                    <input type="hidden" name="codigoRol" value="<c:out value='${rolBusqueda}'/>">
                                     <input type="hidden" name="codigo" value="<c:out value='${codigoBusqueda}'/>">
                                     <input type="hidden" name="nombre" value="<c:out value='${nombreBusqueda}'/>">
                                     <input type="hidden" name="dni" value="<c:out value='${dniBusqueda}'/>">

@@ -19,7 +19,7 @@
                         <select id="ciudad" name="ciudad"><option value="">Todas</option><c:forEach items="${ciudades}" var="opcion"><option value="<c:out value='${opcion}'/>" ${ciudadBusqueda == opcion ? 'selected' : ''}><c:out value="${opcion}"/></option></c:forEach></select></div>
                         <button type="submit">Filtrar</button>
                     </form>
-                    <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                    <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_SUCURSALES')}">
                         <p><a href="<c:url value='/sucursales/nuevo'/>">Agregar sucursal</a></p>
                     </c:if>
                     <c:if test="${not empty mensajeExito}">
@@ -40,7 +40,7 @@
                                         <th scope="col">Dirección</th>
                                         <th scope="col">Ciudad</th>
                                         <th scope="col">Teléfono</th>
-                                        <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                                        <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_SUCURSALES')}">
                                             <th scope="col">Administrar</th>
                                         </c:if>
                                     </tr>
@@ -56,7 +56,7 @@
                                             </td>
                                             <td><c:out value="${sucursal.ciudad}" /></td>
                                             <td><c:out value="${sucursal.telefono}" /></td>
-                                            <c:if test="${usuarioActual.rol == 'ADMINISTRADOR'}">
+                                            <c:if test="${not empty usuarioActual and usuarioActual.tienePermiso('ADMINISTRAR_SUCURSALES')}">
                                                 <td>
                                                     <a
                                                         href="<c:url value='/sucursales/${sucursal.codigo}/editar'/>">Editar</a>

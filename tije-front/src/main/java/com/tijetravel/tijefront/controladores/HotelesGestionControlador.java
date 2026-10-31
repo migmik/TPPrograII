@@ -150,4 +150,9 @@ public class HotelesGestionControlador extends ControladorAdministracion {
     protected String recursoGestionado() {
         return "hoteles";
     }
+
+    @Override
+    protected String permisoRequerido() {
+        return "ADMINISTRAR_HOTELES";
+    }
 }

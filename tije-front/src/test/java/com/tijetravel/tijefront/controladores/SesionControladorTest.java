@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
+import com.tijetravel.tijefront.SesionesPrueba;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 
@@ -152,7 +153,7 @@ class SesionControladorTest {
         SesionRespuesta usuario = new SesionRespuesta();
         usuario.setCodigo(1);
         usuario.setNombreUsuario("ana");
-        usuario.setRol("VENDEDOR");
+        SesionesPrueba.asignar(usuario, "VENDEDOR");
         return usuario;
     }
 

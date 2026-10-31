@@ -1,0 +1,16 @@
+<%@ page pageEncoding="UTF-8" %>
+<details class="roles-resumen">
+    <summary>¿Qué puede hacer cada rol?</summary>
+    <ul>
+        <c:forEach items="${roles}" var="rolDisponible">
+            <li><strong><c:out value="${rolDisponible.nombre}" /></strong>:
+                <c:set var="separador" value="" />
+                <c:forEach items="${permisos}" var="permiso">
+                    <c:if test="${rolDisponible.tienePermiso(permiso.nombre)}"><c:out value="${separador}" /><c:out value="${permiso.descripcion}" /><c:set var="separador" value=", " /></c:if>
+                </c:forEach>
+                <c:if test="${empty rolDisponible.permisos}">sin permisos</c:if>.
+            </li>
+        </c:forEach>
+    </ul>
+    <p><a href="<c:url value='/roles'/>">Editar los permisos de los roles</a></p>
+</details>

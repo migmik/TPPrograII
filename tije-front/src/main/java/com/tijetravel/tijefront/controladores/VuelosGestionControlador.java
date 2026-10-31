@@ -160,4 +160,9 @@ public class VuelosGestionControlador extends ControladorAdministracion {
     protected String recursoGestionado() {
         return "vuelos";
     }
+
+    @Override
+    protected String permisoRequerido() {
+        return "ADMINISTRAR_VUELOS";
+    }
 }

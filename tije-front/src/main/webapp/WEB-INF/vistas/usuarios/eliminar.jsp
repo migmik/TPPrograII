@@ -6,14 +6,14 @@
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Eliminar usuario - Tije Travel</title>
+            <title>Dar de baja usuario - Tije Travel</title>
             <link rel="stylesheet" href="<c:url value='/css/base.css'/>">
         </head>
 
         <body>
             <%@ include file="../fragmentos/navegacion.jspf" %>
                 <main class="compact-page">
-                    <h1>Eliminar usuario</h1>
+                    <h1>Dar de baja usuario</h1>
                     <p>DNI:
                         <c:out value="${cuenta.dni}" default="DNI pendiente" />.
                     </p>
@@ -31,15 +31,14 @@
                     </c:if>
                     <c:choose>
                         <c:when test="${esMiCuenta}">
-                            <p>No podés eliminar tu propia cuenta.</p>
+                            <p>No podés darte de baja a vos mismo.</p>
                         </c:when>
                         <c:otherwise>
-                            <p>Se eliminará esta cuenta de acceso. El turista asociado y sus reservas se conservan.</p>
-                            <p>Esta acción no se puede deshacer. Para recuperar el acceso será necesario crear otra
-                                cuenta.</p>
+                            <p>La cuenta ya no podrá iniciar sesión. El turista asociado y sus reservas se conservan.</p>
+                            <p>Se puede reactivar después desde los usuarios dados de baja.</p>
                             <form method="post" action="<c:url value='/usuarios/${cuenta.codigo}/eliminar'/>">
                                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                                <button type="submit">Confirmar eliminación</button>
+                                <button type="submit">Confirmar baja</button>
                             </form>
                         </c:otherwise>
                     </c:choose>

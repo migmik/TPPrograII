@@ -149,9 +149,9 @@ public class ReservasControlador {
         String salida = comprobarAcceso(false, solicitud, respuesta, modelo);
         if (salida != null) return salida;
         SesionRespuesta usuario = (SesionRespuesta) solicitud.getSession(false).getAttribute("usuarioActual");
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
+        if (!usuario.tienePermiso("VER_BALANCE")) {
             respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo administradores pueden ver el balance.");
+            modelo.addAttribute("mensaje", "No tenés permiso para ver el balance.");
             return "error";
         }
         modelo.addAttribute("balance", reservasApi.balance());
@@ -287,7 +287,7 @@ public class ReservasControlador {
         modelo.addAttribute("hoteles", List.of());
         modelo.addAttribute("vuelos", List.of());
         SesionRespuesta usuario = (SesionRespuesta) modelo.asMap().get("usuarioActual");
-        boolean cliente = usuario != null && "CLIENTE".equals(usuario.getRol());
+        boolean cliente = usuario != null && usuario.isCliente();
         String dni = (String) modelo.asMap().get("dniTuristaBusqueda");
         if (cliente) {
             modelo.addAttribute("turistas", turistasApi.listar());
@@ -324,12 +324,12 @@ public class ReservasControlador {
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();
         sesion.setAttribute("usuarioActual", usuario);
         modelo.addAttribute("usuarioActual", usuario);
-        boolean puedeGestionar = "ADMINISTRADOR".equals(usuario.getRol()) || "VENDEDOR".equals(usuario.getRol());
+        boolean puedeGestionar = usuario.tienePermiso("ADMINISTRAR_RESERVAS");
         modelo.addAttribute("puedeGestionar", puedeGestionar);
-        modelo.addAttribute("puedeCrear", puedeGestionar || "CLIENTE".equals(usuario.getRol()));
+        modelo.addAttribute("puedeCrear", usuario.tienePermiso("CREAR_RESERVAS"));
         if (escritura && !puedeGestionar) {
             respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo administradores y vendedores pueden gestionar reservas.");
+            modelo.addAttribute("mensaje", "No tenés permiso para gestionar reservas.");
             return "error";
         }
         return null;
