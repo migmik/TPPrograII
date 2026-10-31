@@ -20,7 +20,6 @@ import com.tijetravel.tijeback.api.dto.ModificarUsuarioSolicitud;
 import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.UsuarioRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.UsuarioMapeador;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
 import com.tijetravel.tijeback.servicios.UsuarioServicio;
@@ -46,15 +45,15 @@ public class UsuariosRestControlador {
 
         @GetMapping
         public List<UsuarioRespuesta> listar(
-                        @RequestParam(required = false) RolUsuario rol,
+                        @RequestParam(required = false) Integer codigoRol,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return usuarioMapeador.aRespuestas(usuarioServicio.listarPara(actor, rol));
+                return usuarioMapeador.aRespuestas(usuarioServicio.listarPara(actor, codigoRol));
         }
 
         @GetMapping("/pagina")
         public PaginaRespuesta<UsuarioRespuesta> listarPagina(
-                        @RequestParam(required = false) RolUsuario rol,
+                        @RequestParam(required = false) Integer codigoRol,
                         @RequestParam(required = false) Integer codigo,
                         @RequestParam(required = false) String nombre,
                         @RequestParam(required = false) String dni,
@@ -63,7 +62,7 @@ public class UsuariosRestControlador {
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
                 return usuarioMapeador.aPagina(
-                                usuarioServicio.buscarPaginaPara(actor, rol, codigo, nombre, dni, pagina, tamanio));
+                                usuarioServicio.buscarPaginaPara(actor, codigoRol, codigo, nombre, dni, pagina, tamanio));
         }
 
         @GetMapping("/{codigo}")
@@ -84,7 +83,7 @@ public class UsuariosRestControlador {
                                 actor,
                                 solicitud.nombreUsuario(),
                                 solicitud.contrasenia(),
-                                solicitud.rol(),
+                                solicitud.codigoRol(),
                                 solicitud.codigoTurista(), solicitud.dni());
                 UsuarioRespuesta respuesta = usuarioMapeador.aRespuesta(usuario);
                 return ResponseEntity
@@ -98,11 +97,13 @@ public class UsuariosRestControlador {
                         @Valid @RequestBody ModificarUsuarioSolicitud solicitud,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                return usuarioMapeador.aRespuesta(usuarioServicio.modificarCredenciales(
+                return usuarioMapeador.aRespuesta(usuarioServicio.modificar(
                                 actor,
                                 codigo,
                                 solicitud.nombreUsuario(),
-                                solicitud.contrasenia(), solicitud.dni()));
+                                solicitud.contrasenia(),
+                                solicitud.dni(),
+                                solicitud.codigoRol()));
         }
 
         @DeleteMapping("/{codigo}")

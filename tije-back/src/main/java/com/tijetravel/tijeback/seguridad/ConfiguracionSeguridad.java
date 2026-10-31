@@ -24,6 +24,7 @@ import org.springframework.security.config.annotation.web.configurers.SecurityCo
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy;
@@ -38,6 +39,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.tijetravel.tijeback.enums.Permiso;
+import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @Configuration
 @EnableWebSecurity
@@ -99,7 +101,8 @@ public class ConfiguracionSeguridad {
             final SecurityContextRepository repositorioContextoSeguridad,
             final CsrfTokenRepository repositorioTokenCsrf,
             final CorsConfigurationSource configuracionCors,
-            final EscritorErrorSeguridad escritorErrorSeguridad) throws Exception {
+            final EscritorErrorSeguridad escritorErrorSeguridad,
+            UsuarioRepositorio usuarioRepositorio) throws Exception {
 
         http.cors(new Customizer<CorsConfigurer<HttpSecurity>>() {
             @Override
@@ -160,6 +163,9 @@ public class ConfiguracionSeguridad {
                     }
                 });
 
+        // Antes de autorizar se recargan los permisos por si cambio el rol del usuario.
+        http.addFilterBefore(new ActualizacionPermisosFiltro(usuarioRepositorio), AuthorizationFilter.class);
+
         return http.build();
     }
 
@@ -186,7 +192,8 @@ public class ConfiguracionSeguridad {
 
         reglas.requestMatchers(HttpMethod.GET, "/api/v1/turistas/**", "/api/v1/reservas/**")
                 .hasAuthority(Permiso.CONSULTAR.name());
-        reglas.requestMatchers("/api/v1/usuarios/**").hasAuthority(Permiso.ADMINISTRAR_USUARIOS.name());
+        reglas.requestMatchers("/api/v1/usuarios/**", "/api/v1/roles/**")
+                .hasAuthority(Permiso.ADMINISTRAR_USUARIOS.name());
         reglas.requestMatchers("/api/v1/sucursales/**").hasAuthority(Permiso.ADMINISTRAR_SUCURSALES.name());
         reglas.requestMatchers("/api/v1/hoteles/**").hasAuthority(Permiso.ADMINISTRAR_HOTELES.name());
         reglas.requestMatchers("/api/v1/vuelos/**").hasAuthority(Permiso.ADMINISTRAR_VUELOS.name());

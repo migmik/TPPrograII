@@ -13,8 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tijetravel.tijeback.enums.RolUsuario;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.enums.Permiso;
+import com.tijetravel.tijeback.modelos.Empleado;
+import com.tijetravel.tijeback.modelos.Rol;
+import com.tijetravel.tijeback.repositorios.RolRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
 
@@ -25,6 +27,7 @@ public class AdministradorInicializador implements ApplicationRunner {
 
     private final BloqueoEscrituras bloqueoEscrituras;
     private final UsuarioRepositorio usuarioRepositorio;
+    private final RolRepositorio rolRepositorio;
     private final PasswordEncoder codificadorContrasenias;
     private final String nombreUsuario;
     private final String contrasenia;
@@ -33,12 +36,14 @@ public class AdministradorInicializador implements ApplicationRunner {
     public AdministradorInicializador(
             BloqueoEscrituras bloqueoEscrituras,
             UsuarioRepositorio usuarioRepositorio,
+            RolRepositorio rolRepositorio,
             PasswordEncoder codificadorContrasenias,
             @Value("${app.seguridad.administrador-inicial.nombre-usuario:}") String nombreUsuario,
             @Value("${app.seguridad.administrador-inicial.contrasenia:}") String contrasenia,
             @Value("${app.seguridad.administrador-inicial.dni:}") String dni) {
         this.bloqueoEscrituras = bloqueoEscrituras;
         this.usuarioRepositorio = usuarioRepositorio;
+        this.rolRepositorio = rolRepositorio;
         this.codificadorContrasenias = codificadorContrasenias;
         this.nombreUsuario = nombreUsuario;
         this.contrasenia = contrasenia;
@@ -49,7 +54,8 @@ public class AdministradorInicializador implements ApplicationRunner {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void run(ApplicationArguments argumentos) {
         bloqueoEscrituras.adquirir();
-        if (usuarioRepositorio.countByRolAndFechaBajaIsNull(RolUsuario.ADMINISTRADOR) > 0) {
+        // Si ya hay alguien que puede administrar usuarios no hace falta crear otro.
+        if (usuarioRepositorio.contarActivosConPermiso(Permiso.ADMINISTRAR_USUARIOS) > 0) {
             return;
         }
 
@@ -65,9 +71,14 @@ public class AdministradorInicializador implements ApplicationRunner {
                     "El nombre configurado para el administrador inicial ya esta en uso");
         }
 
-        usuarioRepositorio.save(new Administrador(
+        Rol rolAdministrador = rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull("Administrador");
+        if (rolAdministrador == null || !rolAdministrador.tienePermiso(Permiso.ADMINISTRAR_USUARIOS)) {
+            throw new IllegalStateException(
+                    "Falta el rol Administrador con el permiso de administrar usuarios");
+        }
+        usuarioRepositorio.save(new Empleado(
                 nombreNormalizado,
-                codificadorContrasenias.encode(contrasenia), dni));
+                codificadorContrasenias.encode(contrasenia), dni, rolAdministrador));
         LOGGER.info("Se creo el administrador inicial {}", nombreNormalizado);
     }
 

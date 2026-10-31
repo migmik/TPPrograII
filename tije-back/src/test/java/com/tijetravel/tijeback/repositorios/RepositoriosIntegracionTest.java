@@ -20,16 +20,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.modelos.Vuelo;
 
 @SpringBootTest
@@ -53,6 +52,9 @@ class RepositoriosIntegracionTest {
 
         @Autowired
         private ReservaRepositorio reservaRepositorio;
+
+        @Autowired
+        private RolRepositorio rolRepositorio;
 
         @Autowired
         private UsuarioRepositorio usuarioRepositorio;
@@ -85,9 +87,9 @@ class RepositoriosIntegracionTest {
                                 20,
                                 15,
                                 5));
-                usuarioRepositorio.save(new Cliente("ana", "clave", titular));
-                usuarioRepositorio.save(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
-                usuarioRepositorio.save(new Administrador("admin", "clave", DnisPrueba.siguiente()));
+                usuarioRepositorio.save(new Cliente("ana", "clave", titular, rol("Cliente")));
+                usuarioRepositorio.save(new Empleado("vendedor", "clave", DnisPrueba.siguiente(), rol("Vendedor")));
+                usuarioRepositorio.save(new Empleado("admin", "clave", DnisPrueba.siguiente(), rol("Administrador")));
                 reservaRepositorio.saveAndFlush(new Reserva(
                                 familiar,
                                 vuelo,
@@ -100,16 +102,16 @@ class RepositoriosIntegracionTest {
                 Usuario usuario = usuarioRepositorio.buscarActivoPorNombre("ANA");
 
                 assertInstanceOf(Cliente.class, usuario);
-                assertEquals(RolUsuario.CLIENTE, usuario.getRol());
+                assertEquals("Cliente", usuario.getRol().getNombre());
                 assertEquals(titular.getCodigo(), usuario.getCodigoTurista());
                 assertEquals(1, usuarioRepositorio.contarClientesPorTurista(titular.getCodigo()));
                 assertEquals(1, turistaRepositorio.findByTitularCodigo(titular.getCodigo()).size());
                 assertEquals(titular.getCodigo(), turistaRepositorio.findByTitularIsNullAndFechaBajaIsNullOrderByCodigo().get(0).getCodigo());
                 assertEquals(familiar.getCodigo(), turistaRepositorio.findByTitularIsNotNullAndFechaBajaIsNullOrderByCodigo().get(0).getCodigo());
                 assertEquals(familiar.getCodigo(), turistaRepositorio.findByDniAndFechaBajaIsNull(familiar.getDni()).get(0).getCodigo());
-                assertEquals(1, usuarioRepositorio.listarActivosPorRol(RolUsuario.CLIENTE).size());
-                assertEquals(1, usuarioRepositorio.listarActivosPorRol(RolUsuario.VENDEDOR).size());
-                assertEquals(1, usuarioRepositorio.listarActivosPorRol(RolUsuario.ADMINISTRADOR).size());
+                assertEquals(1, usuarioRepositorio.listarActivosPorRol(rol("Cliente").getCodigo()).size());
+                assertEquals(1, usuarioRepositorio.listarActivosPorRol(rol("Vendedor").getCodigo()).size());
+                assertEquals(1, usuarioRepositorio.listarActivosPorRol(rol("Administrador").getCodigo()).size());
                 assertEquals(1, reservaRepositorio.listarPorTitularYFamiliares(titular.getCodigo()).size());
                 assertEquals(1, reservaRepositorio.findByTuristaCodigo(familiar.getCodigo()).size());
                 assertEquals(1, reservaRepositorio.findByVueloNumeroAndFechaBajaIsNull(100).size());
@@ -127,16 +129,16 @@ class RepositoriosIntegracionTest {
                                 .getTotalElements());
                 assertEquals(1, reservaRepositorio.balancePagadas().getReservasPendientes());
                 assertEquals(0, reservaRepositorio.balancePagadas().getReservasPagadas());
-                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.CLIENTE, null, null,
+                assertEquals(1, usuarioRepositorio.buscarPagina(rol("Cliente").getCodigo(), null, null,
                                 titular.getDni(), PageRequest.of(0, 10)).getTotalElements());
-                assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.ADMINISTRADOR,
-                                usuarioRepositorio.listarActivosPorRol(RolUsuario.ADMINISTRADOR).get(0).getCodigo(),
+                assertEquals(1, usuarioRepositorio.buscarPagina(rol("Administrador").getCodigo(),
+                                usuarioRepositorio.listarActivosPorRol(rol("Administrador").getCodigo()).get(0).getCodigo(),
                                 null, null, PageRequest.of(0, 10)).getTotalElements());
         }
 
         @Test
         void aplicaLaMigracionInicialAntesDeValidarJpa() {
-                assertEquals("10", flyway.info().current().getVersion().getVersion());
+                assertEquals("11", flyway.info().current().getVersion().getVersion());
         }
 
         @Test
@@ -160,5 +162,10 @@ class RepositoriosIntegracionTest {
                 } catch (DataIntegrityViolationException esperada) {
                         // El indice unico sobre dni_activo sigue controlando a los activos.
                 }
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

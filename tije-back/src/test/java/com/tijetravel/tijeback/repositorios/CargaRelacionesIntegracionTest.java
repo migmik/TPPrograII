@@ -22,16 +22,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.enums.RolUsuario;
+import com.tijetravel.tijeback.enums.TipoUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.modelos.Vuelo;
 
 import jakarta.persistence.EntityManager;
@@ -51,6 +51,9 @@ class CargaRelacionesIntegracionTest {
     private EntityManager entityManager;
     @Autowired
     private ReservaRepositorio reservas;
+    @Autowired
+    private RolRepositorio rolRepositorio;
+
     @Autowired
     private UsuarioRepositorio usuarios;
 
@@ -74,7 +77,7 @@ class CargaRelacionesIntegracionTest {
                     "titular" + i + "@ejemplo.com", "1", "2", sucursal));
             Turista familiar = guardar(new Turista(DnisPrueba.siguiente(), "Familiar " + i, "Perez", "Calle",
                     "familiar" + i + "@ejemplo.com", "1", "2", sucursal, titular));
-            codigosUsuarios.add(guardar(new Cliente("cliente" + i, "hash", titular)).getCodigo());
+            codigosUsuarios.add(guardar(new Cliente("cliente" + i, "hash", titular, rol("Cliente"))).getCodigo());
             Vuelo vuelo = guardar(new Vuelo(9000 + i, DIA.atTime(10, 0), "Buenos Aires", "Cordoba", 20, 20, 0));
             Hotel hotel = guardar(new Hotel("Hotel " + i, "Calle", "Cordoba", "123", 20));
             Reserva reserva = guardar(new Reserva(familiar, vuelo, hotelComun,
@@ -87,8 +90,8 @@ class CargaRelacionesIntegracionTest {
                 codigoTitular = titular.getCodigo();
             }
         }
-        codigosUsuarios.add(guardar(new Administrador("administrador", "hash", DnisPrueba.siguiente())).getCodigo());
-        codigosUsuarios.add(guardar(new Vendedor("vendedor", "hash", DnisPrueba.siguiente())).getCodigo());
+        codigosUsuarios.add(guardar(new Empleado("administrador", "hash", DnisPrueba.siguiente(), rol("Administrador"))).getCodigo());
+        codigosUsuarios.add(guardar(new Empleado("vendedor", "hash", DnisPrueba.siguiente(), rol("Vendedor"))).getCodigo());
 
         // Excluir INSERTs y evitar que la cache de primer nivel oculte consultas
         // adicionales.
@@ -158,9 +161,9 @@ class CargaRelacionesIntegracionTest {
         List<Usuario> resultado = usuarios.listarActivos();
 
         assertEquals(5, resultado.size());
-        assertEquals(3, contarPorRol(resultado, RolUsuario.CLIENTE));
-        assertEquals(1, contarPorRol(resultado, RolUsuario.ADMINISTRADOR));
-        assertEquals(1, contarPorRol(resultado, RolUsuario.VENDEDOR));
+        assertEquals(3, contarPorRol(resultado, "Cliente"));
+        assertEquals(1, contarPorRol(resultado, "Administrador"));
+        assertEquals(1, contarPorRol(resultado, "Vendedor"));
         assertEquals(1, estadisticas.getPrepareStatementCount());
         entityManager.clear();
         for (Usuario usuario : resultado) {
@@ -199,7 +202,7 @@ class CargaRelacionesIntegracionTest {
     }
 
     private void verificarTuristaFueraDelContexto(Usuario usuario) {
-        if (usuario.getRol() == RolUsuario.CLIENTE) {
+        if (usuario.getTipoUsuario() == TipoUsuario.CLIENTE) {
             assertNotNull(usuario.getCodigoTurista());
             // Leer un atributo distinto del ID exige que el turista este realmente cargado.
             assertTrue(usuario.getTurista().getNombre().startsWith("Titular"));
@@ -221,10 +224,10 @@ class CargaRelacionesIntegracionTest {
         }
     }
 
-    private int contarPorRol(List<Usuario> lista, RolUsuario rol) {
+    private int contarPorRol(List<Usuario> lista, String rol) {
         int cantidad = 0;
         for (Usuario usuario : lista) {
-            if (usuario.getRol() == rol) {
+            if (usuario.getRol().getNombre().equals(rol)) {
                 cantidad++;
             }
         }
@@ -234,5 +237,10 @@ class CargaRelacionesIntegracionTest {
     private <T> T guardar(T entidad) {
         entityManager.persist(entidad);
         return entidad;
+    }
+
+    /** Rol creado por la migracion V11. */
+    private Rol rol(String nombre) {
+        return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
     }
 }

@@ -14,9 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
@@ -79,7 +80,7 @@ class VueloServicioTest {
 
         private Vuelo modificarVuelo(int plazasTurista, int plazasPrimera) {
                 return servicio.modificar(
-                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                new Empleado("admin", "clave", DnisPrueba.siguiente(), RolesPrueba.administrador()),
                                 100,
                                 LocalDateTime.of(2026, 10, 1, 12, 0),
                                 "Buenos Aires",

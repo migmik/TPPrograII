@@ -27,9 +27,11 @@ import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Empleado;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
+import com.tijetravel.tijeback.repositorios.RolRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 
 @SpringBootTest(properties = {
@@ -53,6 +55,9 @@ class EscriturasApiIntegracionTest {
         private MockMvc mockMvc;
 
         @Autowired
+        private RolRepositorio rolRepositorio;
+
+        @Autowired
         private UsuarioRepositorio usuarioRepositorio;
 
         @Autowired
@@ -70,10 +75,10 @@ class EscriturasApiIntegracionTest {
                 usuarioRepositorio.save(new Cliente(
                                 USUARIO_CLIENTE,
                                 codificadorContrasenias.encode(CONTRASENIA_CLIENTE),
-                                titular));
-                usuarioRepositorio.save(new Vendedor(
+                                titular, rol("Cliente")));
+                usuarioRepositorio.save(new Empleado(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente(), rol("Vendedor")));
         }
 
         @Test
@@ -197,14 +202,15 @@ class EscriturasApiIntegracionTest {
                                                 {
                                                   "nombreUsuario": "operador-nuevo",
                                                   "contrasenia": "ClaveOperador123!",
-                                                  "dni": "74567890", "rol": "VENDEDOR"
+                                                  "dni": "74567890", "codigoRol": %d
                                                 }
-                                                """))
+                                                """.formatted(rol("Vendedor").getCodigo())))
                                 .andExpect(status().isCreated())
                                 .andExpect(header().string("Location", org.hamcrest.Matchers.matchesPattern(
                                                 "/api/v1/usuarios/\\d+")))
                                 .andExpect(jsonPath("$.nombreUsuario").value("operador-nuevo"))
-                                .andExpect(jsonPath("$.rol").value("VENDEDOR"))
+                                .andExpect(jsonPath("$.rol").value("Vendedor"))
+                                .andExpect(jsonPath("$.tipoUsuario").value("EMPLEADO"))
                                 .andExpect(jsonPath("$.contrasenia").doesNotExist());
 
                 Usuario usuario = usuarioRepositorio
@@ -219,9 +225,10 @@ class EscriturasApiIntegracionTest {
                                                 {
                                                   "nombreUsuario": "operador-actualizado",
                                                   "dni": "74567890",
-                                                  "contrasenia": "NuevaClaveOperador123!"
+                                                  "contrasenia": "NuevaClaveOperador123!",
+                                                  "codigoRol": %d
                                                 }
-                                                """))
+                                                """.formatted(rol("Vendedor").getCodigo())))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.nombreUsuario").value("operador-actualizado"))
                                 .andExpect(jsonPath("$.contrasenia").doesNotExist());
@@ -392,5 +399,10 @@ class EscriturasApiIntegracionTest {
                                 .andExpect(status().isOk())
                                 .andReturn();
                 return (MockHttpSession) resultado.getRequest().getSession(false);
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

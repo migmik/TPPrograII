@@ -23,10 +23,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
@@ -57,7 +58,7 @@ class TuristaServicioTest {
     private DisponibilidadServicio disponibilidadServicio;
 
     private TuristaServicio servicio;
-    private Administrador administrador;
+    private Empleado administrador;
     private Turista titular;
     private Turista familiar;
 
@@ -71,7 +72,7 @@ class TuristaServicioTest {
                 new AutorizacionServicio(),
                 org.mockito.Mockito.mock(BloqueoEscrituras.class),
                 disponibilidadServicio);
-        administrador = new Administrador("admin", "clave", DnisPrueba.siguiente());
+        administrador = new Empleado("admin", "clave", DnisPrueba.siguiente(), RolesPrueba.administrador());
         Sucursal sucursal = new Sucursal("Av. Colon 100", "351-1000");
         titular = new Turista(DnisPrueba.siguiente(), "Ana", "Perez", "Direccion", "ana@example.com",
                 "100", "200", sucursal);
@@ -90,7 +91,7 @@ class TuristaServicioTest {
 
     @Test
     void laBajaDelTitularArrastraAlGrupoSusReservasPendientesYSuCuenta() {
-        Cliente cuenta = new Cliente("ana", "clave", titular);
+        Cliente cuenta = new Cliente("ana", "clave", titular, RolesPrueba.cliente());
         Reserva pendienteTitular = reservaDe(titular);
         Reserva pendienteFamiliar = reservaDe(familiar);
         when(turistaRepositorio.findById(1)).thenReturn(Optional.of(titular));

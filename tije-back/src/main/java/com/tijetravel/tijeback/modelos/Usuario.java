@@ -2,20 +2,25 @@ package com.tijetravel.tijeback.modelos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.enums.RolUsuario;
+import com.tijetravel.tijeback.enums.TipoUsuario;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * Cuenta para entrar al sistema. Hay dos tipos (Empleado y Cliente) y cada
+ * usuario tiene un rol que define sus permisos.
+ */
 @Entity
 @Table(name = "usuarios")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -36,16 +41,27 @@ public abstract class Usuario extends EntidadBase {
     @Column(nullable = false)
     private String contrasenia;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, updatable = false)
-    private RolUsuario rol;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "rol_codigo", nullable = false)
+    private Rol rol;
 
     protected Usuario() {
     }
 
-    protected Usuario(String nombreUsuario, String contrasenia, RolUsuario rol) {
-        this.rol = ValidacionModelo.obligatorio(rol, "rol");
+    protected Usuario(String nombreUsuario, String contrasenia, Rol rol) {
+        cambiarRol(rol);
         actualizarCredenciales(nombreUsuario, contrasenia);
+    }
+
+    /** Cada subclase dice que tipo de cuenta es; el rol tiene que ser de ese mismo tipo. */
+    public abstract TipoUsuario getTipoUsuario();
+
+    public void cambiarRol(Rol nuevoRol) {
+        ValidacionModelo.obligatorio(nuevoRol, "rol");
+        if (nuevoRol.getTipoUsuario() != getTipoUsuario()) {
+            throw new IllegalArgumentException("El rol " + nuevoRol.getNombre() + " no es para este tipo de usuario");
+        }
+        this.rol = nuevoRol;
     }
 
     public void actualizarCredenciales(String nombreUsuario, String contrasenia) {
@@ -67,6 +83,11 @@ public abstract class Usuario extends EntidadBase {
     /** Indica si el DNI se guarda en el usuario (empleados) o se toma de otro lado. */
     public boolean tieneDniPropio() {
         return true;
+    }
+
+    /** Los permisos salen del rol; si el rol se dio de baja, el usuario no puede hacer nada. */
+    public boolean tienePermiso(Permiso permiso) {
+        return rol.estaActivo() && rol.tienePermiso(permiso);
     }
 
     /** Por defecto un usuario puede ver a cualquier turista. */
@@ -95,7 +116,7 @@ public abstract class Usuario extends EntidadBase {
         return contrasenia;
     }
 
-    public RolUsuario getRol() {
+    public Rol getRol() {
         return rol;
     }
 
@@ -111,10 +132,8 @@ public abstract class Usuario extends EntidadBase {
         return turista.getCodigo();
     }
 
-    public abstract boolean tienePermiso(Permiso permiso);
-
     @Override
     public String toString() {
-        return "Usuario | codigo=" + codigo + ", nombreUsuario=" + nombreUsuario + ", rol=" + rol;
+        return "Usuario | codigo=" + codigo + ", nombreUsuario=" + nombreUsuario + ", rol=" + rol.getNombre();
     }
 }

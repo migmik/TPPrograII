@@ -32,13 +32,15 @@ import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
+import com.tijetravel.tijeback.modelos.Rol;
 import com.tijetravel.tijeback.modelos.Sucursal;
-import com.tijetravel.tijeback.modelos.Vendedor;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
+import com.tijetravel.tijeback.repositorios.RolRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
@@ -76,6 +78,9 @@ class CatalogosEscriturasApiIntegracionTest {
         private TuristaRepositorio turistaRepositorio;
 
         @Autowired
+        private RolRepositorio rolRepositorio;
+
+        @Autowired
         private UsuarioRepositorio usuarioRepositorio;
 
         @Autowired
@@ -83,9 +88,9 @@ class CatalogosEscriturasApiIntegracionTest {
 
         @BeforeEach
         void prepararVendedor() {
-                usuarioRepositorio.save(new Vendedor(
+                usuarioRepositorio.save(new Empleado(
                                 USUARIO_VENDEDOR,
-                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
+                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente(), rol("Vendedor")));
         }
 
         @Test
@@ -427,5 +432,10 @@ class CatalogosEscriturasApiIntegracionTest {
                         }
                 }
                 throw new AssertionError("No se encontro el hotel " + nombre);
+        }
+
+        /** Rol creado por la migracion V11. */
+        private Rol rol(String nombre) {
+            return rolRepositorio.findByNombreIgnoreCaseAndFechaBajaIsNull(nombre);
         }
 }

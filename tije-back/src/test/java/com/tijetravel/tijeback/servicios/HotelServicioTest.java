@@ -17,10 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.RolesPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
-import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Empleado;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
@@ -73,7 +74,7 @@ class HotelServicioTest {
 
                 try {
                         servicio.modificar(
-                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                new Empleado("admin", "clave", DnisPrueba.siguiente(), RolesPrueba.administrador()),
                                 1,
                                 "Hotel Centro",
                                 "Calle 1",
@@ -96,7 +97,7 @@ class HotelServicioTest {
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 
                 Hotel modificado = servicio.modificar(
-                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                new Empleado("admin", "clave", DnisPrueba.siguiente(), RolesPrueba.administrador()),
                                 1,
                                 "Hotel Centro",
                                 "Calle 1",
@@ -115,7 +116,7 @@ class HotelServicioTest {
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 
                 Hotel modificado = servicio.modificar(
-                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                new Empleado("admin", "clave", DnisPrueba.siguiente(), RolesPrueba.administrador()),
                                 1, "Hotel Centro", "Calle 1", "Córdoba", "351-1000", 5, 25000);
 
                 assertEquals("Córdoba", modificado.getCiudad());
