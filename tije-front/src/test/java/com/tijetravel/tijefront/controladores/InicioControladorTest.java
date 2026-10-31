@@ -76,7 +76,7 @@ class InicioControladorTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("inicio"))
                 .andExpect(model().attribute("vuelosEncontrados", List.of(correcto)))
-                .andExpect(model().attribute("vuelosSugeridos", List.of()))
+                .andExpect(model().attribute("avisoVuelos", (Object) null))
                 .andExpect(model().attribute("hotelesEncontrados", List.of(hotel)))
                 .andExpect(model().attribute("busquedaRealizada", true));
     }
@@ -116,20 +116,61 @@ class InicioControladorTest {
     }
 
     @Test
-    void solicitaSugerenciasSoloSiNoHayVueloEnLaFechaPedida() throws Exception {
+    void siNoHayVueloEnLaFechaMuestraLosMasCercanosConSuHotel() throws Exception {
         VueloRespuesta cercano = vuelo(201, "Buenos Aires", "Cordoba", LocalDate.of(2027, 2, 2));
         VueloRespuesta lejano = vuelo(202, "Buenos Aires", "Cordoba", LocalDate.of(2027, 2, 10));
+        HotelRespuesta hotel = hotel(1, "Córdoba");
         when(vuelosApi.buscar("Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1), 2, false))
                 .thenReturn(List.of());
         when(vuelosApi.buscar("Buenos Aires", "Córdoba", LocalDate.of(2027, 2, 1), 2, true))
                 .thenReturn(List.of(cercano, lejano));
-        when(hotelesApi.buscar("Córdoba", LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4), 2))
-                .thenReturn(List.of());
+        when(hotelesApi.buscar("Córdoba", LocalDate.of(2027, 2, 2), LocalDate.of(2027, 2, 5), 2))
+                .thenReturn(List.of(hotel));
 
-        mvc.perform(busqueda())
+        MvcResult resultado = mvc.perform(busqueda())
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("vuelosEncontrados", List.of()))
-                .andExpect(model().attribute("vuelosSugeridos", List.of(cercano, lejano)));
+                .andExpect(model().attribute("vuelosEncontrados", List.of(cercano, lejano)))
+                .andExpect(model().attribute("avisoVuelos",
+                        "No hay vuelos el 01/02/2027. Te mostramos los más cercanos."))
+                .andReturn();
+
+        // El hotel se reserva desde el dia del vuelo cercano, con las mismas noches pedidas.
+        List<?> recomendados = (List<?>) resultado.getModelAndView().getModel().get("recomendados");
+        assertEquals(1, recomendados.size());
+        CombinacionViaje combinacion = (CombinacionViaje) recomendados.get(0);
+        assertEquals(201, combinacion.getVuelo().getNumero());
+        assertEquals(LocalDate.of(2027, 2, 2), combinacion.getFechaLlegada());
+        assertEquals(LocalDate.of(2027, 2, 5), combinacion.getFechaPartida());
+    }
+
+    @Test
+    void sinFechasBuscaLosProximosVuelosConTresNochesDeHotel() throws Exception {
+        VueloRespuesta proximo = vuelo(401, "Buenos Aires", "Córdoba", LocalDate.of(2027, 3, 10));
+        HotelRespuesta hotel = hotel(1, "Córdoba");
+        when(vuelosApi.buscar("Buenos Aires", "Córdoba", null, 2, false)).thenReturn(List.of(proximo));
+        when(hotelesApi.buscar("Córdoba", LocalDate.of(2027, 3, 10), LocalDate.of(2027, 3, 13), 2))
+                .thenReturn(List.of(hotel));
+
+        mvc.perform(get("/buscar")
+                .param("origen", "Buenos Aires").param("destino", "Córdoba").param("personas", "2"))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("vuelosEncontrados", List.of(proximo)))
+                .andExpect(model().attribute("hotelesEncontrados", List.of(hotel)))
+                .andExpect(model().attribute("avisoVuelos",
+                        "Como no elegiste fecha, te mostramos los próximos vuelos."))
+                .andExpect(model().attribute("hotelLlegada", "10/03/2027"))
+                .andExpect(model().attribute("cantidadNoches", 3L));
+    }
+
+    @Test
+    void laPartidaSinLlegadaEsUnError() throws Exception {
+        mvc.perform(get("/buscar")
+                .param("origen", "Buenos Aires").param("destino", "Córdoba")
+                .param("fechaPartida", "2027-02-04").param("personas", "2"))
+                .andExpect(view().name("inicio"))
+                .andExpect(model().attributeHasFieldErrors("busqueda", "fechaLlegada"));
+        verifyNoInteractions(vuelosApi, hotelesApi);
     }
 
     @Test

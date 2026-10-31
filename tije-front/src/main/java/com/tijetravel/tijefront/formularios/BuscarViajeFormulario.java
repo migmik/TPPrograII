@@ -7,7 +7,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class BuscarViajeFormulario {
     @NotBlank(message = "Elegí una ciudad de origen.")
@@ -16,11 +15,10 @@ public class BuscarViajeFormulario {
     @NotBlank(message = "Elegí una ciudad de destino.")
     private String destino;
 
-    @NotNull(message = "Elegí la fecha de llegada.")
+    // Las fechas son opcionales: sin fecha se buscan los proximos vuelos.
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaLlegada;
 
-    @NotNull(message = "Elegí la fecha de partida.")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaPartida;
 

@@ -85,10 +85,13 @@ public class VuelosRestControlador {
 
     @GetMapping("/buscar")
     public List<VueloRespuesta> buscar(@RequestParam String origen, @RequestParam String destino,
-            @RequestParam LocalDate fecha, @RequestParam int personas,
+            @RequestParam(required = false) LocalDate fecha, @RequestParam int personas,
             @RequestParam(defaultValue = "false") boolean sugerencias) {
         List<Vuelo> vuelos;
-        if (sugerencias) {
+        if (fecha == null) {
+            // Sin fecha se muestran los proximos vuelos que salen
+            vuelos = vueloServicio.buscarProximos(origen, destino, personas);
+        } else if (sugerencias) {
             vuelos = vueloServicio.sugerirOtrosDias(origen, destino, fecha, personas);
         } else {
             vuelos = vueloServicio.buscarEnFecha(origen, destino, fecha, personas);

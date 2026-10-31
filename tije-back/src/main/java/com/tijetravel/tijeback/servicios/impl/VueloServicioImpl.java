@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ import com.tijetravel.tijeback.servicios.VueloServicio;
 @Service
 @Transactional(readOnly = true)
 public class VueloServicioImpl implements VueloServicio {
-    private static final int MAXIMO_SUGERENCIAS = 5;
+    private static final int MAXIMO_SUGERENCIAS = 3;
 
     private final BloqueoEscrituras bloqueoEscrituras;
     private final VueloRepositorio vueloRepositorio;
@@ -133,6 +134,15 @@ public class VueloServicioImpl implements VueloServicio {
             sugerencias.add(ordenados.get(i));
         }
         return sugerencias;
+    }
+
+    @Override
+    public List<Vuelo> buscarProximos(String origen, String destino, int personas) {
+        if (personas < 1 || personas > 20) {
+            throw new IllegalArgumentException("La cantidad de personas debe ser de 1 a 20");
+        }
+        return vueloRepositorio.buscarProximos(CiudadConsulta.nombres(origen), CiudadConsulta.nombres(destino),
+                LocalDateTime.now(), ClaseVuelo.TURISTA, personas, PageRequest.of(0, MAXIMO_SUGERENCIAS));
     }
 
     @Override

@@ -36,8 +36,11 @@ public interface VueloServicio {
     /** Vuelos de ese dia con lugar en clase turista para la cantidad de personas. */
     List<Vuelo> buscarEnFecha(String origen, String destino, LocalDate fecha, int personas);
 
-    /** Hasta cinco vuelos de otros dias, empezando por los mas cercanos a la fecha pedida. */
+    /** Hasta tres vuelos de otros dias, empezando por los mas cercanos a la fecha pedida. */
     List<Vuelo> sugerirOtrosDias(String origen, String destino, LocalDate fecha, int personas);
+
+    /** Hasta tres vuelos desde ahora, para cuando no se elige fecha. */
+    List<Vuelo> buscarProximos(String origen, String destino, int personas);
 
     /** @throws EntidadNoEncontradaException si no existe el vuelo o esta dado de baja */
     Vuelo encontrarPorId(Integer numero);

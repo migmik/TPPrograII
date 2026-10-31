@@ -64,4 +64,18 @@ public interface VueloRepositorio extends JpaRepository<Vuelo, Integer> {
             @Param("excluirDesde") LocalDateTime excluirDesde,
             @Param("excluirHasta") LocalDateTime excluirHasta,
             @Param("clase") ClaseVuelo clase, @Param("personas") int personas);
+
+    /** Los proximos vuelos con lugar desde un momento dado; el Pageable limita cuantos se traen. */
+    @Query("""
+            select v from Vuelo v
+            where v.fechaBaja is null
+              and lower(v.origen) in :origenes and lower(v.destino) in :destinos
+              and v.fechaYHora >= :desde
+              and v.plazasTurista - (select count(r) from Reserva r
+                  where r.vuelo = v and r.claseVuelo = :clase and r.fechaBaja is null) >= :personas
+            order by v.fechaYHora
+            """)
+    List<Vuelo> buscarProximos(@Param("origenes") List<String> origenes,
+            @Param("destinos") List<String> destinos, @Param("desde") LocalDateTime desde,
+            @Param("clase") ClaseVuelo clase, @Param("personas") int personas, Pageable cantidad);
 }

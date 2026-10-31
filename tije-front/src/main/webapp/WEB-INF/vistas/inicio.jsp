@@ -15,9 +15,9 @@
             <body class="pagina-inicio">
                 <%@ include file="fragmentos/navegacion.jspf" %>
                     <main class="home-main">
-                        <section class="search-hero${busquedaRealizada ? ' search-hero--compacta' : ''}"
+                        <section class="search-hero${modoBusqueda ? ' search-hero--compacta' : ''}"
                             aria-label="Buscador de viajes">
-                            <c:if test="${not busquedaRealizada}">
+                            <c:if test="${not modoBusqueda}">
                                 <div class="search-hero__intro">
                                     <p class="search-hero__eyebrow">Tu viaje empieza acá</p>
                                     <h1 id="tituloInicio">Encontrá vuelos y alojamiento para tu próxima escapada</h1>
@@ -48,12 +48,12 @@
                                     </div>
                                     <div class="search-field">
                                         <form:label path="fechaLlegada">Llegada</form:label>
-                                        <form:input path="fechaLlegada" type="date" required="required" />
+                                        <form:input path="fechaLlegada" type="date" />
                                         <form:errors path="fechaLlegada" cssClass="error" />
                                     </div>
                                     <div class="search-field">
                                         <form:label path="fechaPartida">Partida del hotel</form:label>
-                                        <form:input path="fechaPartida" type="date" required="required" />
+                                        <form:input path="fechaPartida" type="date" />
                                         <form:errors path="fechaPartida" cssClass="error" />
                                     </div>
                                     <div class="search-field">
@@ -62,7 +62,7 @@
                                             required="required" />
                                         <form:errors path="personas" cssClass="error" />
                                     </div>
-                                    <div class="search-field search-field--button">
+                                    <div class="search-field">
                                         <form:label path="ordenPrecio">Ordenar precios</form:label>
                                         <form:select path="ordenPrecio">
                                             <form:option value="fecha" label="Fecha" />
@@ -74,8 +74,8 @@
                                         <button type="submit">Buscar opciones</button>
                                     </div>
                                 </div>
-                                <p class="search-panel__note">La llegada es el día del vuelo de ida. Esta búsqueda
-                                    consulta disponibilidad; no realiza una reserva.</p>
+                                <p class="search-panel__note">La llegada es el día del vuelo de ida. Las fechas son
+                                    opcionales: si no elegís ninguna, te mostramos los próximos vuelos.</p>
                             </form:form>
                         </section>
 
@@ -92,8 +92,8 @@
                                 <c:if test="${not empty recomendados}">
                                     <div class="search-results__booking">
                                         <h3>Recomendados: vuelo + hotel</h3>
-                                        <p>Las combinaciones más baratas para tus fechas. Cada reserva corresponde a
-                                            una persona; las plazas se confirman al guardarla.</p>
+                                        <p>Las combinaciones más baratas. Cada reserva corresponde a una persona; las
+                                            plazas se confirman al guardarla.</p>
                                         <ul class="search-results__list combinaciones">
                                             <c:forEach items="${recomendados}" var="combinacion">
                                                 <%@ include file="fragmentos/combinacion.jspf" %>
@@ -114,30 +114,12 @@
                                 <div class="search-results__columns">
                                     <div class="search-results__panel">
                                         <h3>Solo vuelos</h3>
+                                        <c:if test="${not empty avisoVuelos}">
+                                            <p class="search-results__aviso"><c:out value="${avisoVuelos}" /></p>
+                                        </c:if>
                                         <c:choose>
                                             <c:when test="${empty vuelosEncontrados}">
-                                                <p>No hay vuelos con plazas suficientes para esa fecha.</p>
-                                                <c:if test="${not empty vuelosSugeridos}">
-                                                    <div class="search-results__suggestions">
-                                                        <h4>Otras fechas para este destino</h4>
-                                                        <p>Estos vuelos salen en otros d&iacute;as. Si eleg&iacute;s uno,
-                                                            volv&eacute; a buscar con esa fecha para consultar el
-                                                            alojamiento.</p>
-                                                        <ul class="search-results__list">
-                                                            <c:forEach items="${vuelosSugeridos}" var="vuelo">
-                                                                <li><strong>Vuelo
-                                                                        <c:out value="${vuelo.numero}" />
-                                                                    </strong>
-                                                                    <span>
-                                                                        <c:out value="${vuelo.fechaYHoraFormateada}" />
-                                                                    </span>
-                                                                    <a href="<c:url value='/vuelos/${vuelo.numero}'/>">Ver
-                                                                        vuelo</a>
-                                                                </li>
-                                                            </c:forEach>
-                                                        </ul>
-                                                    </div>
-                                                </c:if>
+                                                <p>No hay vuelos con plazas suficientes para ese trayecto.</p>
                                             </c:when>
                                             <c:otherwise>
                                                 <ul class="search-results__list">
@@ -159,6 +141,9 @@
                                     </div>
                                     <div class="search-results__panel">
                                         <h3>Solo hoteles</h3>
+                                        <p class="search-results__aviso">Del <c:out value="${hotelLlegada}" /> al
+                                            <c:out value="${hotelPartida}" /> (<c:out value="${cantidadNoches}" />
+                                            noche(s)).</p>
                                         <c:choose>
                                             <c:when test="${empty hotelesEncontrados}">
                                                 <p>No hay hoteles con plazas suficientes para esas fechas.</p>
@@ -185,7 +170,7 @@
                             </section>
                         </c:if>
 
-                        <c:if test="${not busquedaRealizada}">
+                        <c:if test="${not modoBusqueda}">
                         <div class="cards">
                             <section class="card">
                                 <h2>Vuelos</h2>
