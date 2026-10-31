@@ -16,24 +16,21 @@ import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.HotelesGestionApiCliente;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
-import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.formularios.GuardarHotelFormulario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/hoteles")
-public class HotelesGestionControlador {
-    private final AutenticacionApiCliente autenticacionApi;
+public class HotelesGestionControlador extends ControladorAdministracion {
     private final HotelesApiCliente hotelesApi;
     private final HotelesGestionApiCliente gestionApi;
 
     public HotelesGestionControlador(AutenticacionApiCliente autenticacionApi,
             HotelesApiCliente hotelesApi, HotelesGestionApiCliente gestionApi) {
-        this.autenticacionApi = autenticacionApi;
+        super(autenticacionApi);
         this.hotelesApi = hotelesApi;
         this.gestionApi = gestionApi;
     }
@@ -143,43 +140,14 @@ public class HotelesGestionControlador {
         return "redirect:/hoteles";
     }
 
-    private String comprobarAdministrador(HttpServletRequest solicitud, HttpServletResponse respuesta, Model modelo) {
-        HttpSession sesion = solicitud.getSession(false);
-        if (sesion == null || sesion.getAttribute("usuarioActual") == null)
-            return "redirect:/login";
-        SesionRespuesta usuario = autenticacionApi.obtenerSesion();
-        sesion.setAttribute("usuarioActual", usuario);
-        modelo.addAttribute("usuarioActual", usuario);
-        if (!"ADMINISTRADOR".equals(usuario.getRol())) {
-            respuesta.setStatus(403);
-            modelo.addAttribute("mensaje", "Solo un administrador puede gestionar hoteles.");
-            return "error";
-        }
-        return null;
-    }
-
     private void validarPrecio(GuardarHotelFormulario formulario, BindingResult errores) {
         if (formulario.getPrecioNochePersona() != null && formulario.getPrecioNochePersona() % 1000 != 0) {
             errores.rejectValue("precioNochePersona", "precio.invalido", "El precio debe ser múltiplo de $1.000.");
         }
     }
 
-    private String mostrarError(RestClientResponseException error, HttpServletResponse respuesta, Model modelo,
-            String vista, String mensajeConflicto) {
-        int estado = error.getStatusCode().value();
-        if (estado != 400 && estado != 403 && estado != 409)
-            throw error;
-        respuesta.setStatus(estado);
-        modelo.addAttribute("errorGestion", estado == 400 ? "La API rechazó los datos. Revisá los campos."
-                : estado == 403 ? "La API no permite esta operación. Revisá tus permisos y las reservas relacionadas."
-                        : mensajeConflicto);
-        return vista;
-    }
-
-    private String mostrarConexionIncierta(HttpServletResponse respuesta, Model modelo, String vista) {
-        respuesta.setStatus(503);
-        modelo.addAttribute("errorGestion",
-                "No pudimos confirmar la operación. Consultá el listado antes de intentarlo nuevamente.");
-        return vista;
+    @Override
+    protected String recursoGestionado() {
+        return "hoteles";
     }
 }
