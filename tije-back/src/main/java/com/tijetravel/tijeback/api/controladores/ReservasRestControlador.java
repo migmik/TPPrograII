@@ -21,6 +21,7 @@ import com.tijetravel.tijeback.api.dto.GuardarReservaSolicitud;
 import com.tijetravel.tijeback.api.dto.BalanceRespuesta;
 import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.ReservaRespuesta;
+import com.tijetravel.tijeback.api.mapeadores.BalanceMapeador;
 import com.tijetravel.tijeback.api.mapeadores.ReservaMapeador;
 import com.tijetravel.tijeback.servicios.ReservaServicio;
 import org.springframework.data.domain.Page;
@@ -36,14 +37,17 @@ import jakarta.validation.constraints.Positive;
 public class ReservasRestControlador {
         private final ReservaServicio reservaServicio;
         private final ReservaMapeador reservaMapeador;
+        private final BalanceMapeador balanceMapeador;
         private final UsuarioActualServicio usuarioActualServicio;
 
         public ReservasRestControlador(
                         ReservaServicio reservaServicio,
                         ReservaMapeador reservaMapeador,
+                        BalanceMapeador balanceMapeador,
                         UsuarioActualServicio usuarioActualServicio) {
                 this.reservaServicio = reservaServicio;
                 this.reservaMapeador = reservaMapeador;
+                this.balanceMapeador = balanceMapeador;
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
@@ -92,7 +96,8 @@ public class ReservasRestControlador {
 
         @GetMapping("/balance")
         public BalanceRespuesta balance(Authentication autenticacion) {
-                return reservaServicio.balance(usuarioActualServicio.obtener(autenticacion));
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return balanceMapeador.aRespuesta(reservaServicio.balance(actor));
         }
 
         @PostMapping("/{codigo}/pagar")

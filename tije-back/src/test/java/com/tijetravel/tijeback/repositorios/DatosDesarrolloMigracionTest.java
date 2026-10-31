@@ -50,13 +50,13 @@ class DatosDesarrolloMigracionTest {
     void calculaBalanceSoloConReservasPagadas() {
         var reserva = reservaRepositorio.findAll().get(0);
         assertTrue(reserva.getTotal() > 0);
-        assertEquals(0, reservaRepositorio.balancePagadas().reservasPagadas());
+        assertEquals(0, reservaRepositorio.balancePagadas().getReservasPagadas());
         reserva.confirmarPago();
         reservaRepositorio.flush();
         var balance = reservaRepositorio.balancePagadas();
-        assertEquals(1, balance.reservasPagadas());
-        assertEquals(reserva.getPrecioVuelo(), balance.ingresosVuelos());
-        assertEquals(reserva.getPrecioHotel(), balance.ingresosHoteles());
-        assertEquals(reserva.getTotal(), balance.ingresosTotales());
+        assertEquals(1, balance.getReservasPagadas());
+        assertEquals(reserva.getPrecioVuelo(), balance.getIngresosVuelos());
+        assertEquals(reserva.getPrecioHotel(), balance.getIngresosHoteles());
+        assertEquals(reserva.getTotal(), balance.getIngresosTotales());
     }
 }

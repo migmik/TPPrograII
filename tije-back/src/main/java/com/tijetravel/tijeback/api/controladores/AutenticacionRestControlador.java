@@ -2,6 +2,8 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +25,7 @@ import com.tijetravel.tijeback.api.dto.IniciarSesionSolicitud;
 import com.tijetravel.tijeback.api.dto.RegistroClienteSolicitud;
 import com.tijetravel.tijeback.api.dto.SesionRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.SesionMapeador;
-import com.tijetravel.tijeback.seguridad.UsuarioAutenticado;
+import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
 import com.tijetravel.tijeback.servicios.UsuarioServicio;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +40,7 @@ public class AutenticacionRestControlador {
     private final SecurityContextRepository repositorioContextoSeguridad;
     private final SesionMapeador sesionMapeador;
     private final UsuarioServicio usuarioServicio;
+    private final UsuarioActualServicio usuarioActualServicio;
     private final SecurityContextHolderStrategy contextoEstrategia = SecurityContextHolder.getContextHolderStrategy();
 
     public AutenticacionRestControlador(
@@ -45,12 +48,14 @@ public class AutenticacionRestControlador {
             SessionAuthenticationStrategy estrategiaAutenticacionSesion,
             SecurityContextRepository repositorioContextoSeguridad,
             SesionMapeador sesionMapeador,
-            UsuarioServicio usuarioServicio) {
+            UsuarioServicio usuarioServicio,
+            UsuarioActualServicio usuarioActualServicio) {
         this.administradorAutenticacion = administradorAutenticacion;
         this.estrategiaAutenticacionSesion = estrategiaAutenticacionSesion;
         this.repositorioContextoSeguridad = repositorioContextoSeguridad;
         this.sesionMapeador = sesionMapeador;
         this.usuarioServicio = usuarioServicio;
+        this.usuarioActualServicio = usuarioActualServicio;
     }
 
     @GetMapping("/csrf")
@@ -59,8 +64,7 @@ public class AutenticacionRestControlador {
     }
 
     @PostMapping("/registro")
-    public org.springframework.http.ResponseEntity<Void> registrar(
-            @Valid @RequestBody RegistroClienteSolicitud solicitud) {
+    public ResponseEntity<Void> registrar(@Valid @RequestBody RegistroClienteSolicitud solicitud) {
         usuarioServicio.registrarCliente(
                 solicitud.nombreUsuario(),
                 solicitud.contrasenia(),
@@ -72,7 +76,7 @@ public class AutenticacionRestControlador {
                 solicitud.telefonoFijo(),
                 solicitud.telefonoCelular(),
                 solicitud.codigoSucursal());
-        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")
@@ -94,11 +98,11 @@ public class AutenticacionRestControlador {
         contextoEstrategia.setContext(contexto);
         repositorioContextoSeguridad.saveContext(contexto, solicitud, respuesta);
 
-        return sesionMapeador.aRespuesta((UsuarioAutenticado) autenticacion.getPrincipal());
+        return sesionMapeador.aRespuesta(usuarioActualServicio.obtener(autenticacion));
     }
 
     @GetMapping("/sesion")
     public SesionRespuesta obtenerSesion(Authentication autenticacion) {
-        return sesionMapeador.aRespuesta((UsuarioAutenticado) autenticacion.getPrincipal());
+        return sesionMapeador.aRespuesta(usuarioActualServicio.obtener(autenticacion));
     }
 }

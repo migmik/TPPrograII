@@ -126,8 +126,8 @@ class RepositoriosIntegracionTest {
                 assertEquals(1, reservaRepositorio.buscarPagina(titular.getCodigo(), null, null,
                                 null, null, null, null, null, PageRequest.of(0, 10))
                                 .getTotalElements());
-                assertEquals(1, reservaRepositorio.balancePagadas().reservasPendientes());
-                assertEquals(0, reservaRepositorio.balancePagadas().reservasPagadas());
+                assertEquals(1, reservaRepositorio.balancePagadas().getReservasPendientes());
+                assertEquals(0, reservaRepositorio.balancePagadas().getReservasPagadas());
                 assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.CLIENTE, null, null,
                                 titular.getDni(), PageRequest.of(0, 10)).getTotalElements());
                 assertEquals(1, usuarioRepositorio.buscarPagina(RolUsuario.ADMINISTRADOR,
