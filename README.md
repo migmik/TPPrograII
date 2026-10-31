@@ -42,16 +42,44 @@ JavaScript. Consume la API REST y se empaqueta como WAR ejecutable.
 tije-back/     Backend Java y pruebas
 tije-front/    Frontend web independiente con JSP y pruebas
 database/      Script para crear la base y guía de configuración
-docs/         Documentación de la API y diagramas UML
+docs/          Documentación de la API, UML y modelo entidad-relación
 ```
 
 En el backend, los controladores REST reciben las solicitudes, los servicios
 aplican las reglas del negocio y los repositorios acceden a la base de datos.
 Los modelos representan las entidades y los DTOs definen los datos de la API.
 
+```text
+api/controladores   Reciben la peticion HTTP, llaman al servicio y devuelven el DTO
+api/dto             Datos que entran y salen de la API (se serializan a JSON)
+api/mapeadores      Convierten entidades en DTOs (MapeadorBase)
+api/errores         Traduce las excepciones a respuestas HTTP
+servicios           Interfaces con el contrato de cada servicio
+servicios/impl      Implementaciones con las reglas de negocio
+servicios/usuarios  Fabrica de usuarios segun el rol
+repositorios        Acceso a la base con Spring Data JPA
+modelos             Entidades JPA y sus validaciones
+excepciones         Excepciones del negocio
+seguridad           Spring Security, sesion y usuario actual
+```
+
 Cada tipo de usuario define sus permisos; Spring Security y los servicios usan
 esa misma definición. Los servicios agrupan cada cambio en una transacción:
 JPA guarda las modificaciones al finalizar, o las revierte si ocurre un error.
+
+### Diseño
+
+- **Interfaces:** los controladores dependen de las interfaces de servicio
+  (`HotelServicio`, `ReservaServicio`, ...) y Spring inyecta la implementación.
+- **Polimorfismo:** `Administrador`, `Vendedor` y `Cliente` redefinen
+  `tienePermiso` y `puedeVerTurista`, así los servicios no preguntan por el rol.
+- **Patrones:** Factory + Strategy para crear usuarios (`UsuarioFactory` y
+  `CreadorUsuario`), Template Method en `MapeadorBase`, Builder en `RutaConsulta`
+  (frontend), Repository y DTO.
+- **Excepciones:** `ReglaNegocioException` y sus subclases; el
+  `ManejadorGlobalExcepciones` las convierte en el código HTTP que corresponde.
+- **Programación orientada a objetos tradicional:** el código usa bucles,
+  clases y clases anónimas en lugar de streams y expresiones lambda.
 
 ## Ejecutar el backend
 
@@ -122,6 +150,7 @@ del administrador suma solamente las reservas pagadas.
 
 - [API REST](docs/api.md)
 - [UML](docs/uml-tijetravel.md) y [archivo PlantUML](docs/uml-tijetravel.puml)
+- [Modelo entidad-relación](docs/der-tijetravel.md)
 - [Despliegue en Railway](docs/despliegue-railway.md)
 
 Para la presentación se prevé ejecutar MySQL, el backend y el frontend como tres
