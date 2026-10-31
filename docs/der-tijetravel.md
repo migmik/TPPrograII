@@ -1,7 +1,7 @@
 # Modelo entidad-relación de Tije Travel
 
 El esquema se crea con las migraciones de Flyway en
-`tije-back/src/main/resources/db/migration` (V1 a V9). El diagrama muestra cómo
+`tije-back/src/main/resources/db/migration` (V1 a V11). El diagrama muestra cómo
 quedan las tablas después de aplicar todas las migraciones.
 
 ```mermaid
@@ -11,6 +11,8 @@ erDiagram
     TURISTAS |o--o{ TURISTAS : "es titular de"
     TURISTAS ||--o{ RESERVAS : "tiene"
     TURISTAS |o--o| USUARIOS : "tiene cuenta de cliente"
+    ROLES ||--o{ USUARIOS : "define los permisos de"
+    ROLES ||--o{ ROL_PERMISOS : "tiene"
     VUELOS ||--o{ RESERVAS : "incluye"
     HOTELES ||--o{ RESERVAS : "aloja"
 
@@ -36,12 +38,23 @@ erDiagram
 
     USUARIOS {
         int codigo PK
-        varchar tipo_usuario "ADMINISTRADOR, VENDEDOR o CLIENTE"
+        varchar tipo_usuario "EMPLEADO o CLIENTE"
         varchar nombre_usuario UK
         varchar contrasenia "hash bcrypt"
-        enum rol
+        int rol_codigo FK
         varchar dni UK "solo empleados"
         int turista_codigo FK, UK "solo clientes"
+    }
+
+    ROLES {
+        int codigo PK
+        varchar nombre UK
+        varchar tipo_usuario "EMPLEADO o CLIENTE"
+    }
+
+    ROL_PERMISOS {
+        int rol_codigo PK, FK
+        varchar permiso PK
     }
 
     HOTELES {
@@ -98,19 +111,33 @@ escrituras no se pisen (`BloqueoEscrituras`).
 | Vuelo y hotel de la reserva | 1 a N cada uno | `reservas.vuelo_numero` y `reservas.hotel_codigo` |
 | Cliente y turista titular | 1 a 1 (opcional) | `usuarios.turista_codigo`, único y solo para clientes |
 
-## Herencia de usuarios
+## Herencia de usuarios y roles
 
-En Java, `Usuario` es una clase abstracta con tres subclases: `Administrador`,
-`Vendedor` y `Cliente`. En la base se guardan todas en la tabla `usuarios`
-(estrategia `SINGLE_TABLE`) y la columna `tipo_usuario` indica qué clase es.
-Los checks de la tabla aseguran que:
+En Java, `Usuario` es una clase abstracta con dos subclases: `Empleado` y
+`Cliente`. En la base se guardan las dos en la tabla `usuarios` (estrategia
+`SINGLE_TABLE`) y la columna `tipo_usuario` indica qué clase es. Los checks de la
+tabla aseguran que:
 
 - un cliente siempre tiene `turista_codigo` y nunca un DNI propio (lo toma del turista);
-- un administrador o vendedor nunca tiene `turista_codigo`.
+- un empleado nunca tiene `turista_codigo`.
+
+Lo que puede hacer cada usuario depende de su rol (`rol_codigo`). Los permisos
+de cada rol están en `rol_permisos`, una fila por permiso tildado. La migración
+V11 crea los roles Administrador, Vendedor y Cliente; después se pueden crear
+otros, como Hotelero.
+
+## Borrado lógico
+
+Todas las tablas tienen `fecha_creacion` y `fecha_baja`. Dar de baja completa
+`fecha_baja` en lugar de borrar la fila, así una reserva vieja sigue mostrando un
+hotel que ya no se ofrece. Los datos únicos (DNI, email, nombre de usuario,
+dirección de sucursal, etc.) se controlan con columnas generadas `..._activo`
+que valen NULL cuando la fila está dada de baja: el índice único admite varios
+NULL, entonces una persona dada de baja puede volver a registrarse.
 
 ## Restricciones principales
 
-- Un turista no puede tener dos reservas en el mismo vuelo (`uk_reserva_turista_vuelo`).
+- Un turista no puede tener dos reservas activas en el mismo vuelo (`uk_reserva_turista_vuelo`).
 - Un hotel no puede repetirse con el mismo nombre en la misma ciudad (`uk_hotel_nombre_ciudad`).
 - La fecha de llegada tiene que ser anterior a la de partida (`chk_reserva_fechas`).
 - Las plazas por clase de un vuelo no pueden superar el total (`chk_vuelo_distribucion_plazas`).
