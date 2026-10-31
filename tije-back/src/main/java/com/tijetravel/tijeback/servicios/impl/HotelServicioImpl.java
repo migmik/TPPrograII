@@ -24,8 +24,8 @@ import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.servicios.AutorizacionServicio;
 import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
-import com.tijetravel.tijeback.servicios.HotelServicio;
 import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
+import com.tijetravel.tijeback.servicios.HotelServicio;
 
 @Service
 @Transactional(readOnly = true)

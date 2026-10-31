@@ -1,6 +1,5 @@
 package com.tijetravel.tijefront.controladores;
 
-import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -9,10 +8,10 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -21,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.TuristasApiCliente;
 import com.tijetravel.tijefront.clientes.UsuariosApiCliente;
+import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
 import com.tijetravel.tijefront.dto.SesionRespuesta;
 import com.tijetravel.tijefront.dto.TuristaResumen;
 import com.tijetravel.tijefront.dto.UsuarioRespuesta;

@@ -1,8 +1,10 @@
 package com.tijetravel.tijeback.repositorios;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import java.util.List;
+
 import com.tijetravel.tijeback.modelos.Sucursal;
 
 public interface SucursalRepositorio extends JpaRepository<Sucursal, Integer> {

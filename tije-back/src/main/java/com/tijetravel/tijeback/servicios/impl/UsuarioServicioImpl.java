@@ -2,14 +2,14 @@ package com.tijetravel.tijeback.servicios.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.enums.RolUsuario;
@@ -20,13 +20,13 @@ import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.ValidacionModelo;
-import com.tijetravel.tijeback.servicios.usuarios.UsuarioFactory;
-import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
+import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
 import com.tijetravel.tijeback.servicios.AutorizacionServicio;
 import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
 import com.tijetravel.tijeback.servicios.UsuarioServicio;
+import com.tijetravel.tijeback.servicios.usuarios.UsuarioFactory;
 
 @Service
 @Transactional(readOnly = true)
