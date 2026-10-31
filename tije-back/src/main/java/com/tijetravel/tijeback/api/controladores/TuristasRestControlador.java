@@ -2,7 +2,6 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Comparator;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,12 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.CrearTuristaSolicitud;
 import com.tijetravel.tijeback.api.dto.ModificarTuristaSolicitud;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.TuristaRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.TuristaMapeador;
-import com.tijetravel.tijeback.servicios.TuristaServicio;
 import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
+import com.tijetravel.tijeback.servicios.TuristaServicio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -44,7 +44,6 @@ public class TuristasRestControlador {
                 this.usuarioActualServicio = usuarioActualServicio;
         }
 
-        @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
         @GetMapping
         public List<TuristaRespuesta> listar(
                         @RequestParam(required = false) String dni,
@@ -52,13 +51,30 @@ public class TuristasRestControlador {
                         @RequestParam(required = false) List<Integer> codigos,
                         Authentication autenticacion) {
                 Usuario actor = usuarioActualServicio.obtener(autenticacion);
-                List<Turista> resultado = codigos == null
-                                ? turistaServicio.listarPara(actor, dni, titular)
-                                : turistaServicio.listarPorCodigosPara(actor, codigos);
-                return resultado.stream()
-                                .map(turistaMapeador::aRespuesta)
-                                .sorted(Comparator.comparing(TuristaRespuesta::codigo))
-                                .toList();
+                List<Turista> resultado;
+                if (codigos == null) {
+                        resultado = turistaServicio.listarPara(actor, dni, titular);
+                } else {
+                        resultado = turistaServicio.listarPorCodigosPara(actor, codigos);
+                }
+                return turistaMapeador.aRespuestas(resultado);
+        }
+
+        @GetMapping("/pagina")
+        public PaginaRespuesta<TuristaRespuesta> listarPagina(
+                        @RequestParam(required = false) String dni,
+                        @RequestParam(required = false) Boolean titular,
+                        @RequestParam(defaultValue = "0") int pagina,
+                        @RequestParam(defaultValue = "20") int tamanio,
+                        Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return turistaMapeador.aPagina(turistaServicio.buscarPaginaPara(actor, dni, titular, pagina, tamanio));
+        }
+
+        @GetMapping("/sin-cuenta")
+        public List<TuristaRespuesta> listarTitularesSinCuenta(Authentication autenticacion) {
+                Usuario actor = usuarioActualServicio.obtener(autenticacion);
+                return turistaMapeador.aRespuestas(turistaServicio.listarTitularesSinCuentaPara(actor));
         }
 
         @GetMapping("/{codigo}")

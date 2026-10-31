@@ -10,13 +10,13 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
-import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.modelos.Administrador;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
+import com.tijetravel.tijeback.servicios.BloqueoEscrituras;
 
 @Component
 @ConditionalOnProperty(prefix = "app.seguridad.administrador-inicial", name = "habilitado", havingValue = "true")

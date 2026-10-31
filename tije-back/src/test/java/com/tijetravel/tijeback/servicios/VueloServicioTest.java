@@ -1,7 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -13,12 +13,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
 import com.tijetravel.tijeback.modelos.Administrador;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
+import com.tijetravel.tijeback.servicios.impl.VueloServicioImpl;
 
 @ExtendWith(MockitoExtension.class)
 class VueloServicioTest {
@@ -33,7 +35,7 @@ class VueloServicioTest {
 
         @BeforeEach
         void prepararServicio() {
-                servicio = new VueloServicio(
+                servicio = new VueloServicioImpl(
                                 vueloRepositorio,
                                 reservaRepositorio,
                                 new AutorizacionServicio(),
@@ -54,9 +56,12 @@ class VueloServicioTest {
                 when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.TURISTA))
                                 .thenReturn(6L);
 
-                assertThrows(
-                                CapacidadExcedidaException.class,
-                                () -> modificarVuelo(5, 5));
+                try {
+                        modificarVuelo(5, 5);
+                        fail("Se esperaba CapacidadExcedidaException");
+                } catch (CapacidadExcedidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -74,13 +79,14 @@ class VueloServicioTest {
 
         private Vuelo modificarVuelo(int plazasTurista, int plazasPrimera) {
                 return servicio.modificar(
-                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
                                 100,
                                 LocalDateTime.of(2026, 10, 1, 12, 0),
                                 "Buenos Aires",
                                 "Cordoba",
                                 20,
                                 plazasTurista,
-                                plazasPrimera);
+                                plazasPrimera,
+                                150000);
         }
 }

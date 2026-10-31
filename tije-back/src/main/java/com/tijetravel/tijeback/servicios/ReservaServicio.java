@@ -4,298 +4,53 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
 
 import com.tijetravel.tijeback.enums.ClaseVuelo;
-import com.tijetravel.tijeback.api.dto.BalanceRespuesta;
-import com.tijetravel.tijeback.enums.Permiso;
-import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.excepciones.EntidadDuplicadaException;
-import com.tijetravel.tijeback.excepciones.EntidadNoEncontradaException;
-import com.tijetravel.tijeback.excepciones.OperacionNoPermitidaException;
-import com.tijetravel.tijeback.modelos.Hotel;
+import com.tijetravel.tijeback.modelos.BalanceVentas;
 import com.tijetravel.tijeback.modelos.Reserva;
-import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Usuario;
-import com.tijetravel.tijeback.modelos.Vuelo;
-import com.tijetravel.tijeback.repositorios.HotelRepositorio;
-import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
-import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
-import com.tijetravel.tijeback.repositorios.VueloRepositorio;
 
-@Service
-@Transactional(readOnly = true)
-public class ReservaServicio {
-    private final BloqueoEscrituras bloqueoEscrituras;
-    private final ReservaRepositorio reservaRepositorio;
-    private final TuristaRepositorio turistaRepositorio;
-    private final VueloRepositorio vueloRepositorio;
-    private final HotelRepositorio hotelRepositorio;
-    private final AutorizacionServicio autorizacion;
-    private final DisponibilidadServicio disponibilidadServicio;
+/**
+ * Operaciones sobre las reservas de vuelo y hotel. Un cliente solo puede
+ * reservar y consultar para su grupo familiar.
+ */
+public interface ReservaServicio {
 
-    public ReservaServicio(
-            ReservaRepositorio reservaRepositorio,
-            TuristaRepositorio turistaRepositorio,
-            VueloRepositorio vueloRepositorio,
-            HotelRepositorio hotelRepositorio,
-            AutorizacionServicio autorizacion,
-            DisponibilidadServicio disponibilidadServicio,
-            BloqueoEscrituras bloqueoEscrituras) {
-        this.bloqueoEscrituras = bloqueoEscrituras;
-        this.reservaRepositorio = reservaRepositorio;
-        this.turistaRepositorio = turistaRepositorio;
-        this.vueloRepositorio = vueloRepositorio;
-        this.hotelRepositorio = hotelRepositorio;
-        this.autorizacion = autorizacion;
-        this.disponibilidadServicio = disponibilidadServicio;
-    }
+    /**
+     * El hotel tiene que estar en el destino del vuelo y la llegada coincidir con el dia del vuelo.
+     *
+     * @throws EntidadDuplicadaException si el turista ya tiene una reserva en ese vuelo
+     * @throws CapacidadExcedidaException si no hay lugar en el vuelo o en el hotel
+     */
+    Reserva crear(Usuario actor, Integer codigoTurista, Integer numeroVuelo, Integer codigoHotel,
+            ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada, LocalDate fechaPartida);
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Reserva crear(
-            Usuario actor,
-            Integer codigoTurista,
-            Integer numeroVuelo,
-            Integer codigoHotel,
-            ClaseVuelo claseVuelo,
-            TipoHospedaje tipoHospedaje,
-            LocalDate fechaLlegada,
-            LocalDate fechaPartida) {
-        autorizacion.verificarPermiso(actor, Permiso.CREAR_RESERVAS);
-        bloqueoEscrituras.adquirir();
-        disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
+    /** Reservas visibles para el actor ordenadas por codigo. */
+    List<Reserva> listarPara(Usuario actor);
 
-        Turista turista = encontrarTurista(codigoTurista);
-        if (actor.getRol() == RolUsuario.CLIENTE
-                && !autorizacion.perteneceAlGrupoFamiliar(actor, turista)) {
-            throw new OperacionNoPermitidaException("El cliente solo puede reservar para su grupo familiar");
-        }
-        Vuelo vuelo = encontrarVuelo(numeroVuelo);
-        Hotel hotel = encontrarHotel(codigoHotel);
+    /** Busqueda paginada; todos los filtros son opcionales. */
+    Page<Reserva> paginaPara(Usuario actor, Integer codigoTurista, String dni, Integer numeroVuelo,
+            Integer codigoHotel, LocalDate fechaDesde, LocalDate fechaHasta, Boolean pagada, int pagina,
+            int tamanio);
 
-        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumero(codigoTurista, numeroVuelo)) {
-            throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
-        }
-        validarCompatibilidad(vuelo, hotel, fechaLlegada);
-        disponibilidadServicio.verificarCapacidadVuelo(vuelo, claseVuelo, null);
-        disponibilidadServicio.verificarCapacidadHotel(hotel, fechaLlegada, fechaPartida, null);
+    /**
+     * @throws EntidadNoEncontradaException si no existe la reserva
+     * @throws OperacionNoPermitidaException si es de otro grupo familiar
+     */
+    Reserva encontrarVisiblePara(Usuario actor, Integer codigo);
 
-        Reserva reserva = new Reserva(
-                turista,
-                vuelo,
-                hotel,
-                claseVuelo,
-                tipoHospedaje,
-                fechaLlegada,
-                fechaPartida);
-        return reservaRepositorio.save(reserva);
-    }
+    /** Marca la reserva como pagada. Si ya estaba pagada no cambia nada. */
+    Reserva confirmarPago(Usuario actor, Integer codigo);
 
-    public List<Reserva> listar() {
-        return reservaRepositorio.findAll();
-    }
+    /** Totales de reservas pagadas y pendientes. Requiere el permiso VER_BALANCE. */
+    BalanceVentas balance(Usuario actor);
 
-    public List<Reserva> listarPara(Usuario actor) {
-        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        if (actor.getRol() == RolUsuario.CLIENTE) {
-            return listarPorTitularYFamiliares(autorizacion.codigoTitular(actor));
-        }
-        return listar();
-    }
+    /** @throws OperacionNoPermitidaException si la reserva ya esta pagada */
+    Reserva modificar(Usuario actor, Integer codigoReserva, Integer codigoTurista, Integer numeroVuelo,
+            Integer codigoHotel, ClaseVuelo claseVuelo, TipoHospedaje tipoHospedaje, LocalDate fechaLlegada,
+            LocalDate fechaPartida);
 
-    public Page<Reserva> paginaPara(
-            Usuario actor,
-            Integer codigoTurista,
-            Integer numeroVuelo,
-            Integer codigoHotel,
-            LocalDate fechaDesde,
-            LocalDate fechaHasta,
-            int pagina,
-            int tamanio) {
-        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        validarConsultaPaginada(codigoTurista, numeroVuelo, codigoHotel, fechaDesde, fechaHasta, pagina, tamanio);
-        Pageable pageable = PageRequest.of(pagina, tamanio, Sort.by("codigo").ascending());
-
-        if (actor.getRol() == RolUsuario.CLIENTE) {
-            List<Reserva> reservas = listarPorTitularYFamiliares(autorizacion.codigoTitular(actor)).stream()
-                    .filter(reserva -> codigoTurista == null || codigoTurista.equals(reserva.getTurista().getCodigo()))
-                    .filter(reserva -> numeroVuelo == null || numeroVuelo.equals(reserva.getVuelo().getNumero()))
-                    .filter(reserva -> codigoHotel == null || codigoHotel.equals(reserva.getHotel().getCodigo()))
-                    .filter(reserva -> fechaDesde == null || !reserva.getFechaLlegada().isBefore(fechaDesde))
-                    .filter(reserva -> fechaHasta == null || !reserva.getFechaLlegada().isAfter(fechaHasta))
-                    .sorted(java.util.Comparator.comparing(Reserva::getCodigo))
-                    .toList();
-            int inicio = (int) Math.min(pageable.getOffset(), reservas.size());
-            int fin = Math.min(inicio + tamanio, reservas.size());
-            return new PageImpl<>(reservas.subList(inicio, fin), pageable, reservas.size());
-        }
-
-        if (codigoTurista != null) {
-            return reservaRepositorio.findByTuristaCodigo(codigoTurista, pageable);
-        }
-        if (numeroVuelo != null) {
-            return reservaRepositorio.findByVueloNumero(numeroVuelo, pageable);
-        }
-        if (codigoHotel != null) {
-            return reservaRepositorio.findByHotelCodigo(codigoHotel, pageable);
-        }
-        if (fechaDesde != null) {
-            return reservaRepositorio.findByFechaLlegadaBetween(fechaDesde, fechaHasta, pageable);
-        }
-        return reservaRepositorio.findAll(pageable);
-    }
-
-    private void validarConsultaPaginada(
-            Integer codigoTurista,
-            Integer numeroVuelo,
-            Integer codigoHotel,
-            LocalDate fechaDesde,
-            LocalDate fechaHasta,
-            int pagina,
-            int tamanio) {
-        int filtros = (codigoTurista == null ? 0 : 1)
-                + (numeroVuelo == null ? 0 : 1)
-                + (codigoHotel == null ? 0 : 1)
-                + (fechaDesde == null && fechaHasta == null ? 0 : 1);
-        if (filtros > 1) {
-            throw new IllegalArgumentException("Usa un solo filtro por consulta");
-        }
-        if ((fechaDesde == null) != (fechaHasta == null)
-                || (fechaDesde != null && fechaHasta.isBefore(fechaDesde))) {
-            throw new IllegalArgumentException("El rango de fechas debe estar completo y en orden");
-        }
-        if ((codigoTurista != null && codigoTurista < 1)
-                || (numeroVuelo != null && numeroVuelo < 1)
-                || (codigoHotel != null && codigoHotel < 1)) {
-            throw new IllegalArgumentException("Los codigos deben ser positivos");
-        }
-        if (pagina < 0 || tamanio < 1 || tamanio > 100) {
-            throw new IllegalArgumentException("La pagina debe ser positiva y el tamanio debe estar entre 1 y 100");
-        }
-    }
-
-    public Reserva encontrarPorId(Integer codigo) {
-        return reservaRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro la reserva " + codigo));
-    }
-
-    public Reserva encontrarVisiblePara(Usuario actor, Integer codigo) {
-        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        Reserva reserva = encontrarPorId(codigo);
-        if (actor.getRol() == RolUsuario.CLIENTE
-                && !autorizacion.perteneceAlGrupoFamiliar(actor, reserva.getTurista())) {
-            throw new OperacionNoPermitidaException(
-                    "El cliente no puede consultar reservas de otro grupo familiar");
-        }
-        return reserva;
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Reserva confirmarPago(Usuario actor, Integer codigo) {
-        autorizacion.verificarPermiso(actor, Permiso.CONSULTAR);
-        bloqueoEscrituras.adquirir();
-        Reserva reserva = encontrarVisiblePara(actor, codigo);
-        reserva.confirmarPago();
-        return reserva;
-    }
-
-    public BalanceRespuesta balance(Usuario actor) {
-        if (actor.getRol() != RolUsuario.ADMINISTRADOR) {
-            throw new OperacionNoPermitidaException("Solo un administrador puede consultar el balance");
-        }
-        return reservaRepositorio.balancePagadas();
-    }
-
-    public List<Reserva> listarPorTitularYFamiliares(Integer codigoTitular) {
-        Turista titular = encontrarTurista(codigoTitular);
-        if (!titular.isTitular()) {
-            throw new OperacionNoPermitidaException("El turista indicado no es titular");
-        }
-        return reservaRepositorio.listarPorTitularYFamiliares(codigoTitular);
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public Reserva modificar(
-            Usuario actor,
-            Integer codigoReserva,
-            Integer codigoTurista,
-            Integer numeroVuelo,
-            Integer codigoHotel,
-            ClaseVuelo claseVuelo,
-            TipoHospedaje tipoHospedaje,
-            LocalDate fechaLlegada,
-            LocalDate fechaPartida) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
-        bloqueoEscrituras.adquirir();
-        disponibilidadServicio.validarFechas(fechaLlegada, fechaPartida);
-
-        Reserva reserva = encontrarPorId(codigoReserva);
-        if (reserva.isPagada()) {
-            throw new OperacionNoPermitidaException("Una reserva pagada no se puede modificar");
-        }
-        Turista turista = encontrarTurista(codigoTurista);
-        Vuelo vuelo = encontrarVuelo(numeroVuelo);
-        Hotel hotel = encontrarHotel(codigoHotel);
-
-        if (reservaRepositorio.existsByTuristaCodigoAndVueloNumeroAndCodigoNot(
-                codigoTurista, numeroVuelo, codigoReserva)) {
-            throw new EntidadDuplicadaException("El turista ya tiene una reserva para ese vuelo");
-        }
-        validarCompatibilidad(vuelo, hotel, fechaLlegada);
-        disponibilidadServicio.verificarCapacidadVuelo(vuelo, claseVuelo, codigoReserva);
-        disponibilidadServicio.verificarCapacidadHotel(hotel, fechaLlegada, fechaPartida, codigoReserva);
-
-        reserva.actualizarDatos(
-                turista,
-                vuelo,
-                hotel,
-                claseVuelo,
-                tipoHospedaje,
-                fechaLlegada,
-                fechaPartida);
-        return reserva;
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public void eliminar(Usuario actor, Integer codigoReserva) {
-        autorizacion.verificarPermiso(actor, Permiso.ADMINISTRAR_RESERVAS);
-        bloqueoEscrituras.adquirir();
-        Reserva reserva = encontrarPorId(codigoReserva);
-        if (reserva.isPagada()) {
-            throw new OperacionNoPermitidaException("Una reserva pagada no se puede eliminar");
-        }
-        reservaRepositorio.delete(reserva);
-    }
-
-    private void validarCompatibilidad(Vuelo vuelo, Hotel hotel, LocalDate fechaLlegada) {
-        boolean coincideFecha = fechaLlegada.equals(vuelo.getFechaYHora().toLocalDate());
-        boolean coincideDestino = CiudadConsulta.misma(hotel.getCiudad(), vuelo.getDestino());
-        if (!coincideFecha || !coincideDestino) {
-            throw new OperacionNoPermitidaException(
-                    "El hotel, el destino del vuelo y la fecha de llegada no son compatibles");
-        }
-    }
-
-    private Turista encontrarTurista(Integer codigo) {
-        return turistaRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el turista " + codigo));
-    }
-
-    private Vuelo encontrarVuelo(Integer numero) {
-        return vueloRepositorio.findById(numero)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el vuelo " + numero));
-    }
-
-    private Hotel encontrarHotel(Integer codigo) {
-        return hotelRepositorio.findById(codigo)
-                .orElseThrow(() -> new EntidadNoEncontradaException("No se encontro el hotel " + codigo));
-    }
-
+    /** @throws OperacionNoPermitidaException si la reserva ya esta pagada */
+    void eliminar(Usuario actor, Integer codigoReserva);
 }

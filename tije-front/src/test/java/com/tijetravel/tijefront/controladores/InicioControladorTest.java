@@ -20,8 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.CiudadesApiCliente;
+import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
 import com.tijetravel.tijefront.dto.VueloRespuesta;

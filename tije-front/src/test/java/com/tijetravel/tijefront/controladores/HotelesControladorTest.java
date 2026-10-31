@@ -25,6 +25,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import com.tijetravel.tijefront.clientes.HotelesApiCliente;
 import com.tijetravel.tijefront.dto.DisponibilidadHotelRespuesta;
 import com.tijetravel.tijefront.dto.HotelRespuesta;
+import com.tijetravel.tijefront.dto.PaginaHotelesRespuesta;
 
 @ExtendWith(MockitoExtension.class)
 class HotelesControladorTest {
@@ -41,11 +42,19 @@ class HotelesControladorTest {
     }
 
     @Test
-    void pasaLosHotelesALaJsp() throws Exception {
-        when(hotelesApi.listar()).thenReturn(List.of(hotel()));
-        mvc.perform(get("/hoteles"))
+    void pasaLosHotelesFiltradosALaJsp() throws Exception {
+        when(hotelesApi.listarPagina("Cordoba", null, "codigo", 0, false))
+                .thenReturn(new PaginaHotelesRespuesta(List.of(hotel()), 0, 1, false, false));
+        mvc.perform(get("/hoteles").param("ciudad", "Cordoba"))
                 .andExpect(status().isOk()).andExpect(view().name("hoteles/lista"))
                 .andExpect(model().attributeExists("hoteles"));
+    }
+
+    @Test
+    void noEntregaCatalogoCompletoAlVisitante() throws Exception {
+        mvc.perform(get("/hoteles"))
+                .andExpect(status().isOk()).andExpect(model().attributeDoesNotExist("hoteles"));
+        verify(hotelesApi, never()).listar();
     }
 
     @Test
@@ -90,8 +99,9 @@ class HotelesControladorTest {
 
     @Test
     void muestraUnaPaginaClaraCuandoElBackendNoResponde() throws Exception {
-        when(hotelesApi.listar()).thenThrow(new ResourceAccessException("Conexion rechazada"));
-        mvc.perform(get("/hoteles"))
+        when(hotelesApi.listarPagina("Cordoba", null, "codigo", 0, false))
+                .thenThrow(new ResourceAccessException("Conexion rechazada"));
+        mvc.perform(get("/hoteles").param("ciudad", "Cordoba"))
                 .andExpect(status().isServiceUnavailable()).andExpect(view().name("error"))
                 .andExpect(model().attributeExists("mensaje"));
     }

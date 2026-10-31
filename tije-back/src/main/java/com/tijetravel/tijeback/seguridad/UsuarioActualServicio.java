@@ -17,12 +17,21 @@ public class UsuarioActualServicio {
         this.usuarioRepositorio = usuarioRepositorio;
     }
 
+    /** Devuelve el usuario de la sesion o lanza una excepcion si no hay sesion valida. */
     public Usuario obtener(Authentication autenticacion) {
-        if (autenticacion == null || !(autenticacion.getPrincipal() instanceof UsuarioAutenticado principal)) {
+        Usuario usuario = buscar(autenticacion);
+        if (usuario == null) {
             throw new CredencialesInvalidasException("La sesion no es valida");
         }
+        return usuario;
+    }
 
-        return usuarioRepositorio.findById(principal.getCodigo())
-                .orElseThrow(() -> new CredencialesInvalidasException("La sesion no es valida"));
+    /** Devuelve el usuario de la sesion o null si la consulta es anonima. */
+    public Usuario buscar(Authentication autenticacion) {
+        if (autenticacion == null || !(autenticacion.getPrincipal() instanceof UsuarioAutenticado)) {
+            return null;
+        }
+        UsuarioAutenticado principal = (UsuarioAutenticado) autenticacion.getPrincipal();
+        return usuarioRepositorio.findById(principal.getCodigo()).orElse(null);
     }
 }

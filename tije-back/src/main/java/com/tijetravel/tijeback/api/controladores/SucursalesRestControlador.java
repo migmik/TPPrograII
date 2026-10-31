@@ -1,7 +1,6 @@
 package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -13,15 +12,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tijetravel.tijeback.api.dto.GuardarSucursalSolicitud;
 import com.tijetravel.tijeback.api.dto.SucursalRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.SucursalMapeador;
-import com.tijetravel.tijeback.servicios.SucursalServicio;
 import com.tijetravel.tijeback.modelos.Sucursal;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
+import com.tijetravel.tijeback.servicios.SucursalServicio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -42,13 +42,14 @@ public class SucursalesRestControlador {
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
-    @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
-    public List<SucursalRespuesta> listar() {
-        return sucursalServicio.listar().stream()
-                .map(sucursalMapeador::aRespuesta)
-                .sorted(Comparator.comparing(SucursalRespuesta::codigo))
-                .toList();
+    public List<SucursalRespuesta> listar(@RequestParam(required = false) String ciudad) {
+        return sucursalMapeador.aRespuestas(sucursalServicio.listar(ciudad));
+    }
+
+    @GetMapping("/ciudades")
+    public List<String> ciudades() {
+        return sucursalServicio.listarCiudades();
     }
 
     @GetMapping("/{codigo}")
@@ -65,7 +66,8 @@ public class SucursalesRestControlador {
         Sucursal sucursal = sucursalServicio.crear(
                 actor,
                 solicitud.direccion(),
-                solicitud.telefono());
+                solicitud.telefono(),
+                solicitud.ciudad());
         SucursalRespuesta respuesta = sucursalMapeador.aRespuesta(sucursal);
         return ResponseEntity
                 .created(URI.create("/api/v1/sucursales/" + respuesta.codigo()))
@@ -82,7 +84,8 @@ public class SucursalesRestControlador {
                 actor,
                 codigo,
                 solicitud.direccion(),
-                solicitud.telefono()));
+                solicitud.telefono(),
+                solicitud.ciudad()));
     }
 
     @DeleteMapping("/{codigo}")

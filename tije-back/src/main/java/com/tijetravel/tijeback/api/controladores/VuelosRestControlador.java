@@ -2,7 +2,6 @@ package com.tijetravel.tijeback.api.controladores;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -20,14 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tijetravel.tijeback.api.dto.CrearVueloSolicitud;
 import com.tijetravel.tijeback.api.dto.DisponibilidadVueloRespuesta;
 import com.tijetravel.tijeback.api.dto.ModificarVueloSolicitud;
+import com.tijetravel.tijeback.api.dto.PaginaRespuesta;
 import com.tijetravel.tijeback.api.dto.VueloRespuesta;
 import com.tijetravel.tijeback.api.mapeadores.VueloMapeador;
-import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
-import com.tijetravel.tijeback.servicios.VueloServicio;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.seguridad.UsuarioActualServicio;
+import com.tijetravel.tijeback.servicios.DisponibilidadServicio;
+import com.tijetravel.tijeback.servicios.VueloServicio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -51,29 +51,49 @@ public class VuelosRestControlador {
         this.usuarioActualServicio = usuarioActualServicio;
     }
 
-    @SuppressWarnings("null") // El mapeador siempre devuelve una instancia no nula.
     @GetMapping
-    public List<VueloRespuesta> listar(@RequestParam(defaultValue = "numero") String orden) {
-        Comparator<VueloRespuesta> comparador = switch (orden) {
-            case "precioAsc" -> Comparator.comparingInt(VueloRespuesta::precio);
-            case "precioDesc" -> Comparator.comparingInt(VueloRespuesta::precio).reversed();
-            case "numero" -> Comparator.comparingInt(VueloRespuesta::numero);
-            default -> throw new IllegalArgumentException("Orden no valido");
-        };
-        return vueloServicio.listar().stream()
-                .map(vueloMapeador::aRespuesta)
-                .sorted(comparador.thenComparing(VueloRespuesta::numero))
-                .toList();
+    public List<VueloRespuesta> listar(@RequestParam(defaultValue = "numero") String orden,
+            Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.buscar(autenticacion);
+        return vueloMapeador.aRespuestas(vueloServicio.listarPara(actor, orden));
+    }
+
+    @GetMapping("/origenes")
+    public List<String> origenes() {
+        return vueloServicio.listarOrigenes();
+    }
+
+    @GetMapping("/destinos")
+    public List<String> destinos() {
+        return vueloServicio.listarDestinos();
+    }
+
+    @GetMapping("/pagina")
+    public PaginaRespuesta<VueloRespuesta> listarPagina(
+            @RequestParam(required = false) String origen,
+            @RequestParam(required = false) String destino,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta,
+            @RequestParam(defaultValue = "numero") String orden,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanio,
+            Authentication autenticacion) {
+        Usuario actor = usuarioActualServicio.buscar(autenticacion);
+        return vueloMapeador.aPagina(vueloServicio.buscarPagina(
+                actor, origen, destino, fechaDesde, fechaHasta, orden, pagina, tamanio));
     }
 
     @GetMapping("/buscar")
     public List<VueloRespuesta> buscar(@RequestParam String origen, @RequestParam String destino,
             @RequestParam LocalDate fecha, @RequestParam int personas,
             @RequestParam(defaultValue = "false") boolean sugerencias) {
-        List<Vuelo> vuelos = sugerencias
-                ? vueloServicio.sugerirOtrosDias(origen, destino, fecha, personas)
-                : vueloServicio.buscarEnFecha(origen, destino, fecha, personas);
-        return vuelos.stream().map(vueloMapeador::aRespuesta).toList();
+        List<Vuelo> vuelos;
+        if (sugerencias) {
+            vuelos = vueloServicio.sugerirOtrosDias(origen, destino, fecha, personas);
+        } else {
+            vuelos = vueloServicio.buscarEnFecha(origen, destino, fecha, personas);
+        }
+        return vueloMapeador.aRespuestas(vuelos);
     }
 
     @GetMapping("/{numero}")
@@ -106,9 +126,7 @@ public class VuelosRestControlador {
                 solicitud.plazasPrimera(),
                 solicitud.precio());
         VueloRespuesta respuesta = vueloMapeador.aRespuesta(vuelo);
-        return ResponseEntity
-                .created(URI.create("/api/v1/vuelos/" + respuesta.numero()))
-                .body(respuesta);
+        return ResponseEntity.created(URI.create("/api/v1/vuelos/" + respuesta.numero())).body(respuesta);
     }
 
     @PutMapping("/{numero}")
@@ -117,7 +135,7 @@ public class VuelosRestControlador {
             @Valid @RequestBody ModificarVueloSolicitud solicitud,
             Authentication autenticacion) {
         Usuario actor = usuarioActualServicio.obtener(autenticacion);
-        return vueloMapeador.aRespuesta(vueloServicio.modificar(
+        Vuelo vuelo = vueloServicio.modificar(
                 actor,
                 numero,
                 solicitud.fechaYHora(),
@@ -126,7 +144,8 @@ public class VuelosRestControlador {
                 solicitud.totalPlazas(),
                 solicitud.plazasTurista(),
                 solicitud.plazasPrimera(),
-                solicitud.precio()));
+                solicitud.precio());
+        return vueloMapeador.aRespuesta(vuelo);
     }
 
     @DeleteMapping("/{numero}")

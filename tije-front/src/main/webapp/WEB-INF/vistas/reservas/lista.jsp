@@ -26,22 +26,27 @@
                         <c:if test="${puedeCrear}">
                             <p><a href="<c:url value='/reservas/nueva'/>">Crear reserva</a></p>
                         </c:if>
-                        <form method="get" action="<c:url value='/reservas'/>">
-                            <label for="codigoTurista">Código de turista</label>
+                        <form class="filter-form" method="get" action="<c:url value='/reservas'/>">
+                            <div class="filter-field"><label for="codigoTurista">Código de turista</label>
                             <input id="codigoTurista" name="codigoTurista" type="number" min="1"
-                                value="<c:out value='${codigoTuristaBusqueda}'/>" />
-                            <label for="numeroVuelo">Número de vuelo</label>
+                                value="<c:out value='${codigoTuristaBusqueda}'/>" /></div>
+                            <div class="filter-field"><label for="dni">DNI del turista</label>
+                            <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,8}" minlength="7" maxlength="8" value="<c:out value='${dniBusqueda}'/>" /></div>
+                            <div class="filter-field"><label for="numeroVuelo">Número de vuelo</label>
                             <input id="numeroVuelo" name="numeroVuelo" type="number" min="1"
-                                value="<c:out value='${numeroVueloBusqueda}'/>" />
-                            <label for="codigoHotel">Código de hotel</label>
+                                value="<c:out value='${numeroVueloBusqueda}'/>" /></div>
+                            <div class="filter-field"><label for="codigoHotel">Código de hotel</label>
                             <input id="codigoHotel" name="codigoHotel" type="number" min="1"
-                                value="<c:out value='${codigoHotelBusqueda}'/>" />
-                            <label for="fechaDesde">Llegada desde</label>
+                                value="<c:out value='${codigoHotelBusqueda}'/>" /></div>
+                            <div class="filter-field"><label for="fechaDesde">Llegada desde</label>
                             <input id="fechaDesde" name="fechaDesde" type="date"
-                                value="<c:out value='${fechaDesdeBusqueda}'/>" />
-                            <label for="fechaHasta">Llegada hasta</label>
+                                value="<c:out value='${fechaDesdeBusqueda}'/>" /></div>
+                            <div class="filter-field"><label for="fechaHasta">Llegada hasta</label>
                             <input id="fechaHasta" name="fechaHasta" type="date"
-                                value="<c:out value='${fechaHastaBusqueda}'/>" />
+                                value="<c:out value='${fechaHastaBusqueda}'/>" /></div>
+                            <div class="filter-field"><label for="pagada">Estado de pago</label><select id="pagada" name="pagada">
+                                <option value="">Todos</option><option value="true" ${pagadaBusqueda == true ? 'selected' : ''}>Pagadas</option><option value="false" ${pagadaBusqueda == false ? 'selected' : ''}>Pendientes</option>
+                            </select></div>
                             <button type="submit">Filtrar</button>
                             <a href="<c:url value='/reservas'/>">Ver todas</a>
                         </form>
@@ -110,6 +115,8 @@
                         </c:choose>
                         <form method="get" action="<c:url value='/reservas'/>">
                             <input type="hidden" name="codigoTurista" value="<c:out value='${codigoTuristaBusqueda}'/>" />
+                            <input type="hidden" name="dni" value="<c:out value='${dniBusqueda}'/>" />
+                            <input type="hidden" name="pagada" value="<c:out value='${pagadaBusqueda}'/>" />
                             <input type="hidden" name="numeroVuelo" value="<c:out value='${numeroVueloBusqueda}'/>" />
                             <input type="hidden" name="codigoHotel" value="<c:out value='${codigoHotelBusqueda}'/>" />
                             <input type="hidden" name="fechaDesde" value="<c:out value='${fechaDesdeBusqueda}'/>" />
