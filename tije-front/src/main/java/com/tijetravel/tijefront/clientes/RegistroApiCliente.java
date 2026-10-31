@@ -2,6 +2,7 @@ package com.tijetravel.tijefront.clientes;
 
 import org.springframework.stereotype.Service;
 
+import com.tijetravel.tijefront.dto.CsrfRespuesta;
 import com.tijetravel.tijefront.formularios.RegistroClienteFormulario;
 
 @Service
@@ -13,7 +14,7 @@ public class RegistroApiCliente {
     }
 
     public void registrar(RegistroClienteFormulario formulario) {
-        var csrf = conexion.obtenerCsrf();
+        CsrfRespuesta csrf = conexion.obtenerCsrf();
         conexion.getCliente().post().uri("/api/v1/autenticacion/registro")
                 .header(csrf.getNombreEncabezado(), csrf.getToken())
                 .body(formulario)

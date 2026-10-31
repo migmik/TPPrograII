@@ -1,5 +1,6 @@
 package com.tijetravel.tijefront.controladores;
 
+import com.tijetravel.tijefront.dto.PaginaVuelosRespuesta;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +55,7 @@ public class VuelosControlador {
             return "vuelos/lista";
         }
         if (busqueda || personal) {
-            var resultado = vuelosApi.listarPagina(origen, destino, fechaDesde, fechaHasta,
+            PaginaVuelosRespuesta resultado = vuelosApi.listarPagina(origen, destino, fechaDesde, fechaHasta,
                     orden, pagina, personal);
             modelo.addAttribute("vuelos", resultado.elementos());
             modelo.addAttribute("pagina", resultado.pagina());

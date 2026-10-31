@@ -1,5 +1,6 @@
 package com.tijetravel.tijefront.controladores;
 
+import com.tijetravel.tijefront.dto.PaginaUsuariosRespuesta;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class UsuariosControlador {
         if (salida != null) {
             return salida;
         }
-        var resultado = usuariosApi.listarPagina(rol, codigo, nombre, dni, Math.max(0, pagina));
+        PaginaUsuariosRespuesta resultado = usuariosApi.listarPagina(rol, codigo, nombre, dni, Math.max(0, pagina));
         modelo.addAttribute("usuarios", resultado.elementos());
         modelo.addAttribute("pagina", resultado.pagina());
         modelo.addAttribute("totalPaginas", resultado.totalPaginas());

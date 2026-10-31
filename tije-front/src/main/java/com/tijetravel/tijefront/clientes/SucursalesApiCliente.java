@@ -21,11 +21,8 @@ public class SucursalesApiCliente {
     }
 
     public List<SucursalResumen> listar(String ciudad) {
-        SucursalResumen[] sucursales = conexion.getCliente().get().uri(uri -> {
-            var ruta = uri.path("/api/v1/sucursales");
-            if (ciudad != null && !ciudad.isBlank()) ruta.queryParam("ciudad", ciudad.trim());
-            return ruta.build();
-        })
+        RutaConsulta ruta = new RutaConsulta("/api/v1/sucursales").parametro("ciudad", ciudad);
+        SucursalResumen[] sucursales = conexion.getCliente().get().uri(ruta.getPlantilla(), ruta.getValores())
                 .retrieve().body(SucursalResumen[].class);
         if (sucursales == null) {
             throw new RestClientException("La API no devolvió sucursales.");

@@ -1,5 +1,7 @@
 package com.tijetravel.tijefront.controladores;
 
+import jakarta.servlet.http.HttpSession;
+import com.tijetravel.tijefront.dto.PaginaTuristasRespuesta;
 import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -42,7 +44,7 @@ public class TuristasControlador {
             return salida;
         List<TuristaRespuesta> turistas;
         if (Boolean.TRUE.equals(modelo.asMap().get("puedeGestionar"))) {
-            var resultado = turistasApi.listarPagina(dni, titular, Math.max(0, pagina));
+            PaginaTuristasRespuesta resultado = turistasApi.listarPagina(dni, titular, Math.max(0, pagina));
             turistas = resultado.elementos();
             modelo.addAttribute("pagina", resultado.pagina());
             modelo.addAttribute("totalPaginas", resultado.totalPaginas());
@@ -200,7 +202,7 @@ public class TuristasControlador {
 
     private String comprobarAcceso(boolean escritura, HttpServletRequest solicitud,
             HttpServletResponse respuesta, Model modelo) {
-        var sesion = solicitud.getSession(false);
+        HttpSession sesion = solicitud.getSession(false);
         if (sesion == null || sesion.getAttribute("usuarioActual") == null)
             return "redirect:/login";
         SesionRespuesta usuario = autenticacionApi.obtenerSesion();
