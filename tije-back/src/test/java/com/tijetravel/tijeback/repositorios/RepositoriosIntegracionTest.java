@@ -1,7 +1,5 @@
 package com.tijetravel.tijeback.repositorios;
 
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
@@ -10,17 +8,18 @@ import java.time.LocalDateTime;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.RolUsuario;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
-import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Administrador;
+import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Hotel;
 import com.tijetravel.tijeback.modelos.Reserva;
 import com.tijetravel.tijeback.modelos.Sucursal;
@@ -94,7 +93,7 @@ class RepositoriosIntegracionTest {
                                 LocalDate.of(2026, 10, 1),
                                 LocalDate.of(2026, 10, 3)));
 
-                Usuario usuario = usuarioRepositorio.findByNombreUsuarioIgnoreCase("ANA").orElseThrow();
+                Usuario usuario = usuarioRepositorio.findByNombreUsuarioIgnoreCase("ANA");
 
                 assertInstanceOf(Cliente.class, usuario);
                 assertEquals(RolUsuario.CLIENTE, usuario.getRol());

@@ -1,11 +1,11 @@
 package com.tijetravel.tijeback.seguridad;
 
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -14,6 +14,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,17 +24,18 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.tijetravel.tijeback.modelos.Usuario;
+import com.tijetravel.tijeback.DnisPrueba;
+import com.tijetravel.tijeback.enums.Permiso;
 import com.tijetravel.tijeback.modelos.Cliente;
 import com.tijetravel.tijeback.modelos.Sucursal;
-import com.tijetravel.tijeback.enums.Permiso;
+import com.tijetravel.tijeback.modelos.Usuario;
 import com.tijetravel.tijeback.modelos.Vendedor;
 import com.tijetravel.tijeback.repositorios.SucursalRepositorio;
 import com.tijetravel.tijeback.repositorios.UsuarioRepositorio;
@@ -62,10 +66,11 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void autorizaPorElPermisoSinNecesitarRepetirElRolEnElFiltroWeb() throws Exception {
-                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO).orElseThrow();
-                var autenticacion = UsernamePasswordAuthenticationToken.authenticated(
-                                UsuarioAutenticado.desde(administrador), null,
-                                java.util.List.of(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name())));
+                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO);
+                List<SimpleGrantedAuthority> permisos = new ArrayList<>();
+                permisos.add(new SimpleGrantedAuthority(Permiso.ADMINISTRAR_USUARIOS.name()));
+                UsernamePasswordAuthenticationToken autenticacion = UsernamePasswordAuthenticationToken.authenticated(
+                                UsuarioAutenticado.desde(administrador), null, permisos);
                 mockMvc.perform(get("/api/v1/usuarios").with(authentication(autenticacion)))
                                 .andExpect(status().isOk());
         }
@@ -79,8 +84,7 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void creaElAdministradorInicialConContraseniaHasheada() {
-                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO)
-                                .orElseThrow();
+                Usuario administrador = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO);
 
                 assertNotEquals(CONTRASENIA, administrador.getContrasenia());
                 assertTrue(administrador.getContrasenia().startsWith("{bcrypt}"));
@@ -137,7 +141,7 @@ class SeguridadApiIntegracionTest {
 
         @Test
         void registraPublicamenteUnClienteConTuristaTitular() throws Exception {
-                String dni = com.tijetravel.tijeback.DnisPrueba.siguiente();
+                String dni = DnisPrueba.siguiente();
                 Sucursal sucursal = sucursalRepositorio.save(
                                 new Sucursal("Sucursal registro " + dni, "351-1000"));
                 String nombreUsuario = "cliente-" + dni;
@@ -148,7 +152,7 @@ class SeguridadApiIntegracionTest {
                                 .content(registro(nombreUsuario, dni, sucursal.getCodigo())))
                                 .andExpect(status().isCreated());
 
-                Usuario guardado = usuarioRepositorio.findByNombreUsuarioIgnoreCase(nombreUsuario).orElseThrow();
+                Usuario guardado = usuarioRepositorio.findByNombreUsuarioIgnoreCase(nombreUsuario);
                 Cliente cliente = assertInstanceOf(Cliente.class, guardado);
                 assertEquals("CLIENTE", cliente.getRol().name());
                 assertTrue(cliente.getTurista().isTitular());
@@ -206,10 +210,11 @@ class SeguridadApiIntegracionTest {
         void impideQueUnVendedorAccedaALaAdministracionDeUsuarios() throws Exception {
                 String usuarioVendedor = "vendedor-pruebas";
                 String contraseniaVendedor = "ClaveVendedor123!";
-                usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor)
-                                .orElseGet(() -> usuarioRepositorio.save(new Vendedor(
-                                                usuarioVendedor,
-                                                codificadorContrasenias.encode(contraseniaVendedor), com.tijetravel.tijeback.DnisPrueba.siguiente())));
+                if (usuarioRepositorio.findByNombreUsuarioIgnoreCase(usuarioVendedor) == null) {
+                        usuarioRepositorio.save(new Vendedor(
+                                        usuarioVendedor,
+                                        codificadorContrasenias.encode(contraseniaVendedor), DnisPrueba.siguiente()));
+                }
 
                 MvcResult login = iniciarSesion(usuarioVendedor, contraseniaVendedor);
                 MockHttpSession sesion = (MockHttpSession) login.getRequest().getSession(false);

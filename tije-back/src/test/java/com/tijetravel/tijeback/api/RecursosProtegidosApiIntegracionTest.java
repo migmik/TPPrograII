@@ -1,14 +1,15 @@
 package com.tijetravel.tijeback.api;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.modelos.Cliente;
@@ -78,28 +80,35 @@ class RecursosProtegidosApiIntegracionTest {
 
         @BeforeEach
         void prepararUsuariosYReservaExterna() {
-                Turista titular = turistaRepositorio.findById(1).orElseThrow();
-                Usuario usuarioCliente = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_CLIENTE)
-                                .orElseGet(() -> usuarioRepositorio.save(new Cliente(
-                                                USUARIO_CLIENTE,
-                                                codificadorContrasenias.encode(CONTRASENIA_CLIENTE),
-                                                titular)));
+                Turista titular = turistaRepositorio.findById(1).get();
+                Usuario usuarioCliente = usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_CLIENTE);
+                if (usuarioCliente == null) {
+                        usuarioCliente = usuarioRepositorio.save(new Cliente(
+                                        USUARIO_CLIENTE,
+                                        codificadorContrasenias.encode(CONTRASENIA_CLIENTE),
+                                        titular));
+                }
                 codigoUsuarioCliente = usuarioCliente.getCodigo();
-                usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_VENDEDOR)
-                                .orElseGet(() -> usuarioRepositorio.save(new Vendedor(
-                                                USUARIO_VENDEDOR,
-                                                codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), com.tijetravel.tijeback.DnisPrueba.siguiente())));
+                if (usuarioRepositorio.findByNombreUsuarioIgnoreCase(USUARIO_VENDEDOR) == null) {
+                        usuarioRepositorio.save(new Vendedor(
+                                        USUARIO_VENDEDOR,
+                                        codificadorContrasenias.encode(CONTRASENIA_VENDEDOR), DnisPrueba.siguiente()));
+                }
 
-                Reserva reservaExterna = reservaRepositorio.findByTuristaCodigo(3).stream()
-                                .findFirst()
-                                .orElseGet(() -> reservaRepositorio.save(new Reserva(
-                                                turistaRepositorio.findById(3).orElseThrow(),
-                                                vueloRepositorio.findById(103).orElseThrow(),
-                                                hotelRepositorio.findById(4).orElseThrow(),
-                                                ClaseVuelo.TURISTA,
-                                                TipoHospedaje.MEDIA_PENSION,
-                                                LocalDate.of(2026, 11, 1),
-                                                LocalDate.of(2026, 11, 5))));
+                List<Reserva> reservasDelTurista = reservaRepositorio.findByTuristaCodigo(3);
+                Reserva reservaExterna;
+                if (reservasDelTurista.isEmpty()) {
+                        reservaExterna = reservaRepositorio.save(new Reserva(
+                                        turistaRepositorio.findById(3).get(),
+                                        vueloRepositorio.findById(103).get(),
+                                        hotelRepositorio.findById(4).get(),
+                                        ClaseVuelo.TURISTA,
+                                        TipoHospedaje.MEDIA_PENSION,
+                                        LocalDate.of(2026, 11, 1),
+                                        LocalDate.of(2026, 11, 5)));
+                } else {
+                        reservaExterna = reservasDelTurista.get(0);
+                }
                 codigoReservaExterna = reservaExterna.getCodigo();
         }
 
@@ -238,7 +247,7 @@ class RecursosProtegidosApiIntegracionTest {
         void personalConsultaTuristasYUsuariosPorPaginas() throws Exception {
                 MockHttpSession vendedor = iniciarSesion(USUARIO_VENDEDOR, CONTRASENIA_VENDEDOR);
                 mockMvc.perform(get("/api/v1/turistas/pagina").session(vendedor)
-                                .param("dni", turistaRepositorio.findById(1).orElseThrow().getDni())
+                                .param("dni", turistaRepositorio.findById(1).get().getDni())
                                 .param("tamanio", "1"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.elementos.length()").value(1))

@@ -1,10 +1,7 @@
 package com.tijetravel.tijeback.servicios;
 
-import com.tijetravel.tijeback.servicios.impl.HotelServicioImpl;
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -19,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
@@ -30,6 +28,7 @@ import com.tijetravel.tijeback.modelos.Turista;
 import com.tijetravel.tijeback.modelos.Vuelo;
 import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
+import com.tijetravel.tijeback.servicios.impl.HotelServicioImpl;
 
 @ExtendWith(MockitoExtension.class)
 class HotelServicioTest {
@@ -72,17 +71,20 @@ class HotelServicioTest {
                                 reserva("luis@example.com", LocalDate.of(2026, 10, 2), LocalDate.of(2026, 10, 3))));
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 
-                assertThrows(
-                                CapacidadExcedidaException.class,
-                                () -> servicio.modificar(
-                                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
-                                                1,
-                                                "Hotel Centro",
-                                                "Calle 1",
-                                                "Cordoba",
-                                                "351-1000",
-                                                1,
-                                                25000));
+                try {
+                        servicio.modificar(
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
+                                1,
+                                "Hotel Centro",
+                                "Calle 1",
+                                "Cordoba",
+                                "351-1000",
+                                1,
+                                25000);
+                        fail("Se esperaba CapacidadExcedidaException");
+                } catch (CapacidadExcedidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -94,7 +96,7 @@ class HotelServicioTest {
                 when(hotelRepositorio.findById(1)).thenReturn(Optional.of(hotel));
 
                 Hotel modificado = servicio.modificar(
-                                new Administrador("admin", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
+                                new Administrador("admin", "clave", DnisPrueba.siguiente()),
                                 1,
                                 "Hotel Centro",
                                 "Calle 1",

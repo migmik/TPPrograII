@@ -1,14 +1,15 @@
 package com.tijetravel.tijefront.clientes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+
+import com.tijetravel.tijefront.dto.DisponibilidadHotelRespuesta;
+import com.tijetravel.tijefront.dto.HotelRespuesta;
 
 class HotelesApiClienteTest {
     private MockRestServiceServer servidor;
@@ -38,7 +42,7 @@ class HotelesApiClienteTest {
                         [{"codigo":1,"nombre":"Hotel Centro","direccion":"Calle 1",
                           "ciudad":"Córdoba","telefono":"123","capacidadTotal":35}]
                         """, MediaType.APPLICATION_JSON));
-        var hoteles = cliente.listar();
+        List<HotelRespuesta> hoteles = cliente.listar();
         assertEquals(1, hoteles.size());
         assertEquals("Córdoba", hoteles.get(0).getCiudad());
         assertEquals(35, hoteles.get(0).getCapacidadTotal());
@@ -62,7 +66,7 @@ class HotelesApiClienteTest {
                         {"codigoHotel":1,"fechaLlegada":"2027-02-01",
                          "fechaPartida":"2027-02-04","plazasDisponibles":0}
                         """, MediaType.APPLICATION_JSON));
-        var disponibilidad = cliente.consultarDisponibilidad(
+        DisponibilidadHotelRespuesta disponibilidad = cliente.consultarDisponibilidad(
                 1, LocalDate.of(2027, 2, 1), LocalDate.of(2027, 2, 4));
         assertEquals(0, disponibilidad.getPlazasDisponibles());
         assertEquals(LocalDate.of(2027, 2, 4), disponibilidad.getFechaPartida());
@@ -73,7 +77,12 @@ class HotelesApiClienteTest {
     void conservaElErrorDeHotelInexistenteParaMostrarloEnLaVista() {
         servidor.expect(requestTo("http://backend/api/v1/hoteles/999"))
                 .andRespond(withStatus(HttpStatus.NOT_FOUND));
-        assertThrows(HttpClientErrorException.NotFound.class, () -> cliente.buscar(999));
+        try {
+            cliente.buscar(999);
+            fail("Se esperaba HttpClientErrorException.NotFound");
+        } catch (HttpClientErrorException.NotFound esperada) {
+            // Es la excepcion que se esperaba.
+        }
         servidor.verify();
     }
 }

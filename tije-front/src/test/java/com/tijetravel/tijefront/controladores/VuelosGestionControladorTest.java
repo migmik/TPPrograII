@@ -20,6 +20,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import com.tijetravel.tijefront.clientes.AutenticacionApiCliente;
 import com.tijetravel.tijefront.clientes.VuelosApiCliente;
@@ -48,7 +49,7 @@ class VuelosGestionControladorTest {
     @Test
     void validaSumaDePlazasAntesDeCrear() throws Exception {
         when(autenticacionApi.obtenerSesion()).thenReturn(usuario("ADMINISTRADOR"));
-        var solicitud = post("/vuelos").with(csrf()).session(sesion())
+        MockHttpServletRequestBuilder solicitud = post("/vuelos").with(csrf()).session(sesion())
                 .param("numero", "20").param("fechaYHora", "2027-03-10T14:30")
                 .param("origen", "Buenos Aires").param("destino", "Córdoba")
                 .param("totalPlazas", "10").param("plazasTurista", "8").param("plazasPrimera", "3");

@@ -1,12 +1,9 @@
 package com.tijetravel.tijeback.servicios;
 
-import com.tijetravel.tijeback.servicios.impl.ReservaServicioImpl;
-import com.tijetravel.tijeback.servicios.impl.DisponibilidadServicioImpl;
-import com.tijetravel.tijeback.DnisPrueba;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -21,13 +18,14 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.tijetravel.tijeback.DnisPrueba;
 import com.tijetravel.tijeback.enums.ClaseVuelo;
 import com.tijetravel.tijeback.enums.TipoHospedaje;
 import com.tijetravel.tijeback.excepciones.CapacidadExcedidaException;
@@ -45,6 +43,8 @@ import com.tijetravel.tijeback.repositorios.HotelRepositorio;
 import com.tijetravel.tijeback.repositorios.ReservaRepositorio;
 import com.tijetravel.tijeback.repositorios.TuristaRepositorio;
 import com.tijetravel.tijeback.repositorios.VueloRepositorio;
+import com.tijetravel.tijeback.servicios.impl.DisponibilidadServicioImpl;
+import com.tijetravel.tijeback.servicios.impl.ReservaServicioImpl;
 
 @ExtendWith(MockitoExtension.class)
 class ReservaServicioTest {
@@ -100,10 +100,10 @@ class ReservaServicioTest {
         void creaReservaCuandoLosDatosSonCompatiblesYHayCapacidad() {
                 prepararBusquedas();
                 when(reservaRepositorio.save(any(Reserva.class)))
-                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                                .then(returnsFirstArg());
 
                 Reserva reserva = servicio.crear(
-                                new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
+                                new Vendedor("vendedor", "clave", DnisPrueba.siguiente()),
                                 1,
                                 100,
                                 1,
@@ -123,17 +123,20 @@ class ReservaServicioTest {
                 when(reservaRepositorio.countByVueloNumeroAndClaseVuelo(100, ClaseVuelo.TURISTA))
                                 .thenReturn(1L);
 
-                assertThrows(
-                                CapacidadExcedidaException.class,
-                                () -> servicio.crear(
-                                                new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente()),
-                                                1,
-                                                100,
-                                                1,
-                                                ClaseVuelo.TURISTA,
-                                                TipoHospedaje.MEDIA_PENSION,
-                                                LocalDate.of(2026, 10, 1),
-                                                LocalDate.of(2026, 10, 3)));
+                try {
+                        servicio.crear(
+                                new Vendedor("vendedor", "clave", DnisPrueba.siguiente()),
+                                1,
+                                100,
+                                1,
+                                ClaseVuelo.TURISTA,
+                                TipoHospedaje.MEDIA_PENSION,
+                                LocalDate.of(2026, 10, 1),
+                                LocalDate.of(2026, 10, 3));
+                        fail("Se esperaba CapacidadExcedidaException");
+                } catch (CapacidadExcedidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -144,9 +147,12 @@ class ReservaServicioTest {
                 when(reservaRepositorio.existsByTuristaCodigoAndVueloNumero(1, 100))
                                 .thenReturn(true);
 
-                assertThrows(
-                                EntidadDuplicadaException.class,
-                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente())));
+                try {
+                        ingresarReservaValida(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                        fail("Se esperaba EntidadDuplicadaException");
+                } catch (EntidadDuplicadaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -154,9 +160,12 @@ class ReservaServicioTest {
                 hotel = conCodigo(new Hotel("Hotel", "Direccion", "Rosario", "1234", 1), "codigo", 1);
                 prepararBusquedas();
 
-                assertThrows(
-                                OperacionNoPermitidaException.class,
-                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente())));
+                try {
+                        ingresarReservaValida(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                        fail("Se esperaba OperacionNoPermitidaException");
+                } catch (OperacionNoPermitidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
@@ -168,16 +177,19 @@ class ReservaServicioTest {
                                                                 TipoHospedaje.MEDIA_PENSION, LocalDate.of(2026, 10, 1),
                                                                 LocalDate.of(2026, 10, 3))));
 
-                assertThrows(
-                                CapacidadExcedidaException.class,
-                                () -> ingresarReservaValida(new Vendedor("vendedor", "clave", com.tijetravel.tijeback.DnisPrueba.siguiente())));
+                try {
+                        ingresarReservaValida(new Vendedor("vendedor", "clave", DnisPrueba.siguiente()));
+                        fail("Se esperaba CapacidadExcedidaException");
+                } catch (CapacidadExcedidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         @Test
         void clientePuedeCrearReservaParaSiMismo() {
                 prepararBusquedas();
                 when(reservaRepositorio.save(any(Reserva.class)))
-                                .thenAnswer(invocacion -> invocacion.getArgument(0));
+                                .then(returnsFirstArg());
                 Reserva reserva = ingresarReservaValida(new Cliente("cliente", "clave", turista));
                 assertSame(turista, reserva.getTurista());
         }
@@ -187,11 +199,14 @@ class ReservaServicioTest {
                 Turista ajeno = conCodigo(new Turista(DnisPrueba.siguiente(), "Juan", "Lopez",
                                 "Direccion", "juan@example.com", "123", "456", sucursal), "codigo", 2);
                 when(turistaRepositorio.findById(2)).thenReturn(Optional.of(ajeno));
-                assertThrows(
-                                OperacionNoPermitidaException.class,
-                                () -> servicio.crear(new Cliente("cliente", "clave", turista), 2, 100, 1,
-                                                ClaseVuelo.TURISTA, TipoHospedaje.MEDIA_PENSION,
-                                                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3)));
+                try {
+                        servicio.crear(new Cliente("cliente", "clave", turista), 2, 100, 1,
+                                ClaseVuelo.TURISTA, TipoHospedaje.MEDIA_PENSION,
+                                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 3));
+                        fail("Se esperaba OperacionNoPermitidaException");
+                } catch (OperacionNoPermitidaException esperada) {
+                        // Es la excepcion que se esperaba.
+                }
         }
 
         private void prepararBusquedas() {
